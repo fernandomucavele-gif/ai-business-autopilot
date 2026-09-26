@@ -1,22 +1,11 @@
-"use client";
 
-import { useState } from "react";
-
-const menu = [
-  ["🏠", "Dashboard"],
-  ["🔎", "Research AI"],
-  ["🎨", "Creative AI"],
-  ["📢", "Ads"],
-  ["📊", "Analytics"],
-  ["💰", "Finanças"],
-  ["🤖", "Agentes"],
   ["👁️", "Monitoramento"],
-  ["⚙️", "Configurações"],
+  ["⚙️", "Configurações"]
 ];
 
 export default function Home() {
   const [active, setActive] = useState("Dashboard");
-
+import { initialAutopilotState, getSystemStatus } from "../lib/autopilot";
   return (
     <main className="app">
       <aside className="sidebar">
@@ -99,9 +88,7 @@ export default function Home() {
               </div>
               <span className="badge">SIMULAÇÃO</span>
             </div>
-
-            <div className="empty">
-              <div className="empty-icon">🤖</div>
+"empty-icon">🤖</div>
               <h3>O Autopilot está pronto</h3>
               <p>
                 Os agentes de pesquisa, criativos, analytics e anúncios serão
