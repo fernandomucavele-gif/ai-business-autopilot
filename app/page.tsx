@@ -1,434 +1,186 @@
+"use client";
 
-  ["👁️", "Monitoramento"],
-  ["⚙️", "Configurações"]
+import { useMemo, useState } from "react";
+import {
+  initialAutopilotState,
+  getSystemStatus,
+  type Market,
+} from "../lib/autopilot";
+
+type MenuItem = {
+  icon: string;
+  name: string;
+};
+
+const menu: MenuItem[] = [
+  { icon: "🏠", name: "Dashboard" },
+  { icon: "🔎", name: "Research AI" },
+  { icon: "🏭", name: "Fornecedores" },
+  { icon: "🎨", name: "Creative AI" },
+  { icon: "📢", name: "Ads AI" },
+  { icon: "📊", name: "Analytics" },
+  { icon: "👥", name: "Customer AI" },
+  { icon: "📦", name: "Orders AI" },
+  { icon: "💰", name: "Finanças" },
+  { icon: "🤖", name: "Supervisor AI" },
+  { icon: "👁️", name: "Monitoramento" },
+  { icon: "⚙️", name: "Configurações" },
+];
+
+const markets: Market[] = [
+  "Moçambique",
+  "Brasil",
+  "Portugal",
+  "África do Sul",
+  "Europa",
+  "EUA",
+  "Global",
+];
+
+const simulatedProducts = [
+  {
+    name: "Organizador inteligente para casa",
+    market: "Moçambique",
+    score: 88,
+    reason: "Problema simples, fácil demonstração em vídeo e possibilidade de margem.",
+  },
+  {
+    name: "Acessório portátil para automóvel",
+    market: "Brasil",
+    score: 84,
+    reason: "Produto visual, público amplo e possibilidade de venda por impulso.",
+  },
+  {
+    name: "Acessório de fitness doméstico",
+    market: "Europa",
+    score: 81,
+    reason: "Categoria com vários públicos e possibilidade de conteúdo curto.",
+  },
 ];
 
 export default function Home() {
   const [active, setActive] = useState("Dashboard");
-import { initialAutopilotState, getSystemStatus } from "../lib/autopilot";
-  return (
-    <main className="app">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="logo">AI</div>
-          <div>
-            <strong>Business</strong>
-            <span>Autopilot</span>
-          </div>
-        </div>
+  const [market, setMarket] = useState<Market>("Moçambique");
+  const [researchRunning, setResearchRunning] = useState(false);
+  const [researchDone, setResearchDone] = useState(false);
+  const [automation, setAutomation] = useState(false);
 
-        <nav>
-          {menu.map(([icon, name]) => (
-            <button
-              key={name}
-              className={active === name ? "active" : ""}
-              onClick={() => setActive(name)}
-            >
-              <span>{icon}</span>
-              {name}
-            </button>
-          ))}
-        </nav>
+  const systemStatus = useMemo(
+    () => getSystemStatus(initialAutopilotState),
+    []
+  );
 
-        <div className="simulation">
-          <div>🟢</div>
-          <strong>Simulation Mode</strong>
-          <small>Ações reais desativadas</small>
-        </div>
-      </aside>
+  function startResearch() {
+    setResearchRunning(true);
+    setResearchDone(false);
 
-      <section className="content">
-        <header>
+    setTimeout(() => {
+      setResearchRunning(false);
+      setResearchDone(true);
+    }, 1800);
+  }
+
+  function renderDashboard() {
+    return (
+      <>
+        <div className="pageHeader">
           <div>
             <p className="eyebrow">PRIVATE AI SYSTEM</p>
-            <h1>{active}</h1>
+            <h1>Dashboard</h1>
             <p className="subtitle">
               Centro de controlo do teu AI Business Autopilot.
             </p>
           </div>
 
-          <div className="status">
-            <span className="dot" />
-            Sistema online
+          <div className="online">
+            <span>●</span> Sistema online
           </div>
-        </header>
+        </div>
 
         <div className="cards">
           <div className="card">
             <span>💰 Receita</span>
-            <strong>0 MT</strong>
+            <strong>{systemStatus.revenue} MT</strong>
             <small>Modo simulação</small>
           </div>
 
           <div className="card">
             <span>📈 Campanhas</span>
-            <strong>0</strong>
-            <small>Nenhuma campanha ativa</small>
+            <strong>{systemStatus.campaigns}</strong>
+            <small>Nenhuma campanha real ativa</small>
           </div>
 
           <div className="card">
             <span>🤖 Tarefas IA</span>
-            <strong>0</strong>
-            <small>Aguardando execução</small>
+            <strong>{systemStatus.orders + systemStatus.products}</strong>
+            <small>Processos preparados</small>
           </div>
 
           <div className="card">
             <span>⚡ Automação</span>
-            <strong>OFF</strong>
-            <small>Ações reais bloqueadas</small>
+            <strong>{automation ? "TESTE" : "OFF"}</strong>
+            <small>Ações reais continuam bloqueadas</small>
           </div>
         </div>
 
-        <div className="grid">
-          <section className="panel large">
-            <div className="panel-title">
+        <div className="grid2">
+          <section className="panel">
+            <div className="panelTitle">
               <div>
-                <h2>Centro de atividade</h2>
-                <p>Atividade recente do sistema.</p>
+                <h2>🎯 Centro de atividade</h2>
+                <p>Atividade atual do sistema.</p>
               </div>
-              <span className="badge">SIMULAÇÃO</span>
+
+              <span className="simulationBadge">SIMULAÇÃO</span>
             </div>
-"empty-icon">🤖</div>
-              <h3>O Autopilot está pronto</h3>
-              <p>
-                Os agentes de pesquisa, criativos, analytics e anúncios serão
-                conectados nas próximas etapas.
-              </p>
+
+            <div className="activity">
+              <div className="activityIcon">🤖</div>
+              <div>
+                <strong>O Autopilot está pronto</strong>
+                <p>
+                  Os agentes de pesquisa, fornecedores, criativos, anúncios,
+                  clientes, encomendas e finanças estão preparados.
+                </p>
+              </div>
             </div>
           </section>
 
           <section className="panel">
-            <h2>Segurança</h2>
-            <div className="security">
-              <div>🛡️ Modo simulação <b>ATIVO</b></div>
-              <div>💳 Gastos automáticos <b>BLOQUEADOS</b></div>
-              <div>📢 Publicação de anúncios <b>BLOQUEADA</b></div>
-              <div>💸 Levantamentos <b>BLOQUEADOS</b></div>
+            <h2>🔐 Segurança</h2>
+
+            <div className="securityRow">
+              <span>Modo simulação</span>
+              <b>ATIVO</b>
+            </div>
+
+            <div className="securityRow">
+              <span>Compras automáticas</span>
+              <b>BLOQUEADAS</b>
+            </div>
+
+            <div className="securityRow">
+              <span>Pagamentos automáticos</span>
+              <b>BLOQUEADOS</b>
+            </div>
+
+            <div className="securityRow">
+              <span>Publicação real de anúncios</span>
+              <b>BLOQUEADA</b>
             </div>
           </section>
         </div>
-      </section>
 
-      <style jsx>{`
-        * {
-          box-sizing: border-box;
-        }
+        <section className="panel">
+          <div className="panelTitle">
+            <div>
+              <h2>🌍 Mercados</h2>
+              <p>Mercados que o Autopilot poderá analisar.</p>
+            </div>
+          </div>
 
-        .app {
-          min-height: 100vh;
-          display: flex;
-          background: #f4f7fb;
-          color: #101828;
-          font-family: Arial, sans-serif;
-        }
-
-        .sidebar {
-          width: 245px;
-          min-height: 100vh;
-          padding: 24px 16px;
-          background: #0b1220;
-          color: white;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .brand {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 4px 8px 30px;
-        }
-
-        .logo {
-          width: 42px;
-          height: 42px;
-          border-radius: 12px;
-          display: grid;
-          place-items: center;
-          background: #2563eb;
-          font-weight: bold;
-        }
-
-        .brand strong,
-        .brand span {
-          display: block;
-        }
-
-        .brand span {
-          color: #94a3b8;
-          font-size: 12px;
-          margin-top: 3px;
-        }
-
-        nav {
-          display: grid;
-          gap: 7px;
-        }
-
-        nav button {
-          border: 0;
-          border-radius: 10px;
-          padding: 12px;
-          text-align: left;
-          color: #cbd5e1;
-          background: transparent;
-          cursor: pointer;
-          font-size: 14px;
-        }
-
-        nav button span {
-          margin-right: 10px;
-        }
-
-        nav button:hover,
-        nav button.active {
-          background: #1e293b;
-          color: white;
-        }
-
-        .simulation {
-          margin-top: auto;
-          padding: 14px;
-          border: 1px solid #334155;
-          border-radius: 12px;
-          background: #111c2e;
-        }
-
-        .simulation strong,
-        .simulation small {
-          display: block;
-        }
-
-        .simulation strong {
-          margin-top: 7px;
-          font-size: 13px;
-        }
-
-        .simulation small {
-          color: #94a3b8;
-          margin-top: 4px;
-        }
-
-        .content {
-          flex: 1;
-          padding: 35px;
-          max-width: 1500px;
-        }
-
-        header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-
-        .eyebrow {
-          color: #2563eb;
-          font-size: 11px;
-          font-weight: bold;
-          letter-spacing: 1.5px;
-        }
-
-        h1 {
-          margin: 5px 0;
-          font-size: 32px;
-        }
-
-        .subtitle,
-        .panel p {
-          color: #667085;
-        }
-
-        .status {
-          padding: 10px 14px;
-          background: white;
-          border: 1px solid #e4e7ec;
-          border-radius: 20px;
-          font-size: 13px;
-        }
-
-        .dot {
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #16a34a;
-          margin-right: 7px;
-        }
-
-        .cards {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 16px;
-          margin-bottom: 18px;
-        }
-
-        .card,
-        .panel {
-          background: white;
-          border: 1px solid #e4e7ec;
-          border-radius: 16px;
-          box-shadow: 0 4px 18px rgba(16, 24, 40, 0.04);
-        }
-
-        .card {
-          padding: 20px;
-        }
-
-        .card span,
-        .card strong,
-        .card small {
-          display: block;
-        }
-
-        .card strong {
-          font-size: 25px;
-          margin: 13px 0 5px;
-        }
-
-        .card small {
-          color: #98a2b3;
-        }
-
-        .grid {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 18px;
-        }
-
-        .panel {
-          padding: 22px;
-        }
-
-        .panel-title {
-          display: flex;
-          justify-content: space-between;
-          gap: 15px;
-        }
-
-        .panel h2 {
-          margin: 0;
-          font-size: 17px;
-        }
-
-        .panel-title p {
-          margin-top: 6px;
-          font-size: 13px;
-        }
-
-        .badge {
-          height: fit-content;
-          padding: 6px 9px;
-          border-radius: 8px;
-          background: #ecfdf3;
-          color: #027a48;
-          font-size: 10px;
-          font-weight: bold;
-        }
-
-        .empty {
-          text-align: center;
-          padding: 65px 20px;
-        }
-
-        .empty-icon {
-          font-size: 42px;
-        }
-
-        .empty h3 {
-          margin-bottom: 5px;
-        }
-
-        .empty p {
-          max-width: 480px;
-          margin: auto;
-          line-height: 1.5;
-        }
-
-        .security {
-          display: grid;
-          gap: 14px;
-          margin-top: 20px;
-        }
-
-        .security div {
-          padding: 12px;
-          border-radius: 10px;
-          background: #f8fafc;
-          font-size: 13px;
-        }
-
-        .security b {
-          display: block;
-          margin-top: 5px;
-          font-size: 11px;
-          color: #475467;
-        }
-
-        @media (max-width: 900px) {
-          .sidebar {
-            width: 80px;
-          }
-
-          .brand div:not(.logo),
-          nav button:not(.active) {
-            font-size: 0;
-          }
-
-          .brand {
-            justify-content: center;
-          }
-
-          .cards {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        @media (max-width: 600px) {
-          .app {
-            display: block;
-          }
-
-          .sidebar {
-            width: 100%;
-            min-height: auto;
-          }
-
-          nav {
-            grid-template-columns: repeat(3, 1fr);
-          }
-
-          .simulation {
-            display: none;
-          }
-
-          .content {
-            padding: 22px 15px;
-          }
-
-          header {
-            display: block;
-          }
-
-          .status {
-            display: inline-block;
-            margin-top: 15px;
-          }
-
-          .cards {
-            grid-template-columns: 1fr 1fr;
-          }
-
-          .card {
-            padding: 15px;
-          }
-        }
-      `}</style>
-    </main>
-  );
-            }
+          <div className="marketList">
+            {markets.map((item) => (
+              <button
+                key={item}
+                className={market
