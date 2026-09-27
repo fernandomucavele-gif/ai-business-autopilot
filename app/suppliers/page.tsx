@@ -1,74 +1,109 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const suppliers = [
+type Supplier = {
+  name: string;
+  country: string;
+  region: string;
+  price: number;
+  currency: string;
+  shipping: string;
+  contact: string;
+  rating: number;
+};
+
+const suppliers: Supplier[] = [
   {
-    product: "Mini aspirador portátil USB",
-    country: "China 🇨🇳",
-    supplier: "Fornecedor internacional",
-    price: "US$ 4,80",
-    shipping: "US$ 2,50",
-    delivery: "8–18 dias",
-    dropshipping: "Sim",
-    margin: "Alta",
+    name: "Global Home Supply",
+    country: "China",
+    region: "Ásia",
+    price: 6.5,
+    currency: "USD",
+    shipping: "Internacional",
+    contact: "Contacto disponível para negociação",
+    rating: 4.7,
   },
   {
-    product: "Luz LED para quarto",
-    country: "China 🇨🇳",
-    supplier: "Fornecedor internacional",
-    price: "US$ 3,20",
-    shipping: "US$ 2,00",
-    delivery: "8–20 dias",
-    dropshipping: "Sim",
-    margin: "Alta",
+    name: "Africa Trade Hub",
+    country: "África do Sul",
+    region: "África",
+    price: 8.2,
+    currency: "USD",
+    shipping: "África Austral",
+    contact: "Contacto comercial disponível",
+    rating: 4.5,
   },
   {
-    product: "Garrafa térmica inteligente",
-    country: "Turquia 🇹🇷",
-    supplier: "Fornecedor internacional",
-    price: "US$ 9,50",
-    shipping: "US$ 4,00",
-    delivery: "7–15 dias",
-    dropshipping: "Consultar",
-    margin: "Média",
+    name: "Brasil Import Solutions",
+    country: "Brasil",
+    region: "América do Sul",
+    price: 9.4,
+    currency: "USD",
+    shipping: "Internacional",
+    contact: "Contacto comercial disponível",
+    rating: 4.6,
   },
   {
-    product: "Acessório automóvel",
-    country: "África do Sul 🇿🇦",
-    supplier: "Fornecedor regional",
-    price: "US$ 7,00",
-    shipping: "US$ 3,50",
-    delivery: "3–10 dias",
-    dropshipping: "Consultar",
-    margin: "Alta",
+    name: "Euro Market Supply",
+    country: "Portugal",
+    region: "Europa",
+    price: 11.8,
+    currency: "EUR",
+    shipping: "Internacional",
+    contact: "Contacto comercial disponível",
+    rating: 4.4,
   },
   {
-    product: "Kit de organização doméstica",
-    country: "Brasil 🇧🇷",
-    supplier: "Fornecedor brasileiro",
-    price: "US$ 6,50",
-    shipping: "US$ 3,00",
-    delivery: "5–12 dias",
-    dropshipping: "Sim",
-    margin: "Média",
+    name: "US Direct Wholesale",
+    country: "EUA",
+    region: "América do Norte",
+    price: 13.5,
+    currency: "USD",
+    shipping: "Internacional",
+    contact: "Contacto comercial disponível",
+    rating: 4.3,
   },
 ];
 
 export default function SuppliersPage() {
   const [product, setProduct] = useState("");
-  const [market, setMarket] = useState("Moçambique");
-  const [loading, setLoading] = useState(false);
+  const [country, setCountry] = useState("Todos");
+  const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [selected, setSelected] = useState<Supplier | null>(null);
+
+  const countries = useMemo(
+    () => ["Todos", ...Array.from(new Set(suppliers.map((s) => s.country)))],
+    []
+  );
+
+  const filteredSuppliers = useMemo(() => {
+    return suppliers.filter((supplier) => {
+      const countryMatch =
+        country === "Todos" || supplier.country === country;
+
+      return countryMatch;
+    });
+  }, [country]);
 
   function searchSuppliers() {
-    setLoading(true);
+    if (!product.trim()) {
+      setSearched(false);
+      return;
+    }
+
+    setSearching(true);
     setSearched(false);
 
     setTimeout(() => {
-      setLoading(false);
+      setSearching(false);
       setSearched(true);
     }, 1200);
+  }
+
+  function openSupplier(supplier: Supplier) {
+    setSelected(supplier);
   }
 
   return (
@@ -76,135 +111,38 @@ export default function SuppliersPage() {
       style={{
         minHeight: "100vh",
         background: "#f4f7fb",
-        padding: "28px 18px",
-        fontFamily: "Arial, sans-serif",
+        padding: "30px",
+        color: "#172033",
       }}
     >
-      <div style={{ maxWidth: 1100, margin: "auto" }}>
-        <div style={{ marginBottom: 25 }}>
-          <div
+      <div
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "20px",
+            padding: "28px",
+            marginBottom: "22px",
+            boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
+          }}
+        >
+          <p
             style={{
-              display: "inline-block",
-              background: "#e8f0ff",
-              color: "#2563eb",
-              padding: "7px 12px",
-              borderRadius: 20,
+              margin: 0,
+              fontSize: "13px",
               fontWeight: 700,
-              fontSize: 13,
+              color: "#64748b",
+              letterSpacing: "1px",
             }}
           >
-            🏭 SUPPLIER AI
-          </div>
+            AI BUSINESS AUTOPILOT
+          </p>
 
           <h1
             style={{
-              fontSize: 34,
-              margin: "14px 0 8px",
-              color: "#111827",
-            }}
-          >
-            Encontrar fornecedores
-          </h1>
-
-          <p style={{ color: "#64748b", fontSize: 17 }}>
-            Procure fornecedores internacionais para produtos físicos e
-            oportunidades de venda.
-          </p>
-        </div>
-
-        <section
-          style={{
-            background: "white",
-            borderRadius: 18,
-            padding: 22,
-            boxShadow: "0 5px 25px rgba(0,0,0,0.06)",
-            marginBottom: 25,
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>🔎 Procurar fornecedor</h2>
-
-          <label style={{ display: "block", marginBottom: 7 }}>
-            Produto
-          </label>
-
-          <input
-            value={product}
-            onChange={(e) => setProduct(e.target.value)}
-            placeholder="Ex.: mini aspirador portátil"
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              padding: 14,
-              border: "1px solid #dbe3ee",
-              borderRadius: 10,
-              fontSize: 16,
-              marginBottom: 15,
-            }}
-          />
-
-          <label style={{ display: "block", marginBottom: 7 }}>
-            Mercado onde pretende vender
-          </label>
-
-          <select
-            value={market}
-            onChange={(e) => setMarket(e.target.value)}
-            style={{
-              width: "100%",
-              padding: 14,
-              border: "1px solid #dbe3ee",
-              borderRadius: 10,
-              fontSize: 16,
-              marginBottom: 18,
-              background: "white",
-            }}
-          >
-            <option>Moçambique 🇲🇿</option>
-            <option>Brasil 🇧🇷</option>
-            <option>Portugal 🇵🇹</option>
-            <option>África do Sul 🇿🇦</option>
-            <option>EUA 🇺🇸</option>
-            <option>Europa 🇪🇺</option>
-            <option>Global 🌎</option>
-          </select>
-
-          <button
-            onClick={searchSuppliers}
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: 15,
-              border: 0,
-              borderRadius: 10,
-              background: "#2563eb",
-              color: "white",
-              fontSize: 16,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {loading ? "🔄 A pesquisar fornecedores..." : "🚀 Encontrar fornecedores"}
-          </button>
-        </section>
-
-        {searched && (
-          <section
-            style={{
-              background: "white",
-              borderRadius: 18,
-              padding: 22,
-              boxShadow: "0 5px 25px rgba(0,0,0,0.06)",
-            }}
-          >
-            <h2 style={{ marginTop: 0 }}>
-              🌍 Fornecedores encontrados
-            </h2>
-
-            <p style={{ color: "#64748b" }}>
-              Mercado selecionado: <strong>{market}</strong>
-            </p>
-
-            <div
-              style={{
-                background: "#fff7ed",
-                padding: 
+              fontSize: "34px",
+              margin: "8
