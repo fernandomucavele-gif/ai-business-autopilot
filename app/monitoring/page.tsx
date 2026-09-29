@@ -1,229 +1,286 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Activity,
-  Bot,
-  CheckCircle2,
-  ShieldCheck,
-  AlertTriangle,
-  PauseCircle,
-  PlayCircle,
-  RefreshCw,
-} from "lucide-react";
 
 type Log = {
   id: number;
   time: string;
-  type: "success" | "warning" | "info";
   message: string;
+  type: "success" | "warning" | "info";
 };
 
 const initialLogs: Log[] = [
   {
     id: 1,
     time: "Agora",
-    type: "success",
     message: "Autopilot está online em modo simulação.",
+    type: "success",
   },
   {
     id: 2,
     time: "Agora",
-    type: "info",
     message: "Monitoramento automático ativo.",
+    type: "info",
   },
   {
     id: 3,
     time: "Agora",
+    message: "Todas as ações reais continuam bloqueadas.",
     type: "warning",
-    message: "Ações reais permanecem bloqueadas.",
   },
 ];
 
 export default function MonitoringPage() {
-  const [autopilotActive, setAutopilotActive] = useState(true);
+  const [active, setActive] = useState(true);
   const [logs, setLogs] = useState<Log[]>(initialLogs);
 
-  function refreshMonitoring() {
-    setLogs((current) => [
+  function refresh() {
+    setLogs((old) => [
       {
         id: Date.now(),
         time: "Agora",
-        type: "success",
         message: "Monitoramento atualizado com sucesso.",
+        type: "success",
       },
-      ...current,
+      ...old,
     ]);
   }
 
   function toggleAutopilot() {
-    const next = !autopilotActive;
-    setAutopilotActive(next);
+    const next = !active;
+    setActive(next);
 
-    setLogs((current) => [
+    setLogs((old) => [
       {
         id: Date.now(),
         time: "Agora",
-        type: next ? "success" : "warning",
         message: next
           ? "Autopilot ativado em modo simulação."
           : "Autopilot pausado.",
+        type: next ? "success" : "warning",
       },
-      ...current,
+      ...old,
     ]);
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#020617",
+        color: "#ffffff",
+        padding: "24px",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+        }}
+      >
+        <header
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "16px",
+            flexWrap: "wrap",
+            marginBottom: "24px",
+          }}
+        >
           <div>
-            <div className="flex items-center gap-3">
-              <Activity className="text-cyan-400" size={32} />
-              <h1 className="text-3xl font-bold">Monitoramento</h1>
-            </div>
+            <p
+              style={{
+                color: "#22d3ee",
+                fontSize: "13px",
+                fontWeight: "bold",
+                marginBottom: "8px",
+              }}
+            >
+              AI BUSINESS AUTOPILOT
+            </p>
 
-            <p className="text-slate-400 mt-2">
-              Centro de controlo e segurança do AI Business Autopilot.
+            <h1
+              style={{
+                fontSize: "34px",
+                margin: "0 0 8px",
+              }}
+            >
+              👁️ Monitoramento
+            </h1>
+
+            <p
+              style={{
+                color: "#94a3b8",
+                margin: 0,
+              }}
+            >
+              Centro de controlo e segurança do Autopilot.
             </p>
           </div>
 
           <button
-            onClick={refreshMonitoring}
-            className="flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-4 py-3 hover:bg-slate-700"
+            onClick={refresh}
+            style={{
+              background: "#1e293b",
+              color: "#ffffff",
+              border: "1px solid #334155",
+              borderRadius: "12px",
+              padding: "12px 18px",
+              cursor: "pointer",
+            }}
           >
-            <RefreshCw size={18} />
-            Atualizar
+            🔄 Atualizar
           </button>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="text-emerald-400" />
-              <div>
-                <p className="text-sm text-slate-400">Sistema</p>
-                <p className="text-xl font-semibold">Online</p>
-              </div>
-            </div>
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "16px",
+            marginBottom: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#052e16",
+              border: "1px solid #166534",
+              borderRadius: "16px",
+              padding: "20px",
+            }}
+          >
+            <p style={{ color: "#86efac", margin: "0 0 8px" }}>
+              🟢 Sistema
+            </p>
+            <strong style={{ fontSize: "22px" }}>Online</strong>
           </div>
 
-          <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-5">
-            <div className="flex items-center gap-3">
-              <Bot className="text-cyan-400" />
-              <div>
-                <p className="text-sm text-slate-400">Autopilot</p>
-                <p className="text-xl font-semibold">
-                  {autopilotActive ? "Ativo" : "Pausado"}
-                </p>
-              </div>
-            </div>
+          <div
+            style={{
+              background: "#082f49",
+              border: "1px solid #0369a1",
+              borderRadius: "16px",
+              padding: "20px",
+            }}
+          >
+            <p style={{ color: "#67e8f9", margin: "0 0 8px" }}>
+              🤖 Autopilot
+            </p>
+            <strong style={{ fontSize: "22px" }}>
+              {active ? "Ativo" : "Pausado"}
+            </strong>
           </div>
 
-          <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-5">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="text-yellow-400" />
-              <div>
-                <p className="text-sm text-slate-400">Modo</p>
-                <p className="text-xl font-semibold">Simulação</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold">Controlo do Autopilot</h2>
-              <p className="text-slate-400 mt-1">
-                Podes pausar ou ativar a automação durante os testes.
-              </p>
-            </div>
-
-            <button
-              onClick={toggleAutopilot}
-              className={`flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold ${
-                autopilotActive
-                  ? "bg-red-600 hover:bg-red-500"
-                  : "bg-emerald-600 hover:bg-emerald-500"
-              }`}
-            >
-              {autopilotActive ? (
-                <>
-                  <PauseCircle size={20} />
-                  Pausar Autopilot
-                </>
-              ) : (
-                <>
-                  <PlayCircle size={20} />
-                  Ativar Autopilot
-                </>
-              )}
-            </button>
+          <div
+            style={{
+              background: "#422006",
+              border: "1px solid #a16207",
+              borderRadius: "16px",
+              padding: "20px",
+            }}
+          >
+            <p style={{ color: "#fde047", margin: "0 0 8px" }}>
+              🛡️ Segurança
+            </p>
+            <strong style={{ fontSize: "22px" }}>Simulação</strong>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-6">
-          <div className="flex gap-4">
-            <AlertTriangle
-              className="text-yellow-400 shrink-0"
-              size={26}
-            />
+        <section
+          style={{
+            background: "#0f172a",
+            border: "1px solid #1e293b",
+            borderRadius: "16px",
+            padding: "22px",
+            marginBottom: "20px",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>⚡ Controlo do Autopilot</h2>
 
-            <div>
-              <h2 className="font-semibold text-lg">
-                Segurança: modo simulação ativo
-              </h2>
+          <p style={{ color: "#94a3b8" }}>
+            Controla a atividade do Autopilot durante os testes.
+          </p>
 
-              <p className="text-slate-300 mt-2">
-                Compras automáticas, pagamentos automáticos, levantamentos e
-                publicação real de anúncios continuam bloqueados.
-              </p>
-            </div>
-          </div>
+          <button
+            onClick={toggleAutopilot}
+            style={{
+              background: active ? "#dc2626" : "#16a34a",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "12px",
+              padding: "13px 20px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            {active ? "⏸ Pausar Autopilot" : "▶ Ativar Autopilot"}
+          </button>
         </section>
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <div className="flex items-center gap-3 mb-5">
-            <Activity className="text-cyan-400" />
-            <h2 className="text-xl font-semibold">Atividade do sistema</h2>
-          </div>
+        <section
+          style={{
+            background: "#451a03",
+            border: "1px solid #92400e",
+            borderRadius: "16px",
+            padding: "22px",
+            marginBottom: "20px",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>🔐 Segurança</h2>
 
-          <div className="space-y-3">
+          <p style={{ color: "#fde68a" }}>
+            O sistema está em modo simulação. Compras, pagamentos,
+            publicação de anúncios e levantamentos reais continuam bloqueados.
+          </p>
+        </section>
+
+        <section
+          style={{
+            background: "#0f172a",
+            border: "1px solid #1e293b",
+            borderRadius: "16px",
+            padding: "22px",
+            marginBottom: "20px",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>📡 Atividade do sistema</h2>
+
+          <div style={{ display: "grid", gap: "10px" }}>
             {logs.map((log) => (
               <div
                 key={log.id}
-                className="flex items-start gap-3 rounded-xl bg-slate-800/70 p-4"
+                style={{
+                  background: "#1e293b",
+                  borderRadius: "12px",
+                  padding: "15px",
+                }}
               >
-                {log.type === "success" && (
-                  <CheckCircle2
-                    className="text-emerald-400 mt-0.5 shrink-0"
-                    size={20}
-                  />
-                )}
+                <strong>
+                  {log.type === "success"
+                    ? "✅"
+                    : log.type === "warning"
+                    ? "⚠️"
+                    : "ℹ️"}{" "}
+                  {log.message}
+                </strong>
 
-                {log.type === "warning" && (
-                  <AlertTriangle
-                    className="text-yellow-400 mt-0.5 shrink-0"
-                    size={20}
-                  />
-                )}
-
-                {log.type === "info" && (
-                  <Activity
-                    className="text-cyan-400 mt-0.5 shrink-0"
-                    size={20}
-                  />
-                )}
-
-                <div className="flex-1">
-                  <p className="text-white">{log.message}</p>
-                  <p className="text-xs text-slate-500 mt-1">{log.time}</p>
-                </div>
+                <p
+                  style={{
+                    color: "#64748b",
+                    margin: "6px 0 0",
+                    fontSize: "13px",
+                  }}
+                >
+                  {log.time}
+                </p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns:
