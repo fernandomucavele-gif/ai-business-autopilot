@@ -283,4 +283,67 @@ export default function MonitoringPage() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns:
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{
+              background: "#0f172a",
+              border: "1px solid #334155",
+              borderRadius: "16px",
+              padding: "18px",
+            }}
+          >
+            <span style={{ color: "#94a3b8" }}>
+              Compras automáticas
+            </span>
+            <h3 style={{ color: "#f87171" }}>BLOQUEADAS</h3>
+          </div>
+
+          <div
+            style={{
+              background: "#0f172a",
+              border: "1px solid #334155",
+              borderRadius: "16px",
+              padding: "18px",
+            }}
+          >
+            <span style={{ color: "#94a3b8" }}>
+              Pagamentos automáticos
+            </span>
+            <h3 style={{ color: "#f87171" }}>BLOQUEADOS</h3>
+          </div>
+
+          <div
+            style={{
+              background: "#0f172a",
+              border: "1px solid #334155",
+              borderRadius: "16px",
+              padding: "18px",
+            }}
+          >
+            <span style={{ color: "#94a3b8" }}>
+              Publicação de anúncios
+            </span>
+            <h3 style={{ color: "#f87171" }}>BLOQUEADA</h3>
+          </div>
+
+          <div
+            style={{
+              background: "#0f172a",
+              border: "1px solid #334155",
+              borderRadius: "16px",
+              padding: "18px",
+            }}
+          >
+            <span style={{ color: "#94a3b8" }}>
+              Levantamentos
+            </span>
+            <h3 style={{ color: "#f87171" }}>BLOQUEADOS</h3>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
