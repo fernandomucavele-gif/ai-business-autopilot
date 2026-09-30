@@ -35,6 +35,8 @@ export default function SupervisorPage() {
   const [result, setResult] = useState("");
 
   function runAction() {
+    if (running) return;
+
     setRunning(true);
     setResult("");
 
@@ -87,12 +89,38 @@ export default function SupervisorPage() {
           </p>
         </div>
 
+        {/* ESTADO DE SEGURANÇA */}
+        <section
+          style={{
+            background: "#fff7ed",
+            border: "1px solid #fed7aa",
+            padding: 18,
+            borderRadius: 16,
+            marginBottom: 22,
+          }}
+        >
+          <strong style={{ color: "#c2410c" }}>
+            🔒 Modo de simulação ativo
+          </strong>
+
+          <p
+            style={{
+              margin: "8px 0 0",
+              color: "#7c2d12",
+              lineHeight: 1.6,
+            }}
+          >
+            O Supervisor pode executar testes e coordenar os módulos, mas
+            compras reais, publicação de anúncios, pagamentos automáticos e
+            levantamentos continuam bloqueados.
+          </p>
+        </section>
+
         {/* RESUMO DO SISTEMA */}
         <section
           style={{
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(180px,1fr))",
+            gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
             gap: 14,
             marginBottom: 22,
           }}
@@ -102,101 +130,4 @@ export default function SupervisorPage() {
               background: "white",
               padding: 18,
               borderRadius: 16,
-              boxShadow: "0 5px 25px rgba(0,0,0,.06)",
-            }}
-          >
-            <div style={{ color: "#64748b", fontSize: 14 }}>
-              Produtos
-            </div>
-
-            <strong style={{ fontSize: 28 }}>
-              {state.products.length}
-            </strong>
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              padding: 18,
-              borderRadius: 16,
-              boxShadow: "0 5px 25px rgba(0,0,0,.06)",
-            }}
-          >
-            <div style={{ color: "#64748b", fontSize: 14 }}>
-              Campanhas
-            </div>
-
-            <strong style={{ fontSize: 28 }}>
-              {state.campaigns.length}
-            </strong>
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              padding: 18,
-              borderRadius: 16,
-              boxShadow: "0 5px 25px rgba(0,0,0,.06)",
-            }}
-          >
-            <div style={{ color: "#64748b", fontSize: 14 }}>
-              Pedidos
-            </div>
-
-            <strong style={{ fontSize: 28 }}>
-              {state.orders.length}
-            </strong>
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              padding: 18,
-              borderRadius: 16,
-              boxShadow: "0 5px 25px rgba(0,0,0,.06)",
-            }}
-          >
-            <div style={{ color: "#64748b", fontSize: 14 }}>
-              Receita
-            </div>
-
-            <strong style={{ fontSize: 28 }}>
-              {metrics.revenue.toLocaleString("pt-PT")} MT
-            </strong>
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              padding: 18,
-              borderRadius: 16,
-              boxShadow: "0 5px 25px rgba(0,0,0,.06)",
-            }}
-          >
-            <div style={{ color: "#64748b", fontSize: 14 }}>
-              Lucro
-            </div>
-
-            <strong style={{ fontSize: 28 }}>
-              {metrics.profit.toLocaleString("pt-PT")} MT
-            </strong>
-          </div>
-        </section>
-
-        {/* COMANDO */}
-        <section
-          style={{
-            background: "white",
-            padding: 22,
-            borderRadius: 18,
-            boxShadow: "0 5px 25px rgba(0,0,0,.06)",
-            marginBottom: 22,
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>
-            🧠 Comando do Supervisor
-          </h2>
-
-          <p
-            style={{
-              color:
+              boxShadow
