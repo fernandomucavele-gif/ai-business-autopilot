@@ -1,4 +1,4 @@
-"use client";
+qpqlqq1qqq"use client";
 
 import { useRouter } from "next/navigation";
 import { useAutopilot } from "./context/autopilot-context";
