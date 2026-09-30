@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 export default function SettingsPage() {
-  const [simulationMode, setSimulationMode] = useState(true);
-  const [realPurchases, setRealPurchases] = useState(false);
-  const [realAds, setRealAds] = useState(false);
-  const [automaticPayments, setAutomaticPayments] = useState(false);
-  const [automaticWithdrawals, setAutomaticWithdrawals] = useState(false);
+  const { state, setAutomation } = useAutopilot();
+
+  const {
+    simulationMode,
+    realPurchasesEnabled,
+    realAdsEnabled,
+    automaticPaymentsEnabled,
+  } = state.automation;
 
   return (
     <main
@@ -38,6 +41,7 @@ export default function SettingsPage() {
           Controla o funcionamento e a segurança do teu Autopilot.
         </p>
 
+        {/* SEGURANÇA */}
         <section
           style={{
             background: "#0f172a",
@@ -56,17 +60,21 @@ export default function SettingsPage() {
 
           <div
             style={{
-              background: "#451a03",
+              background: simulationMode ? "#451a03" : "#172554",
               border: "1px solid #92400e",
               borderRadius: "12px",
               padding: "15px",
               marginTop: "15px",
+              fontWeight: "bold",
             }}
           >
-            ⚠️ MODO SIMULAÇÃO ATIVO
+            {simulationMode
+              ? "⚠️ MODO SIMULAÇÃO ATIVO"
+              : "ℹ️ MODO SIMULAÇÃO DESATIVADO"}
           </div>
         </section>
 
+        {/* AUTOMAÇÃO */}
         <section
           style={{
             background: "#0f172a",
@@ -82,43 +90,52 @@ export default function SettingsPage() {
             title="Modo simulação"
             description="Permite testar o sistema sem executar ações reais."
             enabled={simulationMode}
-            onChange={setSimulationMode}
+            onChange={(value) =>
+              setAutomation("simulationMode", value)
+            }
             locked={false}
           />
 
           <Setting
             title="Compras automáticas"
             description="Permitir que o sistema faça compras reais."
-            enabled={realPurchases}
-            onChange={setRealPurchases}
+            enabled={realPurchasesEnabled}
+            onChange={(value) =>
+              setAutomation("realPurchasesEnabled", value)
+            }
             locked={true}
           />
 
           <Setting
             title="Publicação de anúncios reais"
             description="Permitir publicação real de campanhas."
-            enabled={realAds}
-            onChange={setRealAds}
+            enabled={realAdsEnabled}
+            onChange={(value) =>
+              setAutomation("realAdsEnabled", value)
+            }
             locked={true}
           />
 
           <Setting
             title="Pagamentos automáticos"
             description="Permitir pagamentos automáticos reais."
-            enabled={automaticPayments}
-            onChange={setAutomaticPayments}
+            enabled={automaticPaymentsEnabled}
+            onChange={(value) =>
+              setAutomation("automaticPaymentsEnabled", value)
+            }
             locked={true}
           />
 
           <Setting
             title="Levantamentos automáticos"
             description="Permitir levantamentos automáticos de dinheiro."
-            enabled={automaticWithdrawals}
-            onChange={setAutomaticWithdrawals}
+            enabled={false}
+            onChange={() => {}}
             locked={true}
           />
         </section>
 
+        {/* ESTADO DO SISTEMA */}
         <section
           style={{
             background: "#0f172a",
@@ -138,14 +155,70 @@ export default function SettingsPage() {
               marginTop: "16px",
             }}
           >
-            <Status title="Sistema" value="ONLINE" />
-            <Status title="Modo" value="SIMULAÇÃO" />
-            <Status title="Compras reais" value="BLOQUEADAS" />
-            <Status title="Anúncios reais" value="BLOQUEADOS" />
-            <Status title="Pagamentos" value="BLOQUEADOS" />
-            <Status title="Levantamentos" value="BLOQUEADOS" />
+            <Status
+              title="Sistema"
+              value="ONLINE"
+            />
+
+            <Status
+              title="Modo"
+              value={simulationMode ? "SIMULAÇÃO" : "MANUAL"}
+            />
+
+            <Status
+              title="Compras reais"
+              value={
+                realPurchasesEnabled
+                  ? "ATIVAS"
+                  : "BLOQUEADAS"
+              }
+            />
+
+            <Status
+              title="Anúncios reais"
+              value={
+                realAdsEnabled
+                  ? "ATIVOS"
+                  : "BLOQUEADOS"
+              }
+            />
+
+            <Status
+              title="Pagamentos"
+              value={
+                automaticPaymentsEnabled
+                  ? "ATIVOS"
+                  : "BLOQUEADOS"
+              }
+            />
+
+            <Status
+              title="Levantamentos"
+              value="BLOQUEADOS"
+            />
           </div>
         </section>
+
+        {/* AVISO FINAL */}
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "16px",
+            borderRadius: "12px",
+            background: "#111827",
+            border: "1px solid #334155",
+            color: "#94a3b8",
+            fontSize: "14px",
+            lineHeight: 1.6,
+          }}
+        >
+          🔒 <strong style={{ color: "#ffffff" }}>
+            Proteção ativa:
+          </strong>{" "}
+          o Autopilot permanece em ambiente de testes. Nenhuma compra,
+          publicação de anúncio, pagamento ou levantamento real será
+          executado através destas configurações.
+        </div>
       </div>
     </main>
   );
@@ -207,7 +280,11 @@ function Setting({
           fontWeight: "bold",
         }}
       >
-        {locked ? "BLOQUEADO" : enabled ? "ATIVO" : "OFF"}
+        {locked
+          ? "BLOQUEADO"
+          : enabled
+          ? "ATIVO"
+          : "OFF"}
       </button>
     </div>
   );
