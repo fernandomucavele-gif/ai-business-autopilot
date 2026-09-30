@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import "./globals.css";
+import { AutopilotProvider } from "./context/autopilot-context";
 
 export const metadata: Metadata = {
   title: "AI Business Autopilot",
-  description: "Sistema privado de automação inteligente para negócios.",
+  description: "Sistema inteligente de automação de negócios",
 };
 
 export default function RootLayout({
@@ -12,7 +14,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt">
-      <body>{children}</body>
+      <body>
+        <AutopilotProvider>
+          {children}
+        </AutopilotProvider>
+      </body>
     </html>
   );
-  }
+}
