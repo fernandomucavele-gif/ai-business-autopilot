@@ -56,6 +56,8 @@ export default function Home() {
   const [researchRunning, setResearchRunning] = useState(false);
   const [researchDone, setResearchDone] = useState(false);
 
+  const [autopilotActive, setAutopilotActive] = useState(true);
+
   function startResearch() {
     setResearchRunning(true);
     setResearchDone(false);
@@ -64,6 +66,10 @@ export default function Home() {
       setResearchRunning(false);
       setResearchDone(true);
     }, 1500);
+  }
+
+  function toggleAutopilot() {
+    setAutopilotActive((value) => !value);
   }
 
   return (
@@ -103,7 +109,8 @@ export default function Home() {
           <strong>AI Business Autopilot</strong>
 
           <div className="online">
-            <span>●</span> Online
+            <span>●</span>{" "}
+            {autopilotActive ? "Online" : "Pausado"}
           </div>
         </header>
 
@@ -119,7 +126,10 @@ export default function Home() {
                 <Card title="💰 Receita" value="0 MT" />
                 <Card title="📈 Campanhas" value="0" />
                 <Card title="🤖 Produtos analisados" value="0" />
-                <Card title="⚡ Automação" value="SIMULAÇÃO" />
+                <Card
+                  title="⚡ Automação"
+                  value={autopilotActive ? "ATIVA" : "PAUSADA"}
+                />
               </div>
 
               <div className="grid2">
@@ -130,13 +140,30 @@ export default function Home() {
                     <div className="bigIcon">🤖</div>
 
                     <div>
-                      <strong>Autopilot preparado</strong>
+                      <strong>
+                        {autopilotActive
+                          ? "Autopilot preparado"
+                          : "Autopilot pausado"}
+                      </strong>
 
                       <p>
                         O sistema está preparado para pesquisar produtos,
                         analisar fornecedores, criar criativos, preparar
                         anúncios e acompanhar operações.
                       </p>
+
+                      <button
+                        className={
+                          autopilotActive
+                            ? "dangerButton"
+                            : "primaryButton"
+                        }
+                        onClick={toggleAutopilot}
+                      >
+                        {autopilotActive
+                          ? "⏸ Pausar Autopilot"
+                          : "▶ Ativar Autopilot"}
+                      </button>
                     </div>
                   </div>
                 </section>
@@ -162,6 +189,11 @@ export default function Home() {
                   <StatusRow
                     label="Publicação real"
                     value="BLOQUEADA"
+                  />
+
+                  <StatusRow
+                    label="Levantamentos"
+                    value="BLOQUEADOS"
                   />
                 </section>
               </div>
@@ -193,6 +225,24 @@ export default function Home() {
                   Mercado selecionado: <strong>{market}</strong>
                 </div>
               </section>
+
+              <section className="panel">
+                <h2>🧠 Estado dos agentes</h2>
+
+                <div className="agentGrid">
+                  {menu.slice(1, 11).map((item) => (
+                    <div className="agent" key={item.name}>
+                      <span>{item.icon}</span>
+                      <strong>{item.name}</strong>
+                      <small>
+                        {autopilotActive
+                          ? "Pronto"
+                          : "Pausado"}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </>
           )}
 
@@ -207,15 +257,17 @@ export default function Home() {
                 <h2>Pesquisa de produtos</h2>
 
                 <p className="muted">
-                  A IA deverá analisar procura, concorrência, preço, margem,
-                  fornecedores, envio e possibilidade de anúncios.
+                  A IA deverá analisar procura, concorrência, preço,
+                  margem, fornecedores, envio e possibilidade de anúncios.
                 </p>
 
                 <label>Mercado</label>
 
                 <select
                   value={market}
-                  onChange={(event) => setMarket(event.target.value)}
+                  onChange={(event) =>
+                    setMarket(event.target.value)
+                  }
                 >
                   {markets.map((item) => (
                     <option key={item} value={item}>
@@ -244,7 +296,8 @@ export default function Home() {
                           <strong>{product.name}</strong>
 
                           <span>
-                            {product.market} · Potencial {product.score}/100
+                            {product.market} · Potencial{" "}
+                            {product.score}/100
                           </span>
                         </div>
 
@@ -257,8 +310,8 @@ export default function Home() {
                 )}
 
                 <div className="warning">
-                  ⚠️ Modo simulação ativo. Nenhuma compra ou encomenda real
-                  será feita automaticamente.
+                  ⚠️ Modo simulação ativo. Nenhuma compra ou encomenda
+                  real será feita automaticamente.
                 </div>
               </section>
             </>
@@ -269,7 +322,9 @@ export default function Home() {
               <>
                 <Header
                   title={
-                    menu.find((item) => item.name === active)?.icon +
+                    (menu.find(
+                      (item) => item.name === active
+                    )?.icon || "🤖") +
                     " " +
                     active
                   }
@@ -279,15 +334,17 @@ export default function Home() {
                 <section className="panel">
                   <div className="module">
                     <div className="moduleIcon">
-                      {menu.find((item) => item.name === active)?.icon}
+                      {menu.find(
+                        (item) => item.name === active
+                      )?.icon}
                     </div>
 
                     <div>
                       <h2>{active}</h2>
 
                       <p className="muted">
-                        Este módulo está preparado para integração com o
-                        AI Business Autopilot.
+                        Este módulo está preparado para integração
+                        com o AI Business Autopilot.
                       </p>
 
                       <span className="ready">
@@ -299,7 +356,11 @@ export default function Home() {
                   <div className="moduleGrid">
                     <div>
                       <strong>Estado</strong>
-                      <span>Preparado</span>
+                      <span>
+                        {autopilotActive
+                          ? "Preparado"
+                          : "Pausado"}
+                      </span>
                     </div>
 
                     <div>
@@ -314,7 +375,11 @@ export default function Home() {
 
                     <div>
                       <strong>Supervisor</strong>
-                      <span>Controlado</span>
+                      <span>
+                        {autopilotActive
+                          ? "Controlado"
+                          : "Pausado"}
+                      </span>
                     </div>
                   </div>
                 </section>
@@ -606,7 +671,8 @@ export default function Home() {
         }
 
         .primaryButton,
-        .secondaryButton {
+        .secondaryButton,
+        .dangerButton {
           border: 0;
           border-radius: 10px;
           padding: 13px 17px;
@@ -618,6 +684,11 @@ export default function Home() {
           width: 100%;
           margin-top: 18px;
           background: #2563eb;
+          color: white;
+        }
+
+        .dangerButton {
+          background: #dc2626;
           color: white;
         }
 
@@ -688,14 +759,16 @@ export default function Home() {
           font-weight: 800;
         }
 
-        .moduleGrid {
+        .moduleGrid,
+        .agentGrid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 12px;
           margin-top: 25px;
         }
 
-        .moduleGrid div {
+        .moduleGrid div,
+        .agent {
           padding: 15px;
           border-radius: 12px;
           background: #f8fafc;
@@ -712,6 +785,22 @@ export default function Home() {
           font-size: 13px;
         }
 
+        .agent span,
+        .agent strong,
+        .agent small {
+          display: block;
+        }
+
+        .agent span {
+          font-size: 22px;
+          margin-bottom: 8px;
+        }
+
+        .agent small {
+          color: #16a34a;
+          margin-top: 5px;
+        }
+
         @media (max-width: 900px) {
           .sidebar {
             width: 220px;
@@ -726,115 +815,5 @@ export default function Home() {
             grid-template-columns: repeat(2, 1fr);
           }
 
-          .moduleGrid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (max-width: 700px) {
-          .app {
-            display: block;
-          }
-
-          .sidebar {
-            position: relative;
-            width: 100%;
-          }
-
-          .content {
-            width: 100%;
-            margin-left: 0;
-          }
-
-          .page {
-            padding: 20px 15px;
-          }
-
-          .cards,
-          .grid2,
-          .moduleGrid {
-            grid-template-columns: 1fr;
-          }
-
-          .product {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-        }
-      `}</style>
-    </main>
-  );
-}
-
-function Header({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="pageHeader">
-      <p className="eyebrow">AI BUSINESS AUTOPILOT</p>
-      <h1>{title}</h1>
-      <p className="muted">{description}</p>
-    </div>
-  );
-}
-
-function Card({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div className="card">
-      <span>{title}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function StatusRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="securityRow">
-      <span>{label}</span>
-      <b>{value}</b>
-    </div>
-  );
-}
-
-function getDescription(name: string) {
-  const descriptions: Record<string, string> = {
-    Fornecedores:
-      "Pesquisar fornecedores internacionais, preços, países, envio e condições.",
-    "Creative AI":
-      "Criar ideias de vídeos, imagens, textos e ofertas.",
-    "Ads AI":
-      "Preparar campanhas, públicos e anúncios para teste.",
-    Analytics:
-      "Analisar campanhas, vendas, conversões e resultados.",
-    "Customer AI":
-      "Preparar respostas e acompanhamento de clientes.",
-    "Orders AI":
-      "Organizar pedidos, pagamentos e estados de entrega.",
-    Finanças:
-      "Controlar receitas, custos, publicidade e lucro.",
-    "Supervisor AI":
-      "Coordenar os agentes do AI Business Autopilot.",
-    Monitoramento:
-      "Acompanhar tarefas, estados e possíveis erros.",
-    Configurações:
-      "Configurar mercados, regras e limites do sistema.",
-  };
-
-  return descriptions[name] || "Módulo do AI Business Autopilot.";
-}
+          .moduleGrid,
+       
