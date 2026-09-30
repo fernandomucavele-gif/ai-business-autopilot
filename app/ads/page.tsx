@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 type Market =
   | "Moçambique"
@@ -37,8 +38,10 @@ const adTemplates: Ad[] = [
     platform: "TikTok / Reels",
     hook: "Ainda tens este problema?",
     headline: "Uma solução simples para o teu dia",
-    text: "Descobre uma forma prática de resolver este problema. Vê como funciona e conhece o produto.",
-    audience: "Pessoas interessadas em casa e organização",
+    text:
+      "Descobre uma forma prática de resolver este problema. Vê como funciona e conhece o produto.",
+    audience:
+      "Pessoas interessadas em casa e organização",
     budget: "Simulação: 500 MT/dia",
   },
   {
@@ -46,8 +49,10 @@ const adTemplates: Ad[] = [
     platform: "TikTok",
     hook: "Olha como isto funciona.",
     headline: "Vê o produto em ação",
-    text: "Demonstração rápida mostrando o produto, o funcionamento e o resultado final.",
-    audience: "Público interessado em produtos práticos",
+    text:
+      "Demonstração rápida mostrando o produto, o funcionamento e o resultado final.",
+    audience:
+      "Público interessado em produtos práticos",
     budget: "Simulação: 400 MT/dia",
   },
   {
@@ -55,8 +60,10 @@ const adTemplates: Ad[] = [
     platform: "Facebook / Instagram",
     hook: "3 motivos para conhecer este produto",
     headline: "Mais praticidade no teu dia",
-    text: "Conhece os principais benefícios e descobre porque este produto pode ser útil para ti.",
-    audience: "Adultos interessados em soluções para o dia a dia",
+    text:
+      "Conhece os principais benefícios e descobre porque este produto pode ser útil para ti.",
+    audience:
+      "Adultos interessados em soluções para o dia a dia",
     budget: "Simulação: 600 MT/dia",
   },
   {
@@ -64,21 +71,37 @@ const adTemplates: Ad[] = [
     platform: "Facebook / Instagram",
     hook: "Uma oportunidade que vale a pena conhecer.",
     headline: "Conhece esta solução",
-    text: "Apresentação visual do produto com benefício principal e chamada para ação.",
-    audience: "Público amplo do mercado selecionado",
+    text:
+      "Apresentação visual do produto com benefício principal e chamada para ação.",
+    audience:
+      "Público amplo do mercado selecionado",
     budget: "Simulação: 500 MT/dia",
   },
 ];
 
 export default function AdsPage() {
+  const { state, addCampaign } = useAutopilot();
+
   const [product, setProduct] = useState(
     "Organizador inteligente para casa"
   );
-  const [market, setMarket] = useState<Market>("Moçambique");
+
+  const [market, setMarket] =
+    useState<Market>("Moçambique");
+
   const [platform, setPlatform] = useState("Todas");
-  const [generating, setGenerating] = useState(false);
-  const [generated, setGenerated] = useState(false);
-  const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
+
+  const [generating, setGenerating] =
+    useState(false);
+
+  const [generated, setGenerated] =
+    useState(false);
+
+  const [selectedAd, setSelectedAd] =
+    useState<Ad | null>(null);
+
+  const [sourceProductId, setSourceProductId] =
+    useState("");
 
   const ads = useMemo(() => {
     if (platform === "Todas") {
@@ -86,9 +109,28 @@ export default function AdsPage() {
     }
 
     return adTemplates.filter((ad) =>
-      ad.platform.toLowerCase().includes(platform.toLowerCase())
+      ad.platform
+        .toLowerCase()
+        .includes(platform.toLowerCase())
     );
   }, [platform]);
+
+  function selectAutopilotProduct(
+    productId: string
+  ) {
+    const selectedProduct = state.products.find(
+      (item) => item.id === productId
+    );
+
+    if (!selectedProduct) {
+      return;
+    }
+
+    setSourceProductId(productId);
+    setProduct(selectedProduct.name);
+    setMarket(selectedProduct.market);
+    setGenerated(false);
+  }
 
   function generateAds() {
     if (!product.trim()) {
@@ -101,6 +143,15 @@ export default function AdsPage() {
     setTimeout(() => {
       setGenerating(false);
       setGenerated(true);
+
+      if (sourceProductId) {
+        addCampaign(
+          sourceProductId,
+          market,
+          "Vendas",
+          500
+        );
+      }
     }, 1200);
   }
 
@@ -125,7 +176,8 @@ export default function AdsPage() {
             borderRadius: "20px",
             padding: "28px",
             marginBottom: "20px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+            boxShadow:
+              "0 8px 25px rgba(0,0,0,0.06)",
           }}
         >
           <div
@@ -154,8 +206,9 @@ export default function AdsPage() {
               lineHeight: 1.6,
             }}
           >
-            Prepara campanhas e variações de anúncios com base nos produtos
-            encontrados pelo Autopilot.
+            Prepara campanhas e variações de anúncios
+            com base nos produtos encontrados pelo
+            Autopilot.
           </p>
 
           <div
@@ -168,8 +221,8 @@ export default function AdsPage() {
               fontWeight: 600,
             }}
           >
-            🟢 Modo simulação ativo — publicação real de anúncios está
-            bloqueada.
+            🟢 Modo simulação ativo — publicação real
+            de anúncios está bloqueada.
           </div>
         </section>
 
@@ -179,10 +232,90 @@ export default function AdsPage() {
             borderRadius: "20px",
             padding: "24px",
             marginBottom: "20px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+            boxShadow:
+              "0 8px 25px rgba(0,0,0,0.06)",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>⚙️ Criar campanha</h2>
+          <h2 style={{ marginTop: 0 }}>
+            📦 Produtos do Autopilot
+          </h2>
+
+          {state.products.length === 0 ? (
+            <p style={{ color: "#64748b" }}>
+              Ainda não existem produtos adicionados
+              pelo Research AI.
+            </p>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "12px",
+              }}
+            >
+              {state.products.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() =>
+                    selectAutopilotProduct(item.id)
+                  }
+                  style={{
+                    textAlign: "left",
+                    padding: "15px",
+                    borderRadius: "12px",
+                    border:
+                      sourceProductId === item.id
+                        ? "2px solid #dc2626"
+                        : "1px solid #e2e8f0",
+                    background:
+                      sourceProductId === item.id
+                        ? "#fef2f2"
+                        : "#fafcff",
+                    cursor: "pointer",
+                  }}
+                >
+                  <strong>{item.name}</strong>
+
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      color: "#64748b",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {item.market} • {item.price} MT
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      color: "#dc2626",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Criar campanha →
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section
+          style={{
+            background: "#ffffff",
+            borderRadius: "20px",
+            padding: "24px",
+            marginBottom: "20px",
+            boxShadow:
+              "0 8px 25px rgba(0,0,0,0.06)",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>
+            ⚙️ Criar campanha
+          </h2>
 
           <div
             style={{
@@ -214,7 +347,8 @@ export default function AdsPage() {
                   boxSizing: "border-box",
                   padding: "13px",
                   borderRadius: "10px",
-                  border: "1px solid #dbe2ea",
+                  border:
+                    "1px solid #dbe2ea",
                 }}
               />
             </div>
@@ -233,18 +367,24 @@ export default function AdsPage() {
               <select
                 value={market}
                 onChange={(event) =>
-                  setMarket(event.target.value as Market)
+                  setMarket(
+                    event.target.value as Market
+                  )
                 }
                 style={{
                   width: "100%",
                   padding: "13px",
                   borderRadius: "10px",
-                  border: "1px solid #dbe2ea",
+                  border:
+                    "1px solid #dbe2ea",
                   background: "#ffffff",
                 }}
               >
                 {markets.map((item) => (
-                  <option key={item} value={item}>
+                  <option
+                    key={item}
+                    value={item}
+                  >
                     {item}
                   </option>
                 ))}
@@ -272,7 +412,8 @@ export default function AdsPage() {
                 width: "100%",
                 padding: "13px",
                 borderRadius: "10px",
-                border: "1px solid #dbe2ea",
+                border:
+                  "1px solid #dbe2ea",
                 background: "#ffffff",
               }}
             >
@@ -292,10 +433,15 @@ export default function AdsPage() {
               padding: "14px",
               border: "none",
               borderRadius: "12px",
-              background: generating ? "#94a3b8" : "#dc2626",
+              background: generating
+                ? "#94a3b8"
+                : "#dc2626",
               color: "#ffffff",
               fontWeight: 700,
               fontSize: "15px",
+              cursor: generating
+                ? "not-allowed"
+                : "pointer",
             }}
           >
             {generating
@@ -315,6 +461,8 @@ export default function AdsPage() {
             >
               ✅ Campanha simulada criada para{" "}
               <strong>{product}</strong>.
+              <br />
+              Nenhum anúncio real foi publicado.
             </div>
           )}
         </section>
@@ -324,7 +472,8 @@ export default function AdsPage() {
             background: "#ffffff",
             borderRadius: "20px",
             padding: "24px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+            boxShadow:
+              "0 8px 25px rgba(0,0,0,0.06)",
           }}
         >
           <div
@@ -337,14 +486,23 @@ export default function AdsPage() {
             }}
           >
             <div>
-              <h2 style={{ margin: 0 }}>📣 Anúncios preparados</h2>
+              <h2 style={{ margin: 0 }}>
+                📣 Anúncios preparados
+              </h2>
 
-              <p style={{ color: "#64748b" }}>
-                Variações que o Supervisor poderá analisar posteriormente.
+              <p
+                style={{
+                  color: "#64748b",
+                }}
+              >
+                Variações que o Supervisor poderá
+                analisar posteriormente.
               </p>
             </div>
 
-            <strong>{ads.length} variações</strong>
+            <strong>
+              {ads.length} variações
+            </strong>
           </div>
 
           <div
@@ -360,28 +518,47 @@ export default function AdsPage() {
               <article
                 key={ad.name}
                 style={{
-                  border: "1px solid #e2e8f0",
+                  border:
+                    "1px solid #e2e8f0",
                   borderRadius: "16px",
                   padding: "18px",
                   background: "#fafcff",
                 }}
               >
-                <div style={{ fontSize: "30px" }}>📢</div>
+                <div style={{ fontSize: "30px" }}>
+                  📢
+                </div>
 
-                <h3 style={{ margin: "10px 0" }}>
+                <h3
+                  style={{
+                    margin: "10px 0",
+                  }}
+                >
                   {ad.name}
                 </h3>
 
                 <p style={{ margin: "7px 0" }}>
-                  📱 <strong>Plataforma:</strong> {ad.platform}
+                  📱{" "}
+                  <strong>
+                    Plataforma:
+                  </strong>{" "}
+                  {ad.platform}
                 </p>
 
                 <p style={{ margin: "7px 0" }}>
-                  🎯 <strong>Público:</strong> {ad.audience}
+                  🎯{" "}
+                  <strong>
+                    Público:
+                  </strong>{" "}
+                  {ad.audience}
                 </p>
 
                 <p style={{ margin: "7px 0" }}>
-                  💰 <strong>Orçamento:</strong> {ad.budget}
+                  💰{" "}
+                  <strong>
+                    Orçamento:
+                  </strong>{" "}
+                  {ad.budget}
                 </p>
 
                 <div
@@ -397,7 +574,9 @@ export default function AdsPage() {
                   “{ad.hook}”
                 </div>
 
-                <h4>{ad.headline}</h4>
+                <h4>
+                  {ad.headline}
+                </h4>
 
                 <p
                   style={{
@@ -410,7 +589,9 @@ export default function AdsPage() {
                 </p>
 
                 <button
-                  onClick={() => setSelectedAd(ad)}
+                  onClick={() =>
+                    setSelectedAd(ad)
+                  }
                   style={{
                     width: "100%",
                     padding: "11px",
@@ -419,6 +600,7 @@ export default function AdsPage() {
                     background: "#0f172a",
                     color: "#ffffff",
                     fontWeight: 700,
+                    cursor: "pointer",
                   }}
                 >
                   Ver anúncio
@@ -445,9 +627,14 @@ export default function AdsPage() {
             }}
           >
             <strong>📊 Métricas</strong>
-            <p style={{ color: "#64748b" }}>
-              CTR, CPC, conversões e ROAS serão acompanhados quando os
-              anúncios reais forem ativados.
+            <p
+              style={{
+                color: "#64748b",
+              }}
+            >
+              CTR, CPC, conversões e ROAS serão
+              acompanhados quando os anúncios reais
+              forem ativados.
             </p>
           </div>
 
@@ -459,9 +646,14 @@ export default function AdsPage() {
             }}
           >
             <strong>🤖 Otimização</strong>
-            <p style={{ color: "#64748b" }}>
-              O Supervisor poderá identificar anúncios com melhor
-              desempenho e preparar novas variações.
+            <p
+              style={{
+                color: "#64748b",
+              }}
+            >
+              O Supervisor poderá identificar
+              anúncios com melhor desempenho e
+              preparar novas variações.
             </p>
           </div>
 
@@ -473,8 +665,13 @@ export default function AdsPage() {
             }}
           >
             <strong>🛑 Proteção</strong>
-            <p style={{ color: "#64748b" }}>
-              Publicação e gastos reais continuam bloqueados nesta fase.
+            <p
+              style={{
+                color: "#64748b",
+              }}
+            >
+              Publicação e gastos reais continuam
+              bloqueados nesta fase.
             </p>
           </div>
         </section>
@@ -485,12 +682,81 @@ export default function AdsPage() {
             padding: "20px",
             borderRadius: "16px",
             background: "#fff7ed",
-            border: "1px solid #fed7aa",
+            border:
+              "1px solid #fed7aa",
             color: "#9a3412",
           }}
         >
-          ⚠️ <strong>Modo de teste:</strong> esta versão apenas prepara
-          campanhas. Não publica anúncios nem gasta dinheiro.
+          ⚠️ <strong>Modo de teste:</strong>{" "}
+          esta versão apenas prepara campanhas.
+          Não publica anúncios nem gasta dinheiro.
+        </section>
+
+        <section
+          style={{
+            marginTop: "20px",
+            background: "#ffffff",
+            borderRadius: "16px",
+            padding: "20px",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>
+            📈 Campanhas no Autopilot
+          </h2>
+
+          {state.campaigns.length === 0 ? (
+            <p
+              style={{
+                color: "#64748b",
+              }}
+            >
+              Nenhuma campanha simulada criada ainda.
+            </p>
+          ) : (
+            state.campaigns.map(
+              (campaign) => (
+                <div
+                  key={campaign.id}
+                  style={{
+                    padding: "14px",
+                    marginTop: "10px",
+                    borderRadius: "12px",
+                    background: "#f8fafc",
+                    border:
+                      "1px solid #e2e8f0",
+                  }}
+                >
+                  <strong>
+                    {campaign.id}
+                  </strong>
+
+                  <div
+                    style={{
+                      marginTop: "5px",
+                      color: "#64748b",
+                    }}
+                  >
+                    Mercado:{" "}
+                    {campaign.market} •
+                    Objetivo:{" "}
+                    {campaign.objective} •
+                    Orçamento:{" "}
+                    {campaign.dailyBudget} MT/dia
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "5px",
+                      color: "#16a34a",
+                      fontWeight: 700,
+                    }}
+                  >
+                    🟢 Simulação
+                  </div>
+                </div>
+              )
+            )
+          )}
         </section>
 
         {selectedAd && (
@@ -498,75 +764,18 @@ export default function AdsPage() {
             style={{
               position: "fixed",
               inset: 0,
-              background: "rgba(0,0,0,0.5)",
+              background:
+                "rgba(0,0,0,0.5)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               padding: "20px",
+              zIndex: 1000,
             }}
           >
             <div
               style={{
                 width: "100%",
                 maxWidth: "520px",
-                background: "#ffffff",
-                borderRadius: "20px",
-                padding: "25px",
-              }}
-            >
-              <h2>📢 {selectedAd.name}</h2>
-
-              <p>
-                <strong>Produto:</strong> {product}
-              </p>
-
-              <p>
-                <strong>Mercado:</strong> {market}
-              </p>
-
-              <p>
-                <strong>Plataforma:</strong> {selectedAd.platform}
-              </p>
-
-              <p>
-                <strong>Hook:</strong> {selectedAd.hook}
-              </p>
-
-              <p>
-                <strong>Título:</strong> {selectedAd.headline}
-              </p>
-
-              <p>
-                <strong>Texto:</strong> {selectedAd.text}
-              </p>
-
-              <p>
-                <strong>Público:</strong> {selectedAd.audience}
-              </p>
-
-              <p>
-                <strong>Orçamento:</strong> {selectedAd.budget}
-              </p>
-
-              <button
-                onClick={() => setSelectedAd(null)}
-                style={{
-                  width: "100%",
-                  marginTop: "15px",
-                  padding: "13px",
-                  border: "none",
-                  borderRadius: "10px",
-                  background: "#dc2626",
-                  color: "#ffffff",
-                  fontWeight: 700,
-                }}
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </main>
-  );
-      }
+                maxHeight: "90vh",
+                overflowY: "aut
