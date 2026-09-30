@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 type Supplier = {
   name: string;
@@ -63,6 +64,8 @@ const suppliers: Supplier[] = [
 ];
 
 export default function SuppliersPage() {
+  const { state } = useAutopilot();
+
   const [product, setProduct] = useState("");
   const [country, setCountry] = useState("Todos");
   const [searching, setSearching] = useState(false);
@@ -70,7 +73,12 @@ export default function SuppliersPage() {
   const [selected, setSelected] = useState<Supplier | null>(null);
 
   const countries = useMemo(() => {
-    return ["Todos", ...Array.from(new Set(suppliers.map((s) => s.country)))];
+    return [
+      "Todos",
+      ...Array.from(
+        new Set(suppliers.map((supplier) => supplier.country))
+      ),
+    ];
   }, []);
 
   const results = useMemo(() => {
@@ -78,7 +86,9 @@ export default function SuppliersPage() {
       return suppliers;
     }
 
-    return suppliers.filter((supplier) => supplier.country === country);
+    return suppliers.filter(
+      (supplier) => supplier.country === country
+    );
   }, [country]);
 
   function searchSuppliers() {
@@ -102,6 +112,7 @@ export default function SuppliersPage() {
         background: "#f4f7fb",
         padding: "30px 18px",
         color: "#172033",
+        fontFamily: "Arial, sans-serif",
       }}
     >
       <div
@@ -110,6 +121,7 @@ export default function SuppliersPage() {
           margin: "0 auto",
         }}
       >
+        {/* CABEÇALHO */}
         <section
           style={{
             background: "#ffffff",
@@ -135,7 +147,7 @@ export default function SuppliersPage() {
               margin: "8px 0",
             }}
           >
-            🏭 Fornecedores AI
+            🏭 Supplier AI
           </h1>
 
           <p
@@ -145,8 +157,8 @@ export default function SuppliersPage() {
               marginBottom: "18px",
             }}
           >
-            Pesquisa fornecedores internacionais para os produtos encontrados
-            pelo Autopilot.
+            Pesquisa fornecedores internacionais para os produtos
+            encontrados pelo Autopilot.
           </p>
 
           <div
@@ -158,11 +170,12 @@ export default function SuppliersPage() {
               fontWeight: 600,
             }}
           >
-            🟢 Modo simulação ativo. Compras e pagamentos reais estão
-            bloqueados.
+            🟢 Modo simulação ativo. Compras e pagamentos reais
+            estão bloqueados.
           </div>
         </section>
 
+        {/* PRODUTOS NO AUTOPILOT */}
         <section
           style={{
             background: "#ffffff",
@@ -172,7 +185,56 @@ export default function SuppliersPage() {
             boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>🔎 Procurar fornecedores</h2>
+          <h2 style={{ marginTop: 0 }}>
+            📦 Produtos no Autopilot
+          </h2>
+
+          {state.products.length === 0 ? (
+            <p style={{ color: "#64748b" }}>
+              Ainda não existem produtos adicionados pelo Research
+              AI.
+            </p>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              {state.products.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setProduct(item.name)}
+                  style={{
+                    padding: "10px 13px",
+                    borderRadius: "10px",
+                    border: "1px solid #dbe2ea",
+                    background: "#f8fafc",
+                    fontWeight: 600,
+                    color: "#334155",
+                  }}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* PESQUISA */}
+        <section
+          style={{
+            background: "#ffffff",
+            borderRadius: "20px",
+            padding: "24px",
+            marginBottom: "20px",
+            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>
+            🔎 Procurar fornecedores
+          </h2>
 
           <p style={{ color: "#64748b" }}>
             O sistema pode procurar fornecedores em qualquer país.
@@ -181,14 +243,17 @@ export default function SuppliersPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(200px, 2fr) minmax(150px, 1fr)",
+              gridTemplateColumns:
+                "minmax(200px, 2fr) minmax(150px, 1fr)",
               gap: "12px",
               marginTop: "18px",
             }}
           >
             <input
               value={product}
-              onChange={(event) => setProduct(event.target.value)}
+              onChange={(event) =>
+                setProduct(event.target.value)
+              }
               placeholder="Ex.: organizador inteligente para casa"
               style={{
                 width: "100%",
@@ -202,7 +267,9 @@ export default function SuppliersPage() {
 
             <select
               value={country}
-              onChange={(event) => setCountry(event.target.value)}
+              onChange={(event) =>
+                setCountry(event.target.value)
+              }
               style={{
                 padding: "14px",
                 border: "1px solid #dbe2ea",
@@ -228,13 +295,17 @@ export default function SuppliersPage() {
               padding: "14px",
               border: "none",
               borderRadius: "12px",
-              background: searching ? "#94a3b8" : "#2563eb",
+              background: searching
+                ? "#94a3b8"
+                : "#2563eb",
               color: "#ffffff",
               fontWeight: 700,
               fontSize: "15px",
             }}
           >
-            {searching ? "🔎 A procurar..." : "🔎 Procurar fornecedores"}
+            {searching
+              ? "🔎 A procurar..."
+              : "🔎 Procurar fornecedores"}
           </button>
 
           {searched && (
@@ -253,6 +324,7 @@ export default function SuppliersPage() {
           )}
         </section>
 
+        {/* RESULTADOS */}
         <section
           style={{
             background: "#ffffff",
@@ -271,7 +343,9 @@ export default function SuppliersPage() {
             }}
           >
             <div>
-              <h2 style={{ margin: 0 }}>🌍 Fornecedores encontrados</h2>
+              <h2 style={{ margin: 0 }}>
+                🌍 Fornecedores encontrados
+              </h2>
 
               <p style={{ color: "#64748b" }}>
                 África, Ásia, Europa, América e outros mercados.
@@ -300,17 +374,29 @@ export default function SuppliersPage() {
                   background: "#fafcff",
                 }}
               >
-                <div style={{ fontSize: "30px" }}>🏭</div>
+                <div style={{ fontSize: "30px" }}>
+                  🏭
+                </div>
 
                 <h3 style={{ margin: "10px 0 6px" }}>
                   {supplier.name}
                 </h3>
 
-                <p style={{ margin: "7px 0", color: "#475569" }}>
+                <p
+                  style={{
+                    margin: "7px 0",
+                    color: "#475569",
+                  }}
+                >
                   🌍 {supplier.country}
                 </p>
 
-                <p style={{ margin: "7px 0", color: "#475569" }}>
+                <p
+                  style={{
+                    margin: "7px 0",
+                    color: "#475569",
+                  }}
+                >
                   📍 {supplier.region}
                 </p>
 
@@ -346,6 +432,7 @@ export default function SuppliersPage() {
           </div>
         </section>
 
+        {/* AUTOMAÇÃO FUTURA */}
         <section
           style={{
             marginTop: "20px",
@@ -355,7 +442,9 @@ export default function SuppliersPage() {
             padding: "22px",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>🤖 Automação futura</h2>
+          <h2 style={{ marginTop: 0 }}>
+            🤖 Automação futura
+          </h2>
 
           <p
             style={{
@@ -363,17 +452,18 @@ export default function SuppliersPage() {
               lineHeight: 1.6,
             }}
           >
-            Futuramente o Autopilot poderá comunicar com fornecedores,
-            negociar condições, comunicar com clientes e preparar encomendas
-            automaticamente.
+            Futuramente o Autopilot poderá comunicar com
+            fornecedores, comparar condições, preparar pedidos e
+            organizar o processo de fornecimento.
           </p>
 
           <strong style={{ color: "#9a3412" }}>
-            ⚠️ Compras, pagamentos e encomendas reais continuam bloqueados
-            durante os testes.
+            ⚠️ Compras, pagamentos e encomendas reais continuam
+            bloqueados durante os testes.
           </strong>
         </section>
 
+        {/* MODAL */}
         {selected && (
           <div
             style={{
@@ -384,70 +474,5 @@ export default function SuppliersPage() {
               alignItems: "center",
               justifyContent: "center",
               padding: "20px",
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                maxWidth: "500px",
-                background: "#ffffff",
-                borderRadius: "20px",
-                padding: "25px",
-              }}
-            >
-              <h2>🏭 {selected.name}</h2>
-
-              <p>
-                <strong>País:</strong> {selected.country}
-              </p>
-
-              <p>
-                <strong>Região:</strong> {selected.region}
-              </p>
-
-              <p>
-                <strong>Preço:</strong> {selected.price}
-              </p>
-
-              <p>
-                <strong>Envio:</strong> {selected.shipping}
-              </p>
-
-              <p>
-                <strong>Avaliação:</strong> ⭐ {selected.rating}
-              </p>
-
-              <div
-                style={{
-                  background: "#f1f5f9",
-                  padding: "14px",
-                  borderRadius: "12px",
-                  marginTop: "15px",
-                }}
-              >
-                💬 Comunicação automática com o fornecedor será ativada
-                somente numa fase posterior de testes.
-              </div>
-
-              <button
-                onClick={() => setSelected(null)}
-                style={{
-                  width: "100%",
-                  marginTop: "18px",
-                  padding: "13px",
-                  border: "none",
-                  borderRadius: "10px",
-                  background: "#2563eb",
-                  color: "#ffffff",
-                  fontWeight: 700,
-                }}
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </main>
-  );
-}
+              zIndex: 1000,
+           
