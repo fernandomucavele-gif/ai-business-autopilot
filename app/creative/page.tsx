@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 type Market =
   | "Moçambique"
@@ -74,13 +75,22 @@ const creativeTemplates: Creative[] = [
 ];
 
 export default function CreativePage() {
+  const { state } = useAutopilot();
+
   const [product, setProduct] = useState(
     "Organizador inteligente para casa"
   );
-  const [market, setMarket] = useState<Market>("Moçambique");
+
+  const [market, setMarket] =
+    useState<Market>("Moçambique");
+
   const [generated, setGenerated] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [selected, setSelected] = useState<Creative | null>(null);
+  const [selected, setSelected] =
+    useState<Creative | null>(null);
+
+  const [sourceProductId, setSourceProductId] =
+    useState("");
 
   const creatives = useMemo(() => {
     return creativeTemplates.map((creative) => ({
@@ -103,6 +113,21 @@ export default function CreativePage() {
       setGenerating(false);
       setGenerated(true);
     }, 1200);
+  }
+
+  function selectAutopilotProduct(productId: string) {
+    const selectedProduct = state.products.find(
+      (item) => item.id === productId
+    );
+
+    if (!selectedProduct) {
+      return;
+    }
+
+    setSourceProductId(productId);
+    setProduct(selectedProduct.name);
+    setMarket(selectedProduct.market);
+    setGenerated(false);
   }
 
   return (
@@ -155,8 +180,9 @@ export default function CreativePage() {
               lineHeight: 1.6,
             }}
           >
-            Cria ideias de vídeos, imagens e textos de anúncios para os
-            produtos encontrados pelo Research AI.
+            Cria ideias de vídeos, imagens e textos de
+            anúncios para os produtos encontrados pelo
+            Research AI.
           </p>
 
           <div
@@ -169,7 +195,8 @@ export default function CreativePage() {
               fontWeight: 600,
             }}
           >
-            🟢 Modo simulação ativo — os anúncios não serão publicados.
+            🟢 Modo simulação ativo — os anúncios não serão
+            publicados.
           </div>
         </section>
 
@@ -182,7 +209,85 @@ export default function CreativePage() {
             boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>⚙️ Configurar criativos</h2>
+          <h2 style={{ marginTop: 0 }}>
+            📦 Produtos do Autopilot
+          </h2>
+
+          {state.products.length === 0 ? (
+            <p style={{ color: "#64748b" }}>
+              Ainda não existem produtos adicionados pelo
+              Research AI.
+            </p>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "12px",
+              }}
+            >
+              {state.products.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() =>
+                    selectAutopilotProduct(item.id)
+                  }
+                  style={{
+                    textAlign: "left",
+                    padding: "15px",
+                    borderRadius: "12px",
+                    border:
+                      sourceProductId === item.id
+                        ? "2px solid #7c3aed"
+                        : "1px solid #e2e8f0",
+                    background:
+                      sourceProductId === item.id
+                        ? "#f5f3ff"
+                        : "#fafcff",
+                    cursor: "pointer",
+                  }}
+                >
+                  <strong>{item.name}</strong>
+
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      color: "#64748b",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {item.market} • {item.price} MT
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      color: "#7c3aed",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Criar criativos →
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section
+          style={{
+            background: "#ffffff",
+            borderRadius: "20px",
+            padding: "24px",
+            marginBottom: "20px",
+            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>
+            ⚙️ Configurar criativos
+          </h2>
 
           <div
             style={{
@@ -261,10 +366,15 @@ export default function CreativePage() {
               padding: "14px",
               border: "none",
               borderRadius: "12px",
-              background: generating ? "#94a3b8" : "#7c3aed",
+              background: generating
+                ? "#94a3b8"
+                : "#7c3aed",
               color: "#ffffff",
               fontWeight: 700,
               fontSize: "15px",
+              cursor: generating
+                ? "not-allowed"
+                : "pointer",
             }}
           >
             {generating
@@ -296,7 +406,9 @@ export default function CreativePage() {
             boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>🎬 Biblioteca de criativos</h2>
+          <h2 style={{ marginTop: 0 }}>
+            🎬 Biblioteca de criativos
+          </h2>
 
           <p style={{ color: "#64748b" }}>
             Ideias preparadas para vídeos e anúncios.
@@ -321,18 +433,22 @@ export default function CreativePage() {
                   background: "#fafcff",
                 }}
               >
-                <div style={{ fontSize: "30px" }}>🎬</div>
+                <div style={{ fontSize: "30px" }}>
+                  🎬
+                </div>
 
                 <h3 style={{ margin: "10px 0" }}>
                   {creative.title}
                 </h3>
 
                 <p style={{ margin: "7px 0" }}>
-                  📱 <strong>Tipo:</strong> {creative.type}
+                  📱 <strong>Tipo:</strong>{" "}
+                  {creative.type}
                 </p>
 
                 <p style={{ margin: "7px 0" }}>
-                  🎯 <strong>Ângulo:</strong> {creative.angle}
+                  🎯 <strong>Ângulo:</strong>{" "}
+                  {creative.angle}
                 </p>
 
                 <div
@@ -368,6 +484,7 @@ export default function CreativePage() {
                     background: "#0f172a",
                     color: "#ffffff",
                     fontWeight: 700,
+                    cursor: "pointer",
                   }}
                 >
                   Ver criativo
@@ -387,8 +504,9 @@ export default function CreativePage() {
             color: "#9a3412",
           }}
         >
-          ⚠️ <strong>Modo de teste:</strong> o Creative AI apenas prepara
-          conteúdos. Nenhum anúncio é publicado automaticamente.
+          ⚠️ <strong>Modo de teste:</strong> o Creative AI
+          apenas prepara conteúdos. Nenhum anúncio é
+          publicado automaticamente.
         </section>
 
         {selected && (
@@ -401,12 +519,15 @@ export default function CreativePage() {
               alignItems: "center",
               justifyContent: "center",
               padding: "20px",
+              zIndex: 1000,
             }}
           >
             <div
               style={{
                 width: "100%",
                 maxWidth: "520px",
+                maxHeight: "90vh",
+                overflowY: "auto",
                 background: "#ffffff",
                 borderRadius: "20px",
                 padding: "25px",
@@ -427,15 +548,18 @@ export default function CreativePage() {
               </p>
 
               <p>
-                <strong>Roteiro:</strong> {selected.script}
+                <strong>Roteiro:</strong>{" "}
+                {selected.script}
               </p>
 
               <p>
-                <strong>Texto:</strong> {selected.caption}
+                <strong>Texto:</strong>{" "}
+                {selected.caption}
               </p>
 
               <p>
-                <strong>Ângulo:</strong> {selected.angle}
+                <strong>Ângulo:</strong>{" "}
+                {selected.angle}
               </p>
 
               <button
@@ -449,6 +573,7 @@ export default function CreativePage() {
                   background: "#7c3aed",
                   color: "#ffffff",
                   fontWeight: 700,
+                  cursor: "pointer",
                 }}
               >
                 Fechar
@@ -459,4 +584,4 @@ export default function CreativePage() {
       </div>
     </main>
   );
-  }
+}
