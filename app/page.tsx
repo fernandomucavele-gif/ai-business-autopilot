@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
+
 import {
   AutopilotState,
   initialAutopilotState,
@@ -64,8 +70,9 @@ export function AutopilotProvider({
 }: {
   children: ReactNode;
 }) {
-  const [state, setState] =
-    useState<AutopilotState>(initialAutopilotState);
+  const [state, setState] = useState<AutopilotState>(
+    initialAutopilotState
+  );
 
   function addProduct(
     name: string,
@@ -172,4 +179,4 @@ export function useAutopilot() {
   }
 
   return context;
-    }
+}
