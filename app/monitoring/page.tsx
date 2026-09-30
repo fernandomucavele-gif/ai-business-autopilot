@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 type Log = {
   id: number;
@@ -9,37 +10,42 @@ type Log = {
   type: "success" | "warning" | "info";
 };
 
-const initialLogs: Log[] = [
-  {
-    id: 1,
-    time: "Agora",
-    message: "Autopilot está online em modo simulação.",
-    type: "success",
-  },
-  {
-    id: 2,
-    time: "Agora",
-    message: "Monitoramento automático ativo.",
-    type: "info",
-  },
-  {
-    id: 3,
-    time: "Agora",
-    message: "Todas as ações reais continuam bloqueadas.",
-    type: "warning",
-  },
-];
-
 export default function MonitoringPage() {
+  const { state, metrics } = useAutopilot();
+
   const [active, setActive] = useState(true);
-  const [logs, setLogs] = useState<Log[]>(initialLogs);
+
+  const [logs, setLogs] = useState<Log[]>([
+    {
+      id: 1,
+      time: "Agora",
+      message:
+        "Autopilot está online em modo simulação.",
+      type: "success",
+    },
+    {
+      id: 2,
+      time: "Agora",
+      message:
+        "Monitoramento automático ativo.",
+      type: "info",
+    },
+    {
+      id: 3,
+      time: "Agora",
+      message:
+        "Todas as ações reais continuam bloqueadas.",
+      type: "warning",
+    },
+  ]);
 
   function refresh() {
     setLogs((old) => [
       {
         id: Date.now(),
         time: "Agora",
-        message: "Monitoramento atualizado com sucesso.",
+        message:
+          "Monitoramento atualizado com sucesso.",
         type: "success",
       },
       ...old,
@@ -48,6 +54,7 @@ export default function MonitoringPage() {
 
   function toggleAutopilot() {
     const next = !active;
+
     setActive(next);
 
     setLogs((old) => [
@@ -138,54 +145,80 @@ export default function MonitoringPage() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(200px, 1fr))",
             gap: "16px",
             marginBottom: "20px",
           }}
         >
-          <div
-            style={{
-              background: "#052e16",
-              border: "1px solid #166534",
-              borderRadius: "16px",
-              padding: "20px",
-            }}
-          >
-            <p style={{ color: "#86efac", margin: "0 0 8px" }}>
-              🟢 Sistema
-            </p>
-            <strong style={{ fontSize: "22px" }}>Online</strong>
-          </div>
+          <StatusCard
+            title="🟢 Sistema"
+            value="Online"
+            background="#052e16"
+            border="#166534"
+            valueColor="#86efac"
+          />
 
-          <div
-            style={{
-              background: "#082f49",
-              border: "1px solid #0369a1",
-              borderRadius: "16px",
-              padding: "20px",
-            }}
-          >
-            <p style={{ color: "#67e8f9", margin: "0 0 8px" }}>
-              🤖 Autopilot
-            </p>
-            <strong style={{ fontSize: "22px" }}>
-              {active ? "Ativo" : "Pausado"}
-            </strong>
-          </div>
+          <StatusCard
+            title="🤖 Autopilot"
+            value={active ? "Ativo" : "Pausado"}
+            background="#082f49"
+            border="#0369a1"
+            valueColor="#67e8f9"
+          />
 
-          <div
-            style={{
-              background: "#422006",
-              border: "1px solid #a16207",
-              borderRadius: "16px",
-              padding: "20px",
-            }}
-          >
-            <p style={{ color: "#fde047", margin: "0 0 8px" }}>
-              🛡️ Segurança
-            </p>
-            <strong style={{ fontSize: "22px" }}>Simulação</strong>
-          </div>
+          <StatusCard
+            title="🛡️ Segurança"
+            value="Simulação"
+            background="#422006"
+            border="#a16207"
+            valueColor="#fde047"
+          />
+        </section>
+
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(170px, 1fr))",
+            gap: "12px",
+            marginBottom: "20px",
+          }}
+        >
+          <Metric
+            title="🛍️ Produtos"
+            value={state.products.length.toString()}
+          />
+
+          <Metric
+            title="📢 Campanhas"
+            value={state.campaigns.length.toString()}
+          />
+
+          <Metric
+            title="📦 Pedidos"
+            value={state.orders.length.toString()}
+          />
+
+          <Metric
+            title="💵 Receita"
+            value={`${metrics.revenue.toLocaleString()} MT`}
+          />
+
+          <Metric
+            title="💸 Custos"
+            value={`${metrics.costs.toLocaleString()} MT`}
+          />
+
+          <Metric
+            title="📈 Lucro"
+            value={`${metrics.profit.toLocaleString()} MT`}
+          />
+
+          <Metric
+            title="📊 ROAS"
+            value={`${metrics.roas.toFixed(2)}x`}
+          />
         </section>
 
         <section
@@ -197,16 +230,21 @@ export default function MonitoringPage() {
             marginBottom: "20px",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>⚡ Controlo do Autopilot</h2>
+          <h2 style={{ marginTop: 0 }}>
+            ⚡ Controlo do Autopilot
+          </h2>
 
           <p style={{ color: "#94a3b8" }}>
-            Controla a atividade do Autopilot durante os testes.
+            Controla a atividade do Autopilot durante
+            os testes.
           </p>
 
           <button
             onClick={toggleAutopilot}
             style={{
-              background: active ? "#dc2626" : "#16a34a",
+              background: active
+                ? "#dc2626"
+                : "#16a34a",
               color: "#ffffff",
               border: "none",
               borderRadius: "12px",
@@ -215,7 +253,9 @@ export default function MonitoringPage() {
               fontWeight: "bold",
             }}
           >
-            {active ? "⏸ Pausar Autopilot" : "▶ Ativar Autopilot"}
+            {active
+              ? "⏸ Pausar Autopilot"
+              : "▶ Ativar Autopilot"}
           </button>
         </section>
 
@@ -228,12 +268,63 @@ export default function MonitoringPage() {
             marginBottom: "20px",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>🔐 Segurança</h2>
+          <h2 style={{ marginTop: 0 }}>
+            🔐 Segurança
+          </h2>
 
           <p style={{ color: "#fde68a" }}>
-            O sistema está em modo simulação. Compras, pagamentos,
-            publicação de anúncios e levantamentos reais continuam bloqueados.
+            O sistema está em modo simulação.
+            Compras, pagamentos, publicação de
+            anúncios e levantamentos reais continuam
+            bloqueados.
           </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "10px",
+              marginTop: "15px",
+            }}
+          >
+            <SecurityItem
+              label="Compras automáticas"
+              value={
+                state.automation.realPurchasesEnabled
+                  ? "ATIVAS"
+                  : "BLOQUEADAS"
+              }
+            />
+
+            <SecurityItem
+              label="Pagamentos automáticos"
+              value={
+                state.automation
+                  .automaticPaymentsEnabled
+                  ? "ATIVOS"
+                  : "BLOQUEADOS"
+              }
+            />
+
+            <SecurityItem
+              label="Anúncios reais"
+              value={
+                state.automation.realAdsEnabled
+                  ? "ATIVOS"
+                  : "BLOQUEADOS"
+              }
+            />
+
+            <SecurityItem
+              label="Modo simulação"
+              value={
+                state.automation.simulationMode
+                  ? "ATIVO"
+                  : "DESATIVADO"
+              }
+            />
+          </div>
         </section>
 
         <section
@@ -245,9 +336,16 @@ export default function MonitoringPage() {
             marginBottom: "20px",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>📡 Atividade do sistema</h2>
+          <h2 style={{ marginTop: 0 }}>
+            📡 Atividade do sistema
+          </h2>
 
-          <div style={{ display: "grid", gap: "10px" }}>
+          <div
+            style={{
+              display: "grid",
+              gap: "10px",
+            }}
+          >
             {logs.map((log) => (
               <div
                 key={log.id}
@@ -283,67 +381,172 @@ export default function MonitoringPage() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(220px, 1fr))",
             gap: "16px",
           }}
         >
-          <div
-            style={{
-              background: "#0f172a",
-              border: "1px solid #334155",
-              borderRadius: "16px",
-              padding: "18px",
-            }}
-          >
-            <span style={{ color: "#94a3b8" }}>
-              Compras automáticas
-            </span>
-            <h3 style={{ color: "#f87171" }}>BLOQUEADAS</h3>
-          </div>
+          <SecurityBox
+            title="Compras automáticas"
+            value="BLOQUEADAS"
+          />
 
-          <div
-            style={{
-              background: "#0f172a",
-              border: "1px solid #334155",
-              borderRadius: "16px",
-              padding: "18px",
-            }}
-          >
-            <span style={{ color: "#94a3b8" }}>
-              Pagamentos automáticos
-            </span>
-            <h3 style={{ color: "#f87171" }}>BLOQUEADOS</h3>
-          </div>
+          <SecurityBox
+            title="Pagamentos automáticos"
+            value="BLOQUEADOS"
+          />
 
-          <div
-            style={{
-              background: "#0f172a",
-              border: "1px solid #334155",
-              borderRadius: "16px",
-              padding: "18px",
-            }}
-          >
-            <span style={{ color: "#94a3b8" }}>
-              Publicação de anúncios
-            </span>
-            <h3 style={{ color: "#f87171" }}>BLOQUEADA</h3>
-          </div>
+          <SecurityBox
+            title="Publicação de anúncios"
+            value="BLOQUEADA"
+          />
 
-          <div
-            style={{
-              background: "#0f172a",
-              border: "1px solid #334155",
-              borderRadius: "16px",
-              padding: "18px",
-            }}
-          >
-            <span style={{ color: "#94a3b8" }}>
-              Levantamentos
-            </span>
-            <h3 style={{ color: "#f87171" }}>BLOQUEADOS</h3>
-          </div>
+          <SecurityBox
+            title="Levantamentos"
+            value="BLOQUEADOS"
+          />
         </section>
       </div>
     </main>
+  );
+}
+
+function StatusCard({
+  title,
+  value,
+  background,
+  border,
+  valueColor,
+}: {
+  title: string;
+  value: string;
+  background: string;
+  border: string;
+  valueColor: string;
+}) {
+  return (
+    <div
+      style={{
+        background,
+        border: `1px solid ${border}`,
+        borderRadius: "16px",
+        padding: "20px",
+      }}
+    >
+      <p
+        style={{
+          color: valueColor,
+          margin: "0 0 8px",
+        }}
+      >
+        {title}
+      </p>
+
+      <strong style={{ fontSize: "22px" }}>
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function Metric({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
+  return (
+    <div
+      style={{
+        background: "#0f172a",
+        border: "1px solid #1e293b",
+        borderRadius: "14px",
+        padding: "16px",
+      }}
+    >
+      <div
+        style={{
+          color: "#94a3b8",
+          fontSize: "14px",
+        }}
+      >
+        {title}
+      </div>
+
+      <strong
+        style={{
+          display: "block",
+          marginTop: "8px",
+          fontSize: "21px",
+        }}
+      >
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function SecurityItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div
+      style={{
+        background: "#0f172a",
+        borderRadius: "10px",
+        padding: "12px",
+      }}
+    >
+      <div
+        style={{
+          color: "#94a3b8",
+          fontSize: "13px",
+        }}
+      >
+        {label}
+      </div>
+
+      <strong
+        style={{
+          display: "block",
+          marginTop: "5px",
+          color: "#f87171",
+        }}
+      >
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function SecurityBox({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
+  return (
+    <div
+      style={{
+        background: "#0f172a",
+        border: "1px solid #334155",
+        borderRadius: "16px",
+        padding: "18px",
+      }}
+    >
+      <span style={{ color: "#94a3b8" }}>
+        {title}
+      </span>
+
+      <h3 style={{ color: "#f87171" }}>
+        {value}
+      </h3>
+    </div>
   );
 }
