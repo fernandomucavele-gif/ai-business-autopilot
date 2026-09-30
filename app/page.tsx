@@ -1,182 +1,122 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { useAutopilot } from "./context/autopilot-context";
 
-import {
-  AutopilotState,
-  initialAutopilotState,
-  Product,
-  Campaign,
-  Order,
-  FinanceRecord,
-  createProduct,
-  createCampaign,
-  createOrder,
-  calculateRevenue,
-  calculateCosts,
-  calculateProfit,
-  calculateROAS,
-} from "@/lib/autopilot";
+const menu = [
+  ["🏠", "Dashboard"],
+  ["🔎", "Research AI"],
+  ["🎨", "Creative AI"],
+  ["📢", "Ads AI"],
+  ["📊", "Analytics AI"],
+  ["💰", "Finance AI"],
+  ["🤝", "Customer AI"],
+  ["📦", "Orders AI"],
+  ["🤖", "Supervisor AI"],
+  ["👁️", "Monitoramento"],
+];
 
-type AutopilotContextType = {
-  state: AutopilotState;
-
-  addProduct: (
-    name: string,
-    market: Product["market"],
-    price: number
-  ) => void;
-
-  addCampaign: (
-    productId: string,
-    market: Campaign["market"],
-    objective: Campaign["objective"],
-    dailyBudget: number
-  ) => void;
-
-  addOrder: (
-    productId: string,
-    customerName: string,
-    market: Order["market"],
-    amount: number
-  ) => void;
-
-  addFinanceRecord: (record: FinanceRecord) => void;
-
-  setAutomation: (
-    key: keyof AutopilotState["automation"],
-    value: boolean
-  ) => void;
-
-  metrics: {
-    revenue: number;
-    costs: number;
-    profit: number;
-    roas: number;
-  };
-};
-
-const AutopilotContext = createContext<
-  AutopilotContextType | undefined
->(undefined);
-
-export function AutopilotProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const [state, setState] = useState<AutopilotState>(
-    initialAutopilotState
-  );
-
-  function addProduct(
-    name: string,
-    market: Product["market"],
-    price: number
-  ) {
-    const product = createProduct(name, market, price);
-
-    setState((current) => ({
-      ...current,
-      products: [...current.products, product],
-    }));
-  }
-
-  function addCampaign(
-    productId: string,
-    market: Campaign["market"],
-    objective: Campaign["objective"],
-    dailyBudget: number
-  ) {
-    const campaign = createCampaign(
-      productId,
-      market,
-      objective,
-      dailyBudget
-    );
-
-    setState((current) => ({
-      ...current,
-      campaigns: [...current.campaigns, campaign],
-    }));
-  }
-
-  function addOrder(
-    productId: string,
-    customerName: string,
-    market: Order["market"],
-    amount: number
-  ) {
-    const order = createOrder(
-      productId,
-      customerName,
-      market,
-      amount
-    );
-
-    setState((current) => ({
-      ...current,
-      orders: [...current.orders, order],
-    }));
-  }
-
-  function addFinanceRecord(record: FinanceRecord) {
-    setState((current) => ({
-      ...current,
-      finance: [...current.finance, record],
-    }));
-  }
-
-  function setAutomation(
-    key: keyof AutopilotState["automation"],
-    value: boolean
-  ) {
-    setState((current) => ({
-      ...current,
-      automation: {
-        ...current.automation,
-        [key]: value,
-      },
-    }));
-  }
-
-  const metrics = {
-    revenue: calculateRevenue(state.finance),
-    costs: calculateCosts(state.finance),
-    profit: calculateProfit(state.finance),
-    roas: calculateROAS(state.finance),
-  };
+export default function Home() {
+  const { state, metrics } = useAutopilot();
 
   return (
-    <AutopilotContext.Provider
-      value={{
-        state,
-        addProduct,
-        addCampaign,
-        addOrder,
-        addFinanceRecord,
-        setAutomation,
-        metrics,
-      }}
-    >
-      {children}
-    </AutopilotContext.Provider>
-  );
-}
+    <main className="app">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="logo">AI</div>
+          <div>
+            <strong>Business</strong>
+            <span>Autopilot</span>
+          </div>
+        </div>
 
-export function useAutopilot() {
-  const context = useContext(AutopilotContext);
+        <nav>
+          {menu.map(([icon, name]) => (
+            <button key={name}>
+              <span>{icon}</span>
+              {name}
+            </button>
+          ))}
+        </nav>
 
-  if (!context) {
-    throw new Error(
-      "useAutopilot deve ser usado dentro de AutopilotProvider"
-    );
-  }
+        <div className="simulation">
+          🟢
+          <strong>Simulation Mode</strong>
+          <small>Ações reais desativadas</small>
+        </div>
+      </aside>
 
-  return context;
-}
+      <section className="content">
+        <header>
+          <div>
+            <p className="eyebrow">PRIVATE AI SYSTEM</p>
+            <h1>AI Business Autopilot</h1>
+            <p className="subtitle">
+              Centro de controlo do teu sistema de automação.
+            </p>
+          </div>
+
+          <div className="status">
+            <span className="dot" />
+            Sistema online
+          </div>
+        </header>
+
+        <div className="cards">
+          <div className="card">
+            <span>💰 Receita</span>
+            <strong>{metrics.revenue} MT</strong>
+            <small>Modo simulação</small>
+          </div>
+
+          <div className="card">
+            <span>📦 Produtos</span>
+            <strong>{state.products.length}</strong>
+            <small>Produtos pesquisados</small>
+          </div>
+
+          <div className="card">
+            <span>📢 Campanhas</span>
+            <strong>{state.campaigns.length}</strong>
+            <small>Campanhas criadas</small>
+          </div>
+
+          <div className="card">
+            <span>⚡ Automação</span>
+            <strong>
+              {state.automation.simulationMode ? "SIMULAÇÃO" : "ATIVA"}
+            </strong>
+            <small>Ações reais bloqueadas</small>
+          </div>
+        </div>
+
+        <div className="grid">
+          <section className="panel large">
+            <div className="panel-title">
+              <div>
+                <h2>Centro de atividade</h2>
+                <p>Estado atual dos agentes do Autopilot.</p>
+              </div>
+
+              <span className="badge">SIMULAÇÃO</span>
+            </div>
+
+            <div className="agents">
+              {menu.slice(1).map(([icon, name]) => (
+                <div className="agent" key={name}>
+                  <span className="agent-icon">{icon}</span>
+                  <div>
+                    <strong>{name}</strong>
+                    <small>Disponível para execução</small>
+                  </div>
+                  <b>READY</b>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel">
+            <h2>Segurança</h2>
+
+            <div className="security">
+              <div>
+                🛡️
