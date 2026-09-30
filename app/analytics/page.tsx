@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 type Market =
   | "Moçambique"
@@ -11,7 +12,7 @@ type Market =
   | "EUA"
   | "Global";
 
-type Campaign = {
+type SimulatedCampaign = {
   product: string;
   market: Market;
   impressions: number;
@@ -31,7 +32,7 @@ const markets: Market[] = [
   "Global",
 ];
 
-const campaigns: Campaign[] = [
+const simulatedCampaigns: SimulatedCampaign[] = [
   {
     product: "Organizador inteligente para casa",
     market: "Moçambique",
@@ -75,51 +76,76 @@ function money(value: number) {
 }
 
 export default function AnalyticsPage() {
-  const [market, setMarket] = useState<Market>("Global");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analyzed, setAnalyzed] = useState(false);
+  const { state, metrics } = useAutopilot();
 
-  const filteredCampaigns = useMemo(() => {
-    if (market === "Global") {
-      return campaigns;
-    }
+  const [market, setMarket] =
+    useState<Market>("Global");
 
-    return campaigns.filter((campaign) => campaign.market === market);
-  }, [market]);
+  const [analyzing, setAnalyzing] =
+    useState(false);
+
+  const [analyzed, setAnalyzed] =
+    useState(false);
+
+  const filteredSimulatedCampaigns =
+    useMemo(() => {
+      if (market === "Global") {
+        return simulatedCampaigns;
+      }
+
+      return simulatedCampaigns.filter(
+        (campaign) =>
+          campaign.market === market
+      );
+    }, [market]);
 
   const totals = useMemo(() => {
-    const impressions = filteredCampaigns.reduce(
-      (total, campaign) => total + campaign.impressions,
-      0
-    );
+    const impressions =
+      filteredSimulatedCampaigns.reduce(
+        (total, campaign) =>
+          total + campaign.impressions,
+        0
+      );
 
-    const clicks = filteredCampaigns.reduce(
-      (total, campaign) => total + campaign.clicks,
-      0
-    );
+    const clicks =
+      filteredSimulatedCampaigns.reduce(
+        (total, campaign) =>
+          total + campaign.clicks,
+        0
+      );
 
-    const spend = filteredCampaigns.reduce(
-      (total, campaign) => total + campaign.spend,
-      0
-    );
+    const spend =
+      filteredSimulatedCampaigns.reduce(
+        (total, campaign) =>
+          total + campaign.spend,
+        0
+      );
 
-    const sales = filteredCampaigns.reduce(
-      (total, campaign) => total + campaign.sales,
-      0
-    );
+    const sales =
+      filteredSimulatedCampaigns.reduce(
+        (total, campaign) =>
+          total + campaign.sales,
+        0
+      );
 
-    const revenue = filteredCampaigns.reduce(
-      (total, campaign) => total + campaign.revenue,
-      0
-    );
+    const revenue =
+      filteredSimulatedCampaigns.reduce(
+        (total, campaign) =>
+          total + campaign.revenue,
+        0
+      );
 
     const profit = revenue - spend;
 
     const ctr =
-      impressions > 0 ? (clicks / impressions) * 100 : 0;
+      impressions > 0
+        ? (clicks / impressions) * 100
+        : 0;
 
     const conversion =
-      clicks > 0 ? (sales / clicks) * 100 : 0;
+      clicks > 0
+        ? (sales / clicks) * 100
+        : 0;
 
     const roas =
       spend > 0 ? revenue / spend : 0;
@@ -135,7 +161,7 @@ export default function AnalyticsPage() {
       conversion,
       roas,
     };
-  }, [filteredCampaigns]);
+  }, [filteredSimulatedCampaigns]);
 
   function runAnalysis() {
     setAnalyzing(true);
@@ -152,13 +178,15 @@ export default function AnalyticsPage() {
       <div className="container">
         <header className="header">
           <div>
-            <div className="eyebrow">AI BUSINESS AUTOPILOT</div>
+            <div className="eyebrow">
+              AI BUSINESS AUTOPILOT
+            </div>
 
             <h1>📊 Analytics AI</h1>
 
             <p>
-              Analisa o desempenho das campanhas e prepara
-              informações para o Supervisor AI.
+              Analisa o desempenho das campanhas e
+              prepara informações para o Supervisor AI.
             </p>
           </div>
 
@@ -169,9 +197,10 @@ export default function AnalyticsPage() {
 
         <section className="simulation">
           <strong>🟢 MODO SIMULAÇÃO</strong>
+
           <span>
-            Todos os números desta página são dados de teste.
-            Nenhum dinheiro está a ser gasto.
+            Todos os números desta página são dados de
+            teste. Nenhum dinheiro está a ser gasto.
           </span>
         </section>
 
@@ -185,11 +214,16 @@ export default function AnalyticsPage() {
           <select
             value={market}
             onChange={(event) =>
-              setMarket(event.target.value as Market)
+              setMarket(
+                event.target.value as Market
+              )
             }
           >
             {markets.map((item) => (
-              <option key={item} value={item}>
+              <option
+                key={item}
+                value={item}
+              >
                 {item}
               </option>
             ))}
@@ -207,7 +241,8 @@ export default function AnalyticsPage() {
 
           {analyzed && (
             <div className="success">
-              ✅ Análise concluída em modo de simulação.
+              ✅ Análise concluída em modo de
+              simulação.
             </div>
           )}
         </section>
@@ -215,67 +250,189 @@ export default function AnalyticsPage() {
         <section className="cards">
           <div className="card">
             <span>👁️ Impressões</span>
+
             <strong>
-              {totals.impressions.toLocaleString("pt-PT")}
+              {totals.impressions.toLocaleString(
+                "pt-PT"
+              )}
             </strong>
-            <small>Visualizações</small>
+
+            <small>
+              Visualizações simuladas
+            </small>
           </div>
 
           <div className="card">
             <span>👆 Cliques</span>
+
             <strong>
-              {totals.clicks.toLocaleString("pt-PT")}
+              {totals.clicks.toLocaleString(
+                "pt-PT"
+              )}
             </strong>
-            <small>Cliques simulados</small>
+
+            <small>
+              Cliques simulados
+            </small>
           </div>
 
           <div className="card">
             <span>💰 Gastos</span>
-            <strong>{money(totals.spend)}</strong>
-            <small>Gasto simulado</small>
+
+            <strong>
+              {money(totals.spend)}
+            </strong>
+
+            <small>
+              Gasto simulado
+            </small>
           </div>
 
           <div className="card">
             <span>🛒 Vendas</span>
-            <strong>{totals.sales}</strong>
-            <small>Vendas simuladas</small>
+
+            <strong>
+              {totals.sales}
+            </strong>
+
+            <small>
+              Vendas simuladas
+            </small>
           </div>
 
           <div className="card">
             <span>💵 Receita</span>
-            <strong>{money(totals.revenue)}</strong>
-            <small>Receita simulada</small>
+
+            <strong>
+              {money(totals.revenue)}
+            </strong>
+
+            <small>
+              Receita simulada
+            </small>
           </div>
 
           <div className="card">
             <span>📈 Lucro</span>
-            <strong>{money(totals.profit)}</strong>
-            <small>Receita menos gastos</small>
+
+            <strong>
+              {money(totals.profit)}
+            </strong>
+
+            <small>
+              Receita menos gastos
+            </small>
           </div>
         </section>
 
         <section className="cards secondary">
           <div className="card">
             <span>CTR</span>
-            <strong>{totals.ctr.toFixed(2)}%</strong>
-            <small>Cliques / impressões</small>
+
+            <strong>
+              {totals.ctr.toFixed(2)}%
+            </strong>
+
+            <small>
+              Cliques / impressões
+            </small>
           </div>
 
           <div className="card">
             <span>Conversão</span>
-            <strong>{totals.conversion.toFixed(2)}%</strong>
-            <small>Vendas / cliques</small>
+
+            <strong>
+              {totals.conversion.toFixed(2)}%
+            </strong>
+
+            <small>
+              Vendas / cliques
+            </small>
           </div>
 
           <div className="card">
             <span>ROAS</span>
-            <strong>{totals.roas.toFixed(2)}x</strong>
-            <small>Receita / gasto</small>
+
+            <strong>
+              {totals.roas.toFixed(2)}x
+            </strong>
+
+            <small>
+              Receita / gasto
+            </small>
           </div>
         </section>
 
         <section className="panel">
-          <h2>📋 Desempenho por campanha</h2>
+          <h2>🤖 Dados do Autopilot</h2>
+
+          <div className="autopilotGrid">
+            <div>
+              <span>
+                Produtos registados
+              </span>
+
+              <strong>
+                {state.products.length}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Campanhas registadas
+              </span>
+
+              <strong>
+                {state.campaigns.length}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Pedidos registados
+              </span>
+
+              <strong>
+                {state.orders.length}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Receita no Autopilot
+              </span>
+
+              <strong>
+                {money(metrics.revenue)}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Custos no Autopilot
+              </span>
+
+              <strong>
+                {money(metrics.costs)}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Lucro no Autopilot
+              </span>
+
+              <strong>
+                {money(metrics.profit)}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="panel">
+          <h2>
+            📋 Desempenho por campanha
+          </h2>
 
           <div className="tableWrapper">
             <table>
@@ -293,75 +450,118 @@ export default function AnalyticsPage() {
               </thead>
 
               <tbody>
-                {filteredCampaigns.map((campaign) => {
-                  const roas =
-                    campaign.spend > 0
-                      ? campaign.revenue / campaign.spend
-                      : 0;
+                {filteredSimulatedCampaigns.map(
+                  (campaign) => {
+                    const roas =
+                      campaign.spend > 0
+                        ? campaign.revenue /
+                          campaign.spend
+                        : 0;
 
-                  return (
-                    <tr key={campaign.product}>
-                      <td>{campaign.product}</td>
-                      <td>{campaign.market}</td>
-                      <td>
-                        {campaign.impressions.toLocaleString(
-                          "pt-PT"
-                        )}
-                      </td>
-                      <td>
-                        {campaign.clicks.toLocaleString("pt-PT")}
-                      </td>
-                      <td>{money(campaign.spend)}</td>
-                      <td>{campaign.sales}</td>
-                      <td>{money(campaign.revenue)}</td>
-                      <td>
-                        <strong>{roas.toFixed(2)}x</strong>
-                      </td>
-                    </tr>
-                  );
-                })}
+                    return (
+                      <tr
+                        key={`${campaign.product}-${campaign.market}`}
+                      >
+                        <td>
+                          {campaign.product}
+                        </td>
+
+                        <td>
+                          {campaign.market}
+                        </td>
+
+                        <td>
+                          {campaign.impressions.toLocaleString(
+                            "pt-PT"
+                          )}
+                        </td>
+
+                        <td>
+                          {campaign.clicks.toLocaleString(
+                            "pt-PT"
+                          )}
+                        </td>
+
+                        <td>
+                          {money(
+                            campaign.spend
+                          )}
+                        </td>
+
+                        <td>
+                          {campaign.sales}
+                        </td>
+
+                        <td>
+                          {money(
+                            campaign.revenue
+                          )}
+                        </td>
+
+                        <td>
+                          <strong>
+                            {roas.toFixed(2)}x
+                          </strong>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )}
               </tbody>
             </table>
           </div>
 
-          {filteredCampaigns.length === 0 && (
+          {filteredSimulatedCampaigns.length ===
+            0 && (
             <div className="empty">
-              Não existem campanhas simuladas para este mercado.
+              Não existem campanhas simuladas
+              para este mercado.
             </div>
           )}
         </section>
 
         <section className="insights">
           <div className="insight">
-            <strong>🤖 Análise automática</strong>
+            <strong>
+              🤖 Análise automática
+            </strong>
+
             <p>
-              O Analytics AI reúne os dados das campanhas para
-              alimentar os próximos processos do Autopilot.
+              O Analytics AI reúne os dados das
+              campanhas para alimentar os próximos
+              processos do Autopilot.
             </p>
           </div>
 
           <div className="insight">
             <strong>⚠️ Alertas</strong>
+
             <p>
-              Na versão real, o sistema poderá identificar campanhas
-              com gastos sem resultados de acordo com as regras
+              Na versão real, o sistema poderá
+              identificar campanhas com gastos sem
+              resultados de acordo com as regras
               definidas.
             </p>
           </div>
 
           <div className="insight">
-            <strong>🔄 Otimização</strong>
+            <strong>
+              🔄 Otimização
+            </strong>
+
             <p>
-              Os resultados poderão ser utilizados pelo Supervisor AI
-              para preparar novas ações.
+              Os resultados poderão ser utilizados
+              pelo Supervisor AI para preparar novas
+              ações.
             </p>
           </div>
         </section>
 
         <section className="security">
-          🔐 <strong>Segurança:</strong> compras, pagamentos,
-          publicação de anúncios e outras ações financeiras continuam
-          BLOQUEADAS enquanto o sistema estiver em simulação.
+          🔐 <strong>Segurança:</strong> compras,
+          pagamentos, publicação de anúncios e outras
+          ações financeiras continuam BLOQUEADAS
+          enquanto o sistema estiver em simulação.
         </section>
       </div>
 
@@ -390,7 +590,8 @@ export default function AnalyticsPage() {
           justify-content: space-between;
           gap: 20px;
           align-items: flex-start;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+          box-shadow:
+            0 8px 25px rgba(0, 0, 0, 0.05);
         }
 
         .eyebrow {
@@ -438,7 +639,8 @@ export default function AnalyticsPage() {
           border-radius: 20px;
           padding: 24px;
           margin-top: 18px;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+          box-shadow:
+            0 8px 25px rgba(0, 0, 0, 0.05);
         }
 
         .muted {
@@ -484,25 +686,28 @@ export default function AnalyticsPage() {
         .cards {
           margin-top: 18px;
           display: grid;
-          grid-template-columns: repeat(
-            auto-fit,
-            minmax(180px, 1fr)
-          );
+          grid-template-columns:
+            repeat(
+              auto-fit,
+              minmax(180px, 1fr)
+            );
           gap: 15px;
         }
 
         .secondary {
-          grid-template-columns: repeat(
-            auto-fit,
-            minmax(220px, 1fr)
-          );
+          grid-template-columns:
+            repeat(
+              auto-fit,
+              minmax(220px, 1fr)
+            );
         }
 
         .card {
           background: #ffffff;
           border-radius: 16px;
           padding: 20px;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+          box-shadow:
+            0 8px 25px rgba(0, 0, 0, 0.05);
         }
 
         .card span {
@@ -522,6 +727,34 @@ export default function AnalyticsPage() {
           color: #94a3b8;
         }
 
+        .autopilotGrid {
+          display: grid;
+          grid-template-columns:
+            repeat(
+              auto-fit,
+              minmax(180px, 1fr)
+            );
+          gap: 12px;
+        }
+
+        .autopilotGrid div {
+          padding: 16px;
+          border-radius: 12px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+        }
+
+        .autopilotGrid span {
+          display: block;
+          color: #64748b;
+          font-size: 13px;
+          margin-bottom: 7px;
+        }
+
+        .autopilotGrid strong {
+          font-size: 22px;
+        }
+
         .tableWrapper {
           overflow-x: auto;
         }
@@ -537,12 +770,14 @@ export default function AnalyticsPage() {
           color: #64748b;
           font-size: 13px;
           padding: 12px;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom:
+            1px solid #e2e8f0;
         }
 
         td {
           padding: 13px 12px;
-          border-bottom: 1px solid #f1f5f9;
+          border-bottom:
+            1px solid #f1f5f9;
         }
 
         td:first-child {
@@ -561,10 +796,11 @@ export default function AnalyticsPage() {
         .insights {
           margin-top: 18px;
           display: grid;
-          grid-template-columns: repeat(
-            auto-fit,
-            minmax(240px, 1fr)
-          );
+          grid-template-columns:
+            repeat(
+              auto-fit,
+              minmax(240px, 1fr)
+            );
           gap: 15px;
         }
 
@@ -572,7 +808,8 @@ export default function AnalyticsPage() {
           background: #ffffff;
           border-radius: 16px;
           padding: 20px;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+          box-shadow:
+            0 8px 25px rgba(0, 0, 0, 0.05);
         }
 
         .insight p {
@@ -612,4 +849,4 @@ export default function AnalyticsPage() {
       `}</style>
     </main>
   );
-  }
+}
