@@ -1,21 +1,95 @@
 "use client";
 
 import { useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 export default function FinancePage() {
+  const { state, metrics, addFinanceRecord } = useAutopilot();
+
   const [revenue, setRevenue] = useState("");
   const [productCost, setProductCost] = useState("");
   const [ads, setAds] = useState("");
   const [shipping, setShipping] = useState("");
+  const [message, setMessage] = useState("");
 
-  const r = Number(revenue) || 0;
-  const p = Number(productCost) || 0;
-  const a = Number(ads) || 0;
-  const s = Number(shipping) || 0;
+  const simulatedRevenue = Number(revenue) || 0;
+  const simulatedProductCost = Number(productCost) || 0;
+  const simulatedAds = Number(ads) || 0;
+  const simulatedShipping = Number(shipping) || 0;
 
-  const costs = p + a + s;
-  const profit = r - costs;
-  const roas = a > 0 ? r / a : 0;
+  const simulatedCosts =
+    simulatedProductCost +
+    simulatedAds +
+    simulatedShipping;
+
+  const simulatedProfit =
+    simulatedRevenue - simulatedCosts;
+
+  const simulatedROAS =
+    simulatedAds > 0
+      ? simulatedRevenue / simulatedAds
+      : 0;
+
+  function addSimulation() {
+    if (
+      simulatedRevenue === 0 &&
+      simulatedProductCost === 0 &&
+      simulatedAds === 0 &&
+      simulatedShipping === 0
+    ) {
+      setMessage("⚠️ Introduz pelo menos um valor.");
+      return;
+    }
+
+    if (simulatedRevenue > 0) {
+      addFinanceRecord({
+        id: `FIN-${Date.now()}-R`,
+        type: "revenue",
+        amount: simulatedRevenue,
+        currency: "MT",
+        description: "Receita simulada",
+      });
+    }
+
+    if (simulatedProductCost > 0) {
+      addFinanceRecord({
+        id: `FIN-${Date.now()}-P`,
+        type: "product_cost",
+        amount: simulatedProductCost,
+        currency: "MT",
+        description: "Custo de produto simulado",
+      });
+    }
+
+    if (simulatedAds > 0) {
+      addFinanceRecord({
+        id: `FIN-${Date.now()}-A`,
+        type: "ad_cost",
+        amount: simulatedAds,
+        currency: "MT",
+        description: "Custo de anúncios simulado",
+      });
+    }
+
+    if (simulatedShipping > 0) {
+      addFinanceRecord({
+        id: `FIN-${Date.now()}-S`,
+        type: "shipping",
+        amount: simulatedShipping,
+        currency: "MT",
+        description: "Custo de envio simulado",
+      });
+    }
+
+    setMessage(
+      "✅ Dados financeiros adicionados ao Autopilot em modo de simulação."
+    );
+
+    setRevenue("");
+    setProductCost("");
+    setAds("");
+    setShipping("");
+  }
 
   return (
     <main
@@ -27,7 +101,12 @@ export default function FinancePage() {
         color: "#111827",
       }}
     >
-      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+      <div
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto",
+        }}
+      >
         <div
           style={{
             display: "inline-block",
@@ -41,26 +120,53 @@ export default function FinancePage() {
           💰 FINANCE AI
         </div>
 
-        <h1 style={{ fontSize: "34px", margin: "14px 0 8px" }}>
+        <h1
+          style={{
+            fontSize: "34px",
+            margin: "14px 0 8px",
+          }}
+        >
           Finance AI
         </h1>
 
-        <p style={{ color: "#64748b", fontSize: "17px" }}>
+        <p
+          style={{
+            color: "#64748b",
+            fontSize: "17px",
+          }}
+        >
           Analisa receitas, custos, lucro e publicidade.
         </p>
 
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(200px,1fr))",
             gap: "15px",
             marginTop: "25px",
           }}
         >
-          <Card title="💵 Receita" value={r} />
-          <Card title="💸 Custos" value={costs} />
-          <Card title="📈 Lucro" value={profit} />
-          <Card title="📊 ROAS" value={roas} suffix="x" />
+          <Card
+            title="💵 Receita Autopilot"
+            value={metrics.revenue}
+          />
+
+          <Card
+            title="💸 Custos Autopilot"
+            value={metrics.costs}
+          />
+
+          <Card
+            title="📈 Lucro Autopilot"
+            value={metrics.profit}
+          />
+
+          <Card
+            title="📊 ROAS Autopilot"
+            value={metrics.roas}
+            suffix="x"
+          />
         </section>
 
         <section
@@ -69,13 +175,16 @@ export default function FinancePage() {
             padding: "24px",
             borderRadius: "18px",
             marginTop: "20px",
+            boxShadow:
+              "0 5px 25px rgba(0,0,0,.05)",
           }}
         >
           <h2>🧮 Simulador financeiro</h2>
 
           <p style={{ color: "#64748b" }}>
-            Introduz valores de teste. Nenhuma operação financeira real será
-            executada.
+            Introduz valores de teste para alimentar
+            o Finance AI. Nenhuma operação financeira
+            real será executada.
           </p>
 
           <Input
@@ -101,6 +210,206 @@ export default function FinancePage() {
             value={shipping}
             setValue={setShipping}
           />
+
+          <div
+            style={{
+              marginTop: 20,
+              padding: 16,
+              borderRadius: 12,
+              background: "#f8fafc",
+            }}
+          >
+            <strong>
+              Resultado desta simulação
+            </strong>
+
+            <p>
+              Receita:{" "}
+              {simulatedRevenue.toFixed(2)} MT
+            </p>
+
+            <p>
+              Custos:{" "}
+              {simulatedCosts.toFixed(2)} MT
+            </p>
+
+            <p>
+              Lucro:{" "}
+              {simulatedProfit.toFixed(2)} MT
+            </p>
+
+            <p>
+              ROAS:{" "}
+              {simulatedROAS.toFixed(2)}x
+            </p>
+          </div>
+
+          <button
+            onClick={addSimulation}
+            style={{
+              width: "100%",
+              marginTop: 18,
+              padding: 15,
+              border: 0,
+              borderRadius: 10,
+              background: "#16a34a",
+              color: "white",
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            ➕ Adicionar simulação ao Autopilot
+          </button>
+
+          {message && (
+            <div
+              style={{
+                marginTop: 15,
+                padding: 14,
+                borderRadius: 10,
+                background: "#eff6ff",
+                color: "#1d4ed8",
+                fontWeight: 600,
+              }}
+            >
+              {message}
+            </div>
+          )}
+        </section>
+
+        <section
+          style={{
+            background: "#ffffff",
+            padding: "24px",
+            borderRadius: "18px",
+            marginTop: "20px",
+            boxShadow:
+              "0 5px 25px rgba(0,0,0,.05)",
+          }}
+        >
+          <h2>📋 Registos financeiros</h2>
+
+          {state.finance.length === 0 ? (
+            <p style={{ color: "#64748b" }}>
+              Ainda não existem registos financeiros.
+            </p>
+          ) : (
+            state.finance.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  padding: 14,
+                  borderBottom:
+                    "1px solid #e2e8f0",
+                }}
+              >
+                <strong>
+                  {item.description}
+                </strong>
+
+                <div
+                  style={{
+                    marginTop: 5,
+                    color:
+                      item.type === "revenue"
+                        ? "#16a34a"
+                        : "#dc2626",
+                    fontWeight: 700,
+                  }}
+                >
+                  {item.type === "revenue"
+                    ? "+"
+                    : "-"}
+                  {item.amount.toLocaleString()}{" "}
+                  {item.currency}
+                </div>
+              </div>
+            ))
+          )}
+        </section>
+
+        <section
+          style={{
+            marginTop: 20,
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(180px,1fr))",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: 18,
+              borderRadius: 14,
+            }}
+          >
+            <strong>📦 Produtos</strong>
+            <div
+              style={{
+                fontSize: 24,
+                marginTop: 7,
+              }}
+            >
+              {state.products.length}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: "white",
+              padding: 18,
+              borderRadius: 14,
+            }}
+          >
+            <strong>📢 Campanhas</strong>
+            <div
+              style={{
+                fontSize: 24,
+                marginTop: 7,
+              }}
+            >
+              {state.campaigns.length}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: "white",
+              padding: 18,
+              borderRadius: 14,
+            }}
+          >
+            <strong>📦 Pedidos</strong>
+            <div
+              style={{
+                fontSize: 24,
+                marginTop: 7,
+              }}
+            >
+              {state.orders.length}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: "white",
+              padding: 18,
+              borderRadius: 14,
+            }}
+          >
+            <strong>🔒 Segurança</strong>
+            <div
+              style={{
+                marginTop: 7,
+                color: "#16a34a",
+                fontWeight: 700,
+              }}
+            >
+              Simulação ativa
+            </div>
+          </div>
         </section>
 
         <div
@@ -114,8 +423,9 @@ export default function FinancePage() {
         >
           ⚠️ <strong>Modo simulação ativo.</strong>
           <br />
-          Pagamentos, transferências e ações financeiras reais continuam
-          bloqueados.
+          Pagamentos, transferências,
+          compras, anúncios pagos e levantamentos
+          continuam bloqueados.
         </div>
       </div>
     </main>
@@ -140,9 +450,19 @@ function Card({
         border: "1px solid #e2e8f0",
       }}
     >
-      <div style={{ color: "#64748b" }}>{title}</div>
-      <strong style={{ display: "block", fontSize: "25px", marginTop: "8px" }}>
-        {value.toFixed(2)}{suffix}
+      <div style={{ color: "#64748b" }}>
+        {title}
+      </div>
+
+      <strong
+        style={{
+          display: "block",
+          fontSize: "25px",
+          marginTop: "8px",
+        }}
+      >
+        {value.toFixed(2)}
+        {suffix}
       </strong>
     </div>
   );
@@ -171,7 +491,9 @@ function Input({
         type="number"
         min="0"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) =>
+          setValue(e.target.value)
+        }
         placeholder="0"
         style={{
           display: "block",
@@ -186,4 +508,4 @@ function Input({
       />
     </label>
   );
-        }
+}
