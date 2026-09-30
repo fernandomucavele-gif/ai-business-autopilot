@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 
 type Market =
   | "Moçambique"
@@ -11,7 +12,7 @@ type Market =
   | "EUA"
   | "Global";
 
-type Product = {
+type SimulatedProduct = {
   name: string;
   market: Market;
   score: number;
@@ -19,6 +20,8 @@ type Product = {
   competition: string;
   margin: string;
   reason: string;
+  price: number;
+  type: "Físico" | "Infoproduto";
 };
 
 const markets: Market[] = [
@@ -31,7 +34,7 @@ const markets: Market[] = [
   "Global",
 ];
 
-const simulatedProducts: Product[] = [
+const simulatedProducts: SimulatedProduct[] = [
   {
     name: "Organizador inteligente para casa",
     market: "Moçambique",
@@ -41,6 +44,8 @@ const simulatedProducts: Product[] = [
     margin: "Boa",
     reason:
       "Produto fácil de demonstrar em vídeo e adequado para venda online.",
+    price: 850,
+    type: "Físico",
   },
   {
     name: "Acessório portátil para automóvel",
@@ -51,6 +56,8 @@ const simulatedProducts: Product[] = [
     margin: "Boa",
     reason:
       "Tem público amplo e pode ser apresentado através de vídeos curtos.",
+    price: 1200,
+    type: "Físico",
   },
   {
     name: "Acessório para treino doméstico",
@@ -61,6 +68,8 @@ const simulatedProducts: Product[] = [
     margin: "Boa",
     reason:
       "Categoria com procura e várias possibilidades de conteúdo.",
+    price: 1800,
+    type: "Físico",
   },
   {
     name: "Produto de organização pessoal",
@@ -71,6 +80,8 @@ const simulatedProducts: Product[] = [
     margin: "Boa",
     reason:
       "Pode ser vendido através de demonstrações simples e conteúdo educativo.",
+    price: 950,
+    type: "Físico",
   },
   {
     name: "Acessório para telemóvel",
@@ -81,6 +92,8 @@ const simulatedProducts: Product[] = [
     margin: "Média",
     reason:
       "Mercado amplo e possibilidade de venda por impulso.",
+    price: 700,
+    type: "Físico",
   },
   {
     name: "Infoproduto de desenvolvimento pessoal",
@@ -91,15 +104,20 @@ const simulatedProducts: Product[] = [
     margin: "Muito alta",
     reason:
       "Não necessita de stock físico e pode ser entregue digitalmente.",
+    price: 155,
+    type: "Infoproduto",
   },
 ];
 
 export default function ResearchPage() {
+  const { state, addProduct } = useAutopilot();
+
   const [market, setMarket] = useState<Market>("Moçambique");
   const [category, setCategory] = useState("Todos");
   const [keyword, setKeyword] = useState("");
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [addedProduct, setAddedProduct] = useState("");
 
   const products = useMemo(() => {
     let result = simulatedProducts.filter((product) => {
@@ -108,21 +126,22 @@ export default function ResearchPage() {
 
       const keywordMatch =
         keyword.trim() === "" ||
-        product.name.toLowerCase().includes(keyword.toLowerCase());
+        product.name
+          .toLowerCase()
+          .includes(keyword.toLowerCase());
 
       return marketMatch && keywordMatch;
     });
 
     if (category === "Infoprodutos") {
-      result = result.filter((product) =>
-        product.name.toLowerCase().includes("infoproduto")
+      result = result.filter(
+        (product) => product.type === "Infoproduto"
       );
     }
 
     if (category === "Produtos físicos") {
       result = result.filter(
-        (product) =>
-          !product.name.toLowerCase().includes("infoproduto")
+        (product) => product.type === "Físico"
       );
     }
 
@@ -132,11 +151,17 @@ export default function ResearchPage() {
   function runResearch() {
     setRunning(true);
     setCompleted(false);
+    setAddedProduct("");
 
     setTimeout(() => {
       setRunning(false);
       setCompleted(true);
     }, 1600);
+  }
+
+  function addToAutopilot(product: SimulatedProduct) {
+    addProduct(product.name, product.market, product.price);
+    setAddedProduct(product.name);
   }
 
   return (
@@ -146,6 +171,7 @@ export default function ResearchPage() {
         background: "#f4f7fb",
         padding: "30px 18px",
         color: "#172033",
+        fontFamily: "Arial, sans-serif",
       }}
     >
       <div
@@ -154,6 +180,7 @@ export default function ResearchPage() {
           margin: "0 auto",
         }}
       >
+        {/* CABEÇALHO */}
         <section
           style={{
             background: "#ffffff",
@@ -189,8 +216,8 @@ export default function ResearchPage() {
               lineHeight: 1.6,
             }}
           >
-            Pesquisa produtos com potencial de venda em diferentes
-            mercados.
+            Pesquisa oportunidades e produtos com potencial
+            de venda em diferentes mercados.
           </p>
 
           <div
@@ -203,11 +230,12 @@ export default function ResearchPage() {
               fontWeight: 600,
             }}
           >
-            🟢 Modo simulação ativo — nenhuma compra ou campanha real será
-            executada.
+            🟢 Modo simulação ativo — nenhuma compra ou
+            campanha real será executada.
           </div>
         </section>
 
+        {/* CONFIGURAÇÃO */}
         <section
           style={{
             background: "#ffffff",
@@ -217,7 +245,9 @@ export default function ResearchPage() {
             boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>🌍 Configurar pesquisa</h2>
+          <h2 style={{ marginTop: 0 }}>
+            🌍 Configurar pesquisa
+          </h2>
 
           <div
             style={{
@@ -352,6 +382,7 @@ export default function ResearchPage() {
           )}
         </section>
 
+        {/* RESULTADOS */}
         <section
           style={{
             background: "#ffffff",
@@ -371,11 +402,11 @@ export default function ResearchPage() {
           >
             <div>
               <h2 style={{ margin: 0 }}>
-                📦 Produtos simulados
+                📦 Produtos encontrados
               </h2>
 
               <p style={{ color: "#64748b" }}>
-                Resultados organizados por potencial.
+                Resultados simulados organizados por potencial.
               </p>
             </div>
 
@@ -404,101 +435,91 @@ export default function ResearchPage() {
                 marginTop: "20px",
               }}
             >
-              {products.map((product) => (
-                <article
-                  key={product.name}
-                  style={{
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "16px",
-                    padding: "18px",
-                    background: "#fafcff",
-                  }}
-                >
-                  <div style={{ fontSize: "30px" }}>📦</div>
+              {products.map((product) => {
+                const alreadyAdded = state.products.some(
+                  (item) => item.name === product.name
+                );
 
-                  <h3
+                return (
+                  <article
+                    key={product.name}
                     style={{
-                      margin: "10px 0",
-                      lineHeight: 1.4,
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "18px",
+                      background: "#fafcff",
                     }}
                   >
-                    {product.name}
-                  </h3>
+                    <div style={{ fontSize: "30px" }}>
+                      {product.type === "Infoproduto"
+                        ? "📘"
+                        : "📦"}
+                    </div>
 
-                  <p style={{ margin: "7px 0" }}>
-                    🌍 <strong>Mercado:</strong> {product.market}
-                  </p>
+                    <h3
+                      style={{
+                        margin: "10px 0",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {product.name}
+                    </h3>
 
-                  <p style={{ margin: "7px 0" }}>
-                    🔥 <strong>Procura:</strong> {product.demand}
-                  </p>
+                    <p style={{ margin: "7px 0" }}>
+                      🌍 <strong>Mercado:</strong>{" "}
+                      {product.market}
+                    </p>
 
-                  <p style={{ margin: "7px 0" }}>
-                    🏁 <strong>Concorrência:</strong>{" "}
-                    {product.competition}
-                  </p>
+                    <p style={{ margin: "7px 0" }}>
+                      🏷️ <strong>Tipo:</strong>{" "}
+                      {product.type}
+                    </p>
 
-                  <p style={{ margin: "7px 0" }}>
-                    💰 <strong>Margem:</strong> {product.margin}
-                  </p>
+                    <p style={{ margin: "7px 0" }}>
+                      🔥 <strong>Procura:</strong>{" "}
+                      {product.demand}
+                    </p>
 
-                  <div
-                    style={{
-                      marginTop: "12px",
-                      padding: "10px",
-                      borderRadius: "10px",
-                      background: "#eff6ff",
-                      color: "#1d4ed8",
-                      fontWeight: 800,
-                    }}
-                  >
-                    Score: {product.score}/100
-                  </div>
+                    <p style={{ margin: "7px 0" }}>
+                      🏁 <strong>Concorrência:</strong>{" "}
+                      {product.competition}
+                    </p>
 
-                  <p
-                    style={{
-                      color: "#64748b",
-                      lineHeight: 1.5,
-                      fontSize: "14px",
-                    }}
-                  >
-                    {product.reason}
-                  </p>
+                    <p style={{ margin: "7px 0" }}>
+                      💰 <strong>Preço simulado:</strong>{" "}
+                      {product.price.toLocaleString("pt-PT")} MT
+                    </p>
 
-                  <button
-                    style={{
-                      width: "100%",
-                      padding: "11px",
-                      border: "none",
-                      borderRadius: "10px",
-                      background: "#0f172a",
-                      color: "#ffffff",
-                      fontWeight: 700,
-                    }}
-                  >
-                    Analisar produto
-                  </button>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+                    <div
+                      style={{
+                        marginTop: "12px",
+                        padding: "10px",
+                        borderRadius: "10px",
+                        background: "#eff6ff",
+                        color: "#1d4ed8",
+                        fontWeight: 800,
+                      }}
+                    >
+                      Score: {product.score}/100
+                    </div>
 
-        <section
-          style={{
-            marginTop: "20px",
-            padding: "20px",
-            borderRadius: "16px",
-            background: "#fff7ed",
-            border: "1px solid #fed7aa",
-            color: "#9a3412",
-          }}
-        >
-          ⚠️ <strong>Importante:</strong> estes resultados são simulados.
-          Nesta fase o Research AI não compra produtos, não contacta
-          fornecedores e não publica anúncios.
-        </section>
-      </div>
-    </main>
-  );
-}
+                    <p
+                      style={{
+                        color: "#64748b",
+                        lineHeight: 1.5,
+                        fontSize: "14px",
+                      }}
+                    >
+                      {product.reason}
+                    </p>
+
+                    <button
+                      onClick={() =>
+                        addToAutopilot(product)
+                      }
+                      disabled={alreadyAdded}
+                      style={{
+                        width: "100%",
+                        padding: "11px",
+                        border: "none",
+                        border
