@@ -3,131 +3,106 @@
 import { useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
 
-const modules = [
-  ["🔎", "Research AI", "Pesquisa produtos e oportunidades"],
-  ["🏭", "Supplier AI", "Pesquisa fornecedores"],
-  ["🎨", "Creative AI", "Cria criativos e ofertas"],
-  ["📢", "Ads AI", "Prepara campanhas"],
-  ["📊", "Analytics AI", "Analisa resultados"],
-  ["👥", "Customer AI", "Atende clientes"],
-  ["📦", "Orders AI", "Controla encomendas"],
-  ["💰", "Finance AI", "Controla receitas e custos"],
-];
-
-const actions = [
-  "Pesquisar novas oportunidades",
-  "Analisar fornecedores",
-  "Criar criativos",
-  "Preparar campanha",
-  "Analisar campanhas",
-  "Verificar pedidos",
-  "Analisar resultados financeiros",
-];
-
 export default function SupervisorPage() {
-  const { state, metrics } = useAutopilot();
+  const { state, metrics } =
+    useAutopilot();
 
-  const [selectedAction, setSelectedAction] = useState(
-    "Pesquisar novas oportunidades"
-  );
+  const [running, setRunning] =
+    useState(false);
 
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState("");
+  const [message, setMessage] =
+    useState(
+      "Supervisor pronto para monitorizar o sistema."
+    );
 
-  function runAction() {
-    if (running) return;
-
+  function runSupervisor() {
     setRunning(true);
-    setResult("");
+    setMessage(
+      "Supervisor está a analisar os módulos..."
+    );
 
     setTimeout(() => {
       setRunning(false);
 
-      setResult(
-        `Ação "${selectedAction}" executada em modo de simulação. ` +
-          `${state.products.length} produtos, ` +
-          `${state.campaigns.length} campanhas e ` +
-          `${state.orders.length} pedidos estão atualmente registados no Autopilot.`
-      );
-    }, 1200);
+      if (
+        state.automation.simulationMode
+      ) {
+        setMessage(
+          "Análise concluída. Sistema protegido em modo de simulação."
+        );
+      } else {
+        setMessage(
+          "Análise concluída."
+        );
+      }
+    }, 800);
   }
 
   return (
     <main
       style={{
         minHeight: "100vh",
+        padding: "24px",
         background: "#f4f7fb",
-        padding: "28px 18px",
-        fontFamily: "Arial, sans-serif",
-        color: "#111827",
+        color: "#101828",
       }}
     >
-      <div style={{ maxWidth: 1100, margin: "auto" }}>
-        {/* CABEÇALHO */}
-        <div style={{ marginBottom: 25 }}>
-          <div
-            style={{
-              display: "inline-block",
-              padding: "7px 12px",
-              borderRadius: 20,
-              background: "#ede9fe",
-              color: "#6d28d9",
-              fontWeight: 700,
-              fontSize: 13,
-            }}
-          >
-            🤖 SUPERVISOR AI
-          </div>
-
-          <h1 style={{ fontSize: 34, margin: "14px 0 8px" }}>
-            Centro de controlo do AI Business Autopilot
-          </h1>
-
-          <p style={{ color: "#64748b", fontSize: 17 }}>
-            Coordena os agentes de pesquisa, fornecedores, criativos,
-            anúncios, clientes, encomendas e finanças.
-          </p>
-        </div>
-
-        {/* ESTADO DE SEGURANÇA */}
-        <section
+      <div
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+        }}
+      >
+        <header
           style={{
-            background: "#fff7ed",
-            border: "1px solid #fed7aa",
-            padding: 18,
-            borderRadius: 16,
-            marginBottom: 22,
+            marginBottom: "24px",
           }}
         >
-          <strong style={{ color: "#c2410c" }}>
-            🔒 Modo de simulação ativo
-          </strong>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "1px",
+              color: "#667085",
+            }}
+          >
+            AI BUSINESS AUTOPILOT
+          </p>
+
+          <h1
+            style={{
+              margin: "8px 0",
+              fontSize: "32px",
+            }}
+          >
+            🤖 Supervisor AI
+          </h1>
 
           <p
             style={{
-              margin: "8px 0 0",
-              color: "#7c2d12",
-              lineHeight: 1.6,
+              margin: 0,
+              color: "#667085",
             }}
           >
-            O Supervisor pode executar testes e coordenar os módulos, mas
-            compras reais, publicação de anúncios, pagamentos automáticos e
-            levantamentos continuam bloqueados.
+            Agente responsável por supervisionar
+            o estado geral do Autopilot.
           </p>
-        </section>
+        </header>
 
-        {/* RESUMO DO SISTEMA */}
         <section
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
-            gap: 14,
-            marginBottom: 22,
+            background: "#ffffff",
+            border:
+              "1px solid #e4e7ec",
+            borderRadius: "16px",
+            padding: "20px",
+            marginBottom: "20px",
           }}
         >
           <div
             style={{
-              background: "white",
-              padding: 18,
-              borderRadius: 16,
-              boxShadow
+              display: "flex",
+              justifyContent:
+                "space-between",
+              alignItems: "
