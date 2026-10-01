@@ -1,4 +1,4 @@
-qpqlqq1qqq"use client";
+"use client";
 
 import { useRouter } from "next/navigation";
 import { useAutopilot } from "./context/autopilot-context";
@@ -6,16 +6,16 @@ import { useAutopilot } from "./context/autopilot-context";
 const menu = [
   ["🏠", "Dashboard", "/"],
   ["🔎", "Research AI", "/research"],
-  ["🏭", "Supplier AI", "/supplier"],
+  ["🏭", "Supplier AI", "/suppliers"],
   ["🎨", "Creative AI", "/creative"],
   ["📢", "Ads AI", "/ads"],
   ["📊", "Analytics AI", "/analytics"],
   ["💰", "Finance AI", "/finance"],
-  ["🤝", "Customer AI", "/customer"],
+  ["🤝", "Customer AI", "/customers"],
   ["📦", "Orders AI", "/orders"],
   ["🤖", "Supervisor AI", "/supervisor"],
-  ["👁️", "Monitoramento", "/monitoramento"],
-  ["⚙️", "Configurações", "/configuracoes"],
+  ["👁️", "Monitoramento", "/monitoring"],
+  ["⚙️", "Configurações", "/settings/app/settings"],
 ];
 
 export default function Home() {
@@ -61,7 +61,9 @@ export default function Home() {
       <section className="content">
         <header>
           <div>
-            <p className="eyebrow">PRIVATE AI SYSTEM</p>
+            <p className="eyebrow">
+              PRIVATE AI SYSTEM
+            </p>
 
             <h1>AI Business Autopilot</h1>
 
@@ -76,7 +78,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* RESUMO */}
         <div className="cards">
           <div className="card">
             <span>💰 Receita</span>
@@ -91,25 +92,37 @@ export default function Home() {
           <div className="card">
             <span>📦 Produtos</span>
 
-            <strong>{state.products.length}</strong>
+            <strong>
+              {state.products.length}
+            </strong>
 
-            <small>Produtos pesquisados</small>
+            <small>
+              Produtos pesquisados
+            </small>
           </div>
 
           <div className="card">
             <span>📢 Campanhas</span>
 
-            <strong>{state.campaigns.length}</strong>
+            <strong>
+              {state.campaigns.length}
+            </strong>
 
-            <small>Campanhas criadas</small>
+            <small>
+              Campanhas criadas
+            </small>
           </div>
 
           <div className="card">
             <span>🛒 Pedidos</span>
 
-            <strong>{state.orders.length}</strong>
+            <strong>
+              {state.orders.length}
+            </strong>
 
-            <small>Pedidos registados</small>
+            <small>
+              Pedidos registados
+            </small>
           </div>
 
           <div className="card">
@@ -121,65 +134,81 @@ export default function Home() {
                 : "ATIVA"}
             </strong>
 
-            <small>Ações reais bloqueadas</small>
+            <small>
+              Ações reais bloqueadas
+            </small>
           </div>
         </div>
 
         <div className="grid">
-          {/* AGENTES */}
           <section className="panel large">
             <div className="panel-title">
               <div>
-                <h2>Centro de atividade</h2>
+                <h2>
+                  Centro de atividade
+                </h2>
 
                 <p>
                   Estado atual dos agentes do Autopilot.
                 </p>
               </div>
 
-              <span className="badge">SIMULAÇÃO</span>
+              <span className="badge">
+                SIMULAÇÃO
+              </span>
             </div>
 
             <div className="agents">
-              {menu.slice(1, 11).map(([icon, name, path]) => (
-                <button
-                  className="agent"
-                  key={name}
-                  onClick={() => router.push(path)}
-                  style={{
-                    border: "none",
-                    width: "100%",
-                    textAlign: "left",
-                    cursor: "pointer",
-                  }}
-                >
-                  <span className="agent-icon">{icon}</span>
+              {menu.slice(1).map(
+                ([icon, name, path]) => (
+                  <button
+                    className="agent"
+                    key={name}
+                    onClick={() =>
+                      router.push(path)
+                    }
+                    style={{
+                      border: "none",
+                      width: "100%",
+                      textAlign: "left",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span className="agent-icon">
+                      {icon}
+                    </span>
 
-                  <div>
-                    <strong>{name}</strong>
+                    <div>
+                      <strong>
+                        {name}
+                      </strong>
 
-                    <small>
-                      Disponível para execução
-                    </small>
-                  </div>
+                      <small>
+                        Disponível para execução
+                      </small>
+                    </div>
 
-                  <b>READY</b>
-                </button>
-              ))}
+                    <b>READY</b>
+                  </button>
+                )
+              )}
             </div>
           </section>
 
-          {/* SEGURANÇA */}
           <section className="panel">
             <h2>Segurança</h2>
 
             <div className="security">
               <div>
                 🛡️
-                <strong> Modo simulação</strong>
+                <strong>
+                  {" "}
+                  Modo simulação
+                </strong>
 
                 <small>
-                  {state.automation.simulationMode
+                  {state.automation
+                    .simulationMode
                     ? " ATIVO"
                     : " DESATIVADO"}
                 </small>
@@ -187,10 +216,14 @@ export default function Home() {
 
               <div>
                 🛒
-                <strong> Compras reais</strong>
+                <strong>
+                  {" "}
+                  Compras reais
+                </strong>
 
                 <small>
-                  {state.automation.realPurchasesEnabled
+                  {state.automation
+                    .realPurchasesEnabled
                     ? " ATIVAS"
                     : " BLOQUEADAS"}
                 </small>
@@ -198,10 +231,14 @@ export default function Home() {
 
               <div>
                 📢
-                <strong> Anúncios reais</strong>
+                <strong>
+                  {" "}
+                  Anúncios reais
+                </strong>
 
                 <small>
-                  {state.automation.realAdsEnabled
+                  {state.automation
+                    .realAdsEnabled
                     ? " ATIVOS"
                     : " BLOQUEADOS"}
                 </small>
@@ -209,10 +246,14 @@ export default function Home() {
 
               <div>
                 💳
-                <strong> Pagamentos</strong>
+                <strong>
+                  {" "}
+                  Pagamentos
+                </strong>
 
                 <small>
-                  {state.automation.automaticPaymentsEnabled
+                  {state.automation
+                    .automaticPaymentsEnabled
                     ? " ATIVOS"
                     : " BLOQUEADOS"}
                 </small>
@@ -220,19 +261,26 @@ export default function Home() {
 
               <div>
                 💸
-                <strong> Levantamentos</strong>
+                <strong>
+                  {" "}
+                  Levantamentos
+                </strong>
 
-                <small> BLOQUEADOS</small>
+                <small>
+                  {" "}
+                  BLOQUEADOS
+                </small>
               </div>
             </div>
           </section>
         </div>
 
-        {/* MÉTRICAS */}
         <section className="panel metrics-panel">
           <div className="panel-title">
             <div>
-              <h2>📊 Visão financeira</h2>
+              <h2>
+                📊 Visão financeira
+              </h2>
 
               <p>
                 Dados partilhados entre os módulos do Autopilot.
@@ -245,7 +293,10 @@ export default function Home() {
               <span>Receita</span>
 
               <strong>
-                {metrics.revenue.toLocaleString("pt-PT")} MT
+                {metrics.revenue.toLocaleString(
+                  "pt-PT"
+                )}{" "}
+                MT
               </strong>
             </div>
 
@@ -253,7 +304,10 @@ export default function Home() {
               <span>Custos</span>
 
               <strong>
-                {metrics.costs.toLocaleString("pt-PT")} MT
+                {metrics.costs.toLocaleString(
+                  "pt-PT"
+                )}{" "}
+                MT
               </strong>
             </div>
 
@@ -261,7 +315,10 @@ export default function Home() {
               <span>Lucro</span>
 
               <strong>
-                {metrics.profit.toLocaleString("pt-PT")} MT
+                {metrics.profit.toLocaleString(
+                  "pt-PT"
+                )}{" "}
+                MT
               </strong>
             </div>
 
@@ -275,18 +332,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* AVISO */}
         <section className="panel warning">
-          <h2>🔒 Proteção do sistema</h2>
+          <h2>
+            🔒 Proteção do sistema
+          </h2>
 
           <p>
-            O AI Business Autopilot está atualmente em
-            <strong> modo de simulação</strong>.
+            O AI Business Autopilot está atualmente em{" "}
+            <strong>
+              modo de simulação
+            </strong>.
           </p>
 
           <p>
-            Compras reais, publicação de anúncios, pagamentos
-            automáticos e levantamentos permanecem bloqueados.
+            Compras reais, publicação de anúncios,
+            pagamentos automáticos e levantamentos
+            permanecem bloqueados.
           </p>
         </section>
       </section>
