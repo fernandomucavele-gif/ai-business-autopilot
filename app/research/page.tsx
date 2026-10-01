@@ -1,28 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
-
-type Market =
-  | "Moçambique"
-  | "Brasil"
-  | "Portugal"
-  | "África do Sul"
-  | "Europa"
-  | "EUA"
-  | "Global";
-
-type SimulatedProduct = {
-  name: string;
-  market: Market;
-  score: number;
-  demand: string;
-  competition: string;
-  margin: string;
-  reason: string;
-  price: number;
-  type: "Físico" | "Infoproduto";
-};
+import type { Market } from "../../lib/autopilot";
 
 const markets: Market[] = [
   "Moçambique",
@@ -34,177 +14,101 @@ const markets: Market[] = [
   "Global",
 ];
 
-const simulatedProducts: SimulatedProduct[] = [
-  {
-    name: "Organizador inteligente para casa",
-    market: "Moçambique",
-    score: 91,
-    demand: "Alta",
-    competition: "Média",
-    margin: "Boa",
-    reason:
-      "Produto fácil de demonstrar em vídeo e adequado para venda online.",
-    price: 850,
-    type: "Físico",
-  },
-  {
-    name: "Acessório portátil para automóvel",
-    market: "Brasil",
-    score: 87,
-    demand: "Alta",
-    competition: "Média",
-    margin: "Boa",
-    reason:
-      "Tem público amplo e pode ser apresentado através de vídeos curtos.",
-    price: 1200,
-    type: "Físico",
-  },
-  {
-    name: "Acessório para treino doméstico",
-    market: "Europa",
-    score: 84,
-    demand: "Alta",
-    competition: "Alta",
-    margin: "Boa",
-    reason:
-      "Categoria com procura e várias possibilidades de conteúdo.",
-    price: 1800,
-    type: "Físico",
-  },
-  {
-    name: "Produto de organização pessoal",
-    market: "Portugal",
-    score: 82,
-    demand: "Média",
-    competition: "Média",
-    margin: "Boa",
-    reason:
-      "Pode ser vendido através de demonstrações simples e conteúdo educativo.",
-    price: 950,
-    type: "Físico",
-  },
-  {
-    name: "Acessório para telemóvel",
-    market: "África do Sul",
-    score: 80,
-    demand: "Alta",
-    competition: "Alta",
-    margin: "Média",
-    reason:
-      "Mercado amplo e possibilidade de venda por impulso.",
-    price: 700,
-    type: "Físico",
-  },
-  {
-    name: "Infoproduto de desenvolvimento pessoal",
-    market: "Moçambique",
-    score: 89,
-    demand: "Média",
-    competition: "Média",
-    margin: "Muito alta",
-    reason:
-      "Não necessita de stock físico e pode ser entregue digitalmente.",
-    price: 155,
-    type: "Infoproduto",
-  },
+const ideas = [
+  "Garrafa térmica inteligente",
+  "Organizador multifuncional",
+  "Luz LED portátil",
+  "Acessório fitness",
+  "Produto para cuidados pessoais",
+  "Infoproduto de desenvolvimento pessoal",
 ];
 
 export default function ResearchPage() {
   const { state, addProduct } = useAutopilot();
 
-  const [market, setMarket] = useState<Market>("Moçambique");
-  const [category, setCategory] = useState("Todos");
-  const [keyword, setKeyword] = useState("");
-  const [running, setRunning] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [addedProduct, setAddedProduct] = useState("");
+  const [market, setMarket] =
+    useState<Market>("Moçambique");
 
-  const products = useMemo(() => {
-    let result = simulatedProducts.filter((product) => {
-      const marketMatch =
-        market === "Global" || product.market === market;
+  const [price, setPrice] =
+    useState("500");
 
-      const keywordMatch =
-        keyword.trim() === "" ||
-        product.name
-          .toLowerCase()
-          .includes(keyword.toLowerCase());
+  const [searching, setSearching] =
+    useState(false);
 
-      return marketMatch && keywordMatch;
-    });
+  const [message, setMessage] =
+    useState("");
 
-    if (category === "Infoprodutos") {
-      result = result.filter(
-        (product) => product.type === "Infoproduto"
-      );
-    }
-
-    if (category === "Produtos físicos") {
-      result = result.filter(
-        (product) => product.type === "Físico"
-      );
-    }
-
-    return result.sort((a, b) => b.score - a.score);
-  }, [market, keyword, category]);
+  const [results, setResults] =
+    useState<string[]>([]);
 
   function runResearch() {
-    setRunning(true);
-    setCompleted(false);
-    setAddedProduct("");
+    setSearching(true);
+    setMessage("");
 
     setTimeout(() => {
-      setRunning(false);
-      setCompleted(true);
-    }, 1600);
+      const shuffled = [...ideas].sort(
+        () => Math.random() - 0.5
+      );
+
+      setResults(shuffled.slice(0, 5));
+      setSearching(false);
+      setMessage(
+        "Pesquisa simulada concluída."
+      );
+    }, 600);
   }
 
-  function addToAutopilot(product: SimulatedProduct) {
-    addProduct(product.name, product.market, product.price);
-    setAddedProduct(product.name);
+  function addResearchProduct(name: string) {
+    const numericPrice =
+      Number(price) || 500;
+
+    addProduct(
+      name,
+      market,
+      numericPrice
+    );
+
+    setMessage(
+      `${name} foi adicionado ao Autopilot.`
+    );
   }
 
   return (
     <main
       style={{
         minHeight: "100vh",
+        padding: "24px",
         background: "#f4f7fb",
-        padding: "30px 18px",
-        color: "#172033",
-        fontFamily: "Arial, sans-serif",
+        color: "#101828",
       }}
     >
       <div
         style={{
-          maxWidth: "1150px",
+          maxWidth: "1100px",
           margin: "0 auto",
         }}
       >
-        {/* CABEÇALHO */}
-        <section
+        <header
           style={{
-            background: "#ffffff",
-            borderRadius: "20px",
-            padding: "28px",
-            marginBottom: "20px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+            marginBottom: "24px",
           }}
         >
-          <div
+          <p
             style={{
-              color: "#64748b",
-              fontSize: "13px",
+              margin: 0,
+              fontSize: "12px",
               fontWeight: 700,
               letterSpacing: "1px",
+              color: "#667085",
             }}
           >
             AI BUSINESS AUTOPILOT
-          </div>
+          </p>
 
           <h1
             style={{
-              fontSize: "34px",
               margin: "8px 0",
+              fontSize: "32px",
             }}
           >
             🔎 Research AI
@@ -212,314 +116,301 @@ export default function ResearchPage() {
 
           <p
             style={{
-              color: "#64748b",
-              lineHeight: 1.6,
+              margin: 0,
+              color: "#667085",
             }}
           >
-            Pesquisa oportunidades e produtos com potencial
-            de venda em diferentes mercados.
+            Pesquisa e descoberta de produtos
+            com potencial de venda.
           </p>
+        </header>
 
-          <div
-            style={{
-              marginTop: "18px",
-              padding: "13px",
-              borderRadius: "12px",
-              background: "#ecfdf5",
-              color: "#166534",
-              fontWeight: 600,
-            }}
-          >
-            🟢 Modo simulação ativo — nenhuma compra ou
-            campanha real será executada.
-          </div>
-        </section>
-
-        {/* CONFIGURAÇÃO */}
         <section
           style={{
             background: "#ffffff",
-            borderRadius: "20px",
-            padding: "24px",
+            borderRadius: "16px",
+            padding: "20px",
             marginBottom: "20px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+            border: "1px solid #e4e7ec",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>
-            🌍 Configurar pesquisa
-          </h2>
+          <h2>Pesquisa de mercado</h2>
 
           <div
             style={{
               display: "grid",
               gridTemplateColumns:
                 "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "14px",
+              gap: "16px",
+              marginTop: "16px",
             }}
           >
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 700,
-                }}
-              >
-                Mercado
-              </label>
+            <label
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              Mercado
 
               <select
                 value={market}
                 onChange={(event) =>
-                  setMarket(event.target.value as Market)
+                  setMarket(
+                    event.target.value as Market
+                  )
                 }
                 style={{
-                  width: "100%",
-                  padding: "13px",
+                  padding: "12px",
                   borderRadius: "10px",
-                  border: "1px solid #dbe2ea",
-                  background: "#ffffff",
+                  border: "1px solid #d0d5dd",
+                  background: "#fff",
                 }}
               >
                 {markets.map((item) => (
-                  <option key={item} value={item}>
+                  <option
+                    key={item}
+                    value={item}
+                  >
                     {item}
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
 
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 700,
-                }}
-              >
-                Tipo
-              </label>
-
-              <select
-                value={category}
-                onChange={(event) =>
-                  setCategory(event.target.value)
-                }
-                style={{
-                  width: "100%",
-                  padding: "13px",
-                  borderRadius: "10px",
-                  border: "1px solid #dbe2ea",
-                  background: "#ffffff",
-                }}
-              >
-                <option>Todos</option>
-                <option>Produtos físicos</option>
-                <option>Infoprodutos</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 700,
-                }}
-              >
-                Palavra-chave
-              </label>
+            <label
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              Preço de venda estimado
 
               <input
-                value={keyword}
+                type="number"
+                value={price}
                 onChange={(event) =>
-                  setKeyword(event.target.value)
+                  setPrice(event.target.value)
                 }
-                placeholder="Ex.: fitness"
                 style={{
-                  width: "100%",
-                  boxSizing: "border-box",
-                  padding: "13px",
+                  padding: "12px",
                   borderRadius: "10px",
-                  border: "1px solid #dbe2ea",
+                  border: "1px solid #d0d5dd",
                 }}
               />
-            </div>
+            </label>
           </div>
 
           <button
             onClick={runResearch}
-            disabled={running}
+            disabled={searching}
             style={{
+              marginTop: "20px",
               width: "100%",
-              marginTop: "18px",
-              padding: "14px",
+              padding: "13px",
               border: "none",
-              borderRadius: "12px",
-              background: running ? "#94a3b8" : "#2563eb",
+              borderRadius: "10px",
+              background: "#101828",
               color: "#ffffff",
+              cursor: searching
+                ? "wait"
+                : "pointer",
               fontWeight: 700,
-              fontSize: "15px",
             }}
           >
-            {running
-              ? "🔎 A analisar mercados..."
-              : "🚀 Iniciar pesquisa"}
+            {searching
+              ? "🔄 A pesquisar..."
+              : "🔎 Pesquisar produtos"}
           </button>
 
-          {completed && (
-            <div
+          {message && (
+            <p
               style={{
-                marginTop: "15px",
-                padding: "13px",
-                borderRadius: "12px",
-                background: "#eff6ff",
-                color: "#1d4ed8",
+                marginTop: "14px",
+                color: "#475467",
               }}
             >
-              ✅ Pesquisa simulada concluída.
-            </div>
+              {message}
+            </p>
           )}
         </section>
 
-        {/* RESULTADOS */}
+        {results.length > 0 && (
+          <section
+            style={{
+              background: "#ffffff",
+              borderRadius: "16px",
+              padding: "20px",
+              marginBottom: "20px",
+              border: "1px solid #e4e7ec",
+            }}
+          >
+            <h2>
+              Produtos encontrados
+            </h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: "14px",
+                marginTop: "16px",
+              }}
+            >
+              {results.map((product) => (
+                <div
+                  key={product}
+                  style={{
+                    padding: "16px",
+                    borderRadius: "12px",
+                    border:
+                      "1px solid #e4e7ec",
+                  }}
+                >
+                  <h3
+                    style={{
+                      marginTop: 0,
+                    }}
+                  >
+                    {product}
+                  </h3>
+
+                  <p
+                    style={{
+                      color: "#667085",
+                    }}
+                  >
+                    Mercado: {market}
+                  </p>
+
+                  <p
+                    style={{
+                      color: "#667085",
+                    }}
+                  >
+                    Preço: {price} MT
+                  </p>
+
+                  <button
+                    onClick={() =>
+                      addResearchProduct(
+                        product
+                      )
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "11px",
+                      border: "none",
+                      borderRadius: "9px",
+                      background: "#12b76a",
+                      color: "#ffffff",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    ➕ Adicionar ao Autopilot
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section
           style={{
             background: "#ffffff",
-            borderRadius: "20px",
-            padding: "24px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+            borderRadius: "16px",
+            padding: "20px",
+            border: "1px solid #e4e7ec",
           }}
         >
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
+              gap: "12px",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: "10px",
             }}
           >
             <div>
-              <h2 style={{ margin: 0 }}>
-                📦 Produtos encontrados
+              <h2>
+                Produtos no Autopilot
               </h2>
 
-              <p style={{ color: "#64748b" }}>
-                Resultados simulados organizados por potencial.
+              <p
+                style={{
+                  color: "#667085",
+                }}
+              >
+                Produtos adicionados pela
+                pesquisa simulada.
               </p>
             </div>
 
-            <strong>{products.length} resultados</strong>
+            <strong>
+              {state.products.length} produto(s)
+            </strong>
           </div>
 
-          {products.length === 0 ? (
-            <div
+          {state.products.length === 0 ? (
+            <p
               style={{
+                color: "#667085",
                 marginTop: "20px",
-                padding: "20px",
-                borderRadius: "12px",
-                background: "#f8fafc",
-                color: "#64748b",
               }}
             >
-              Nenhum produto encontrado com estes filtros.
-            </div>
+              Ainda não existem produtos.
+              Execute uma pesquisa para começar.
+            </p>
           ) : (
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(270px, 1fr))",
-                gap: "16px",
-                marginTop: "20px",
+                gap: "10px",
+                marginTop: "16px",
               }}
             >
-              {products.map((product) => {
-                const alreadyAdded = state.products.some(
-                  (item) => item.name === product.name
-                );
-
-                return (
-                  <article
-                    key={product.name}
+              {state.products.map(
+                (product) => (
+                  <div
+                    key={product.id}
                     style={{
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "16px",
-                      padding: "18px",
-                      background: "#fafcff",
+                      display: "flex",
+                      justifyContent:
+                        "space-between",
+                      gap: "12px",
+                      padding: "14px",
+                      borderRadius: "10px",
+                      background: "#f9fafb",
+                      flexWrap: "wrap",
                     }}
                   >
-                    <div style={{ fontSize: "30px" }}>
-                      {product.type === "Infoproduto"
-                        ? "📘"
-                        : "📦"}
-                    </div>
-
-                    <h3
-                      style={{
-                        margin: "10px 0",
-                        lineHeight: 1.4,
-                      }}
-                    >
+                    <strong>
                       {product.name}
-                    </h3>
+                    </strong>
 
-                    <p style={{ margin: "7px 0" }}>
-                      🌍 <strong>Mercado:</strong>{" "}
+                    <span>
                       {product.market}
-                    </p>
+                    </span>
 
-                    <p style={{ margin: "7px 0" }}>
-                      🏷️ <strong>Tipo:</strong>{" "}
-                      {product.type}
-                    </p>
+                    <span>
+                      {product.price} MT
+                    </span>
 
-                    <p style={{ margin: "7px 0" }}>
-                      🔥 <strong>Procura:</strong>{" "}
-                      {product.demand}
-                    </p>
-
-                    <p style={{ margin: "7px 0" }}>
-                      🏁 <strong>Concorrência:</strong>{" "}
-                      {product.competition}
-                    </p>
-
-                    <p style={{ margin: "7px 0" }}>
-                      💰 <strong>Preço simulado:</strong>{" "}
-                      {product.price.toLocaleString("pt-PT")} MT
-                    </p>
-
-                    <div
-                      style={{
-                        marginTop: "12px",
-                        padding: "10px",
-                        borderRadius: "10px",
-                        background: "#eff6ff",
-                        color: "#1d4ed8",
-                        fontWeight: 800,
-                      }}
-                    >
-                      Score: {product.score}/100
-                    </div>
-
-                    <p
-                      style={{
-                        color: "#64748b",
-                        lineHeight: 1.5,
-                        fontSize: "14px",
-                      }}
-                    >
-                      {product.reason}
-                    </p>
-
-                    <button
-                      onClick={() =>
-                        addToAutopilot(product)
-                      }
-                      disabled={alreadyAdded}
-                      style={{
-                        width: "100%",
-                        padding: "11px",
-                        border: "none",
-                        border
+                    <span>
+                      {product.status}
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}
