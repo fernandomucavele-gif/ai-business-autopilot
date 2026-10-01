@@ -3,142 +3,138 @@
 import { useAutopilot } from "../../../context/autopilot-context";
 
 export default function SettingsPage() {
-  const { state, setAutomation } = useAutopilot();
+  const { state } = useAutopilot();
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        background: "#f4f7fb",
+        background: "#020617",
+        color: "#fff",
         padding: "24px",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <div
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-        }}
-      >
-        <div
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+        <p style={{ color: "#22d3ee", fontWeight: "bold" }}>
+          AI BUSINESS AUTOPILOT
+        </p>
+
+        <h1>⚙️ Configurações</h1>
+
+        <p style={{ color: "#94a3b8" }}>
+          Configurações e segurança do sistema.
+        </p>
+
+        <section
           style={{
-            background: "#ffffff",
-            borderRadius: "16px",
-            padding: "24px",
-            border: "1px solid #e4e7ec",
-            marginBottom: "20px",
+            background: "#0f172a",
+            border: "1px solid #1e293b",
+            borderRadius: 16,
+            padding: 20,
+            marginTop: 20,
           }}
         >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "28px",
-              color: "#101828",
-            }}
-          >
-            Configurações
-          </h1>
-
-          <p
-            style={{
-              marginTop: "8px",
-              color: "#667085",
-            }}
-          >
-            Controle as configurações do AI Business Autopilot.
-          </p>
-        </div>
-
-        <div
-          style={{
-            background: "#ffffff",
-            borderRadius: "16px",
-            padding: "24px",
-            border: "1px solid #e4e7ec",
-            marginBottom: "20px",
-          }}
-        >
-          <h2
-            style={{
-              marginTop: 0,
-              color: "#101828",
-            }}
-          >
-            🛡️ Segurança e automação
-          </h2>
+          <h2>🛡️ Segurança</h2>
 
           <div
             style={{
-              padding: "16px",
-              borderRadius: "12px",
-              background: "#ecfdf3",
-              border: "1px solid #abefc6",
-              marginBottom: "20px",
+              background: "#451a03",
+              border: "1px solid #92400e",
+              borderRadius: 12,
+              padding: 16,
+              marginTop: 15,
             }}
           >
-            <strong style={{ color: "#067647" }}>
-              Modo simulação ativo
-            </strong>
-
-            <p
-              style={{
-                marginBottom: 0,
-                color: "#475467",
-              }}
-            >
-              O sistema continua protegido. Nenhuma compra,
-              publicação de anúncio ou pagamento real será executado.
-            </p>
+            ⚠️ MODO SIMULAÇÃO ATIVO
           </div>
 
-          <SettingRow
-            title="Modo simulação"
-            description="Mantém as operações do sistema em ambiente de teste."
-            enabled={state.automation.simulationMode}
-            locked={false}
-            onChange={(value) =>
-              setAutomation("simulationMode", value)
-            }
-          />
+          <p style={{ color: "#94a3b8" }}>
+            Compras, pagamentos, anúncios reais e levantamentos continuam
+            bloqueados.
+          </p>
+        </section>
 
-          <SettingRow
-            title="Compras reais"
-            description="Permite que o sistema faça compras reais com fornecedores."
-            enabled={false}
-            locked={true}
-          />
-
-          <SettingRow
-            title="Anúncios reais"
-            description="Permite publicar campanhas reais em plataformas de anúncios."
-            enabled={false}
-            locked={true}
-          />
-
-          <SettingRow
-            title="Pagamentos automáticos"
-            description="Permite executar pagamentos automaticamente."
-            enabled={false}
-            locked={true}
-          />
-
-          <SettingRow
-            title="Levantamentos"
-            description="Transferência de receitas para contas externas."
-            enabled={false}
-            locked={true}
-          />
-        </div>
-
-        <div
+        <section
           style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "16px",
+            background: "#0f172a",
+            border: "1px solid #1e293b",
+            borderRadius: 16,
+            padding: 20,
+            marginTop: 20,
           }}
         >
+          <h2>📊 Estado do sistema</h2>
+
           <InfoCard
             title="Produtos"
             value={String(state.products.length)}
-           
+          />
+
+          <InfoCard
+            title="Campanhas"
+            value={String(state.campaigns.length)}
+          />
+
+          <InfoCard
+            title="Pedidos"
+            value={String(state.orders.length)}
+          />
+
+          <InfoCard
+            title="Modo"
+            value="SIMULAÇÃO"
+          />
+
+          <InfoCard
+            title="Compras reais"
+            value="BLOQUEADAS"
+          />
+
+          <InfoCard
+            title="Pagamentos"
+            value="BLOQUEADOS"
+          />
+
+          <InfoCard
+            title="Levantamentos"
+            value="BLOQUEADOS"
+          />
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function InfoCard({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
+  return (
+    <div
+      style={{
+        background: "#1e293b",
+        borderRadius: 12,
+        padding: 16,
+        marginTop: 12,
+      }}
+    >
+      <span style={{ color: "#94a3b8" }}>
+        {title}
+      </span>
+
+      <strong
+        style={{
+          display: "block",
+          marginTop: 6,
+          fontSize: 20,
+        }}
+      >
+        {value}
+      </strong>
+    </div>
+  );
+}
