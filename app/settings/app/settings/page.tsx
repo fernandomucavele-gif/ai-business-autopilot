@@ -1,321 +1,144 @@
 "use client";
 
-import { useAutopilot } from "../context/autopilot-context";
+import { useAutopilot } from "../../../context/autopilot-context";
 
 export default function SettingsPage() {
   const { state, setAutomation } = useAutopilot();
-
-  const {
-    simulationMode,
-    realPurchasesEnabled,
-    realAdsEnabled,
-    automaticPaymentsEnabled,
-  } = state.automation;
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        background: "#020617",
-        color: "#ffffff",
+        background: "#f4f7fb",
         padding: "24px",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-        <p
+      <div
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+        }}
+      >
+        <div
           style={{
-            color: "#22d3ee",
-            fontSize: "13px",
-            fontWeight: "bold",
-          }}
-        >
-          AI BUSINESS AUTOPILOT
-        </p>
-
-        <h1 style={{ fontSize: "34px", marginBottom: "8px" }}>
-          ⚙️ Configurações
-        </h1>
-
-        <p style={{ color: "#94a3b8", marginBottom: "28px" }}>
-          Controla o funcionamento e a segurança do teu Autopilot.
-        </p>
-
-        {/* SEGURANÇA */}
-        <section
-          style={{
-            background: "#0f172a",
-            border: "1px solid #1e293b",
+            background: "#ffffff",
             borderRadius: "16px",
-            padding: "22px",
+            padding: "24px",
+            border: "1px solid #e4e7ec",
             marginBottom: "20px",
           }}
         >
-          <h2>🛡️ Segurança</h2>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "28px",
+              color: "#101828",
+            }}
+          >
+            Configurações
+          </h1>
 
-          <p style={{ color: "#94a3b8" }}>
-            O sistema está protegido para testes. As ações reais permanecem
-            desativadas.
+          <p
+            style={{
+              marginTop: "8px",
+              color: "#667085",
+            }}
+          >
+            Controle as configurações do AI Business Autopilot.
           </p>
+        </div>
+
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "16px",
+            padding: "24px",
+            border: "1px solid #e4e7ec",
+            marginBottom: "20px",
+          }}
+        >
+          <h2
+            style={{
+              marginTop: 0,
+              color: "#101828",
+            }}
+          >
+            🛡️ Segurança e automação
+          </h2>
 
           <div
             style={{
-              background: simulationMode ? "#451a03" : "#172554",
-              border: "1px solid #92400e",
+              padding: "16px",
               borderRadius: "12px",
-              padding: "15px",
-              marginTop: "15px",
-              fontWeight: "bold",
+              background: "#ecfdf3",
+              border: "1px solid #abefc6",
+              marginBottom: "20px",
             }}
           >
-            {simulationMode
-              ? "⚠️ MODO SIMULAÇÃO ATIVO"
-              : "ℹ️ MODO SIMULAÇÃO DESATIVADO"}
+            <strong style={{ color: "#067647" }}>
+              Modo simulação ativo
+            </strong>
+
+            <p
+              style={{
+                marginBottom: 0,
+                color: "#475467",
+              }}
+            >
+              O sistema continua protegido. Nenhuma compra,
+              publicação de anúncio ou pagamento real será executado.
+            </p>
           </div>
-        </section>
 
-        {/* AUTOMAÇÃO */}
-        <section
-          style={{
-            background: "#0f172a",
-            border: "1px solid #1e293b",
-            borderRadius: "16px",
-            padding: "22px",
-            marginBottom: "20px",
-          }}
-        >
-          <h2>🤖 Automação</h2>
-
-          <Setting
+          <SettingRow
             title="Modo simulação"
-            description="Permite testar o sistema sem executar ações reais."
-            enabled={simulationMode}
+            description="Mantém as operações do sistema em ambiente de teste."
+            enabled={state.automation.simulationMode}
+            locked={false}
             onChange={(value) =>
               setAutomation("simulationMode", value)
             }
-            locked={false}
           />
 
-          <Setting
-            title="Compras automáticas"
-            description="Permitir que o sistema faça compras reais."
-            enabled={realPurchasesEnabled}
-            onChange={(value) =>
-              setAutomation("realPurchasesEnabled", value)
-            }
-            locked={true}
-          />
-
-          <Setting
-            title="Publicação de anúncios reais"
-            description="Permitir publicação real de campanhas."
-            enabled={realAdsEnabled}
-            onChange={(value) =>
-              setAutomation("realAdsEnabled", value)
-            }
-            locked={true}
-          />
-
-          <Setting
-            title="Pagamentos automáticos"
-            description="Permitir pagamentos automáticos reais."
-            enabled={automaticPaymentsEnabled}
-            onChange={(value) =>
-              setAutomation("automaticPaymentsEnabled", value)
-            }
-            locked={true}
-          />
-
-          <Setting
-            title="Levantamentos automáticos"
-            description="Permitir levantamentos automáticos de dinheiro."
+          <SettingRow
+            title="Compras reais"
+            description="Permite que o sistema faça compras reais com fornecedores."
             enabled={false}
-            onChange={() => {}}
             locked={true}
           />
-        </section>
 
-        {/* ESTADO DO SISTEMA */}
-        <section
-          style={{
-            background: "#0f172a",
-            border: "1px solid #1e293b",
-            borderRadius: "16px",
-            padding: "22px",
-          }}
-        >
-          <h2>📊 Estado do sistema</h2>
+          <SettingRow
+            title="Anúncios reais"
+            description="Permite publicar campanhas reais em plataformas de anúncios."
+            enabled={false}
+            locked={true}
+          />
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "12px",
-              marginTop: "16px",
-            }}
-          >
-            <Status
-              title="Sistema"
-              value="ONLINE"
-            />
+          <SettingRow
+            title="Pagamentos automáticos"
+            description="Permite executar pagamentos automaticamente."
+            enabled={false}
+            locked={true}
+          />
 
-            <Status
-              title="Modo"
-              value={simulationMode ? "SIMULAÇÃO" : "MANUAL"}
-            />
+          <SettingRow
+            title="Levantamentos"
+            description="Transferência de receitas para contas externas."
+            enabled={false}
+            locked={true}
+          />
+        </div>
 
-            <Status
-              title="Compras reais"
-              value={
-                realPurchasesEnabled
-                  ? "ATIVAS"
-                  : "BLOQUEADAS"
-              }
-            />
-
-            <Status
-              title="Anúncios reais"
-              value={
-                realAdsEnabled
-                  ? "ATIVOS"
-                  : "BLOQUEADOS"
-              }
-            />
-
-            <Status
-              title="Pagamentos"
-              value={
-                automaticPaymentsEnabled
-                  ? "ATIVOS"
-                  : "BLOQUEADOS"
-              }
-            />
-
-            <Status
-              title="Levantamentos"
-              value="BLOQUEADOS"
-            />
-          </div>
-        </section>
-
-        {/* AVISO FINAL */}
         <div
           style={{
-            marginTop: "20px",
-            padding: "16px",
-            borderRadius: "12px",
-            background: "#111827",
-            border: "1px solid #334155",
-            color: "#94a3b8",
-            fontSize: "14px",
-            lineHeight: 1.6,
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "16px",
           }}
         >
-          🔒 <strong style={{ color: "#ffffff" }}>
-            Proteção ativa:
-          </strong>{" "}
-          o Autopilot permanece em ambiente de testes. Nenhuma compra,
-          publicação de anúncio, pagamento ou levantamento real será
-          executado através destas configurações.
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function Setting({
-  title,
-  description,
-  enabled,
-  onChange,
-  locked,
-}: {
-  title: string;
-  description: string;
-  enabled: boolean;
-  onChange: (value: boolean) => void;
-  locked: boolean;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: "20px",
-        padding: "18px 0",
-        borderBottom: "1px solid #1e293b",
-      }}
-    >
-      <div>
-        <strong>{title}</strong>
-
-        <p
-          style={{
-            color: "#94a3b8",
-            margin: "6px 0 0",
-            fontSize: "14px",
-          }}
-        >
-          {description}
-        </p>
-      </div>
-
-      <button
-        disabled={locked}
-        onClick={() => onChange(!enabled)}
-        style={{
-          minWidth: "90px",
-          padding: "10px 14px",
-          borderRadius: "10px",
-          border: "none",
-          cursor: locked ? "not-allowed" : "pointer",
-          background: locked
-            ? "#334155"
-            : enabled
-            ? "#16a34a"
-            : "#475569",
-          color: "#ffffff",
-          fontWeight: "bold",
-        }}
-      >
-        {locked
-          ? "BLOQUEADO"
-          : enabled
-          ? "ATIVO"
-          : "OFF"}
-      </button>
-    </div>
-  );
-}
-
-function Status({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div
-      style={{
-        background: "#1e293b",
-        borderRadius: "12px",
-        padding: "16px",
-      }}
-    >
-      <p
-        style={{
-          color: "#94a3b8",
-          fontSize: "13px",
-          margin: "0 0 6px",
-        }}
-      >
-        {title}
-      </p>
-
-      <strong>{value}</strong>
-    </div>
-  );
-}
+          <InfoCard
+            title="Produtos"
+            value={String(state.products.length)}
+           
