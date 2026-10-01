@@ -12,80 +12,187 @@ export type Product = {
   name: string;
   market: Market;
   price: number;
-  cost: number;
-  status: "research" | "approved" | "rejected";
+  supplier?: string;
+  supplierCountry?: string;
+  score: number;
+  status: "research" | "approved" | "testing" | "active";
 };
 
 export type Campaign = {
   id: string;
-  product: string;
+  productId: string;
   market: Market;
-  impressions: number;
-  clicks: number;
-  spend: number;
-  sales: number;
-  revenue: number;
+  objective:
+    | "Vendas"
+    | "Leads"
+    | "Tráfego"
+    | "Reconhecimento";
+  dailyBudget: number;
+  status: "simulation" | "ready" | "active";
 };
 
 export type Order = {
   id: string;
-  product: string;
-  customer: string;
-  country: string;
+  productId: string;
+  customerName: string;
+  market: Market;
   amount: number;
-  supplier: string;
-  status: string;
+  status:
+    | "Novo"
+    | "Pagamento pendente"
+    | "Pago"
+    | "Enviado ao fornecedor"
+    | "Em trânsito"
+    | "Entregue";
 };
 
-export type AutomationSettings = {
-  simulationMode: boolean;
-  realPurchasesEnabled: boolean;
-  realAdsEnabled: boolean;
-  automaticPaymentsEnabled: boolean;
-  automaticWithdrawalsEnabled: boolean;
+export type FinanceRecord = {
+  id: string;
+  type:
+    | "revenue"
+    | "product_cost"
+    | "ad_cost"
+    | "shipping";
+  amount: number;
+  currency: string;
+  description: string;
 };
 
 export type AutopilotState = {
   products: Product[];
   campaigns: Campaign[];
   orders: Order[];
-  automation: AutomationSettings;
+  finance: FinanceRecord[];
+  automation: {
+    simulationMode: boolean;
+    realPurchasesEnabled: boolean;
+    realAdsEnabled: boolean;
+    automaticPaymentsEnabled: boolean;
+  };
 };
 
 export const initialAutopilotState: AutopilotState = {
   products: [],
   campaigns: [],
   orders: [],
+  finance: [],
   automation: {
     simulationMode: true,
     realPurchasesEnabled: false,
     realAdsEnabled: false,
     automaticPaymentsEnabled: false,
-    automaticWithdrawalsEnabled: false,
   },
 };
 
-export function calculateMetrics(state: AutopilotState) {
-  const revenue = state.campaigns.reduce(
-    (total, campaign) => total + campaign.revenue,
-    0
-  );
-
-  const ads = state.campaigns.reduce(
-    (total, campaign) => total + campaign.spend,
-    0
-  );
-
-  const costs = ads;
-
-  const profit = revenue - costs;
-
-  const roas = ads > 0 ? revenue / ads : 0;
-
+export function createProduct(
+  name: string,
+  market: Market,
+  price: number
+): Product {
   return {
-    revenue,
-    costs,
-    profit,
-    roas,
+    id: `PROD-${Date.now()}`,
+    name,
+    market,
+    price,
+    score: 0,
+    status: "research",
+  };
+}
+
+export function createCampaign(
+  productId: string,
+  market: Market,
+  objective: Campaign["objective"],
+  dailyBudget: number
+): Campaign {
+  return {
+    id: `CAMP-${Date.now()}`,
+    productId,
+    market,
+    objective,
+    dailyBudget,
+    status: "simulation",
+  };
+}
+
+export function createOrder(
+  productId: string,
+  customerName: string,
+  market: Market,
+  amount: number
+): Order {
+  return {
+    id: `ORD-${Date.now()}`,
+    productId,
+    customerName,
+    market,
+    amount,
+    status: "Novo",
+  };
+}
+
+export function calculateRevenue(
+  finance: FinanceRecord[]
+): number {
+  return finance
+    .filter((item) => item.type === "revenue")
+    .reduce((total, item) => total + item.amount, 0);
+}
+
+export function calculateCosts(
+  finance: FinanceRecord[]
+): number {
+  return finance
+    .filter((item) => item.type !== "revenue")
+    .reduce((total, item) => total + item.amount, 0);
+}
+
+export function calculateProfit(
+  finance: FinanceRecord[]
+): number {
+  return (
+    calculateRevenue(finance) -
+    calculateCosts(finance)
+  );
+}
+
+export function calculateROAS(
+  finance: FinanceRecord[]
+): number {
+  const revenue = calculateRevenue(finance);
+
+  const adCost = finance
+    .filter((item) => item.type === "ad_cost")
+    .reduce((total, item) => total + item.amount, 0);
+
+  if (adCost === 0) return 0;
+
+  return revenue / adCost;
+}
+
+export function getSystemStatus(
+  state: AutopilotState
+) {
+  return {
+    simulationMode:
+      state.automation.simulationMode,
+
+    realPurchasesEnabled:
+      state.automation.realPurchasesEnabled,
+
+    realAdsEnabled:
+      state.automation.realAdsEnabled,
+
+    automaticPaymentsEnabled:
+      state.automation.automaticPaymentsEnabled,
+
+    products: state.products.length,
+    campaigns: state.campaigns.length,
+    orders: state.orders.length,
+
+    revenue: calculateRevenue(state.finance),
+    costs: calculateCosts(state.finance),
+    profit: calculateProfit(state.finance),
+    roas: calculateROAS(state.finance),
   };
 }
