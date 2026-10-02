@@ -23,296 +23,89 @@ export default function Home() {
   const { state, metrics } = useAutopilot();
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top right, #1e293b 0%, #09090b 35%, #020617 100%)",
-        color: "#f8fafc",
-        fontFamily: "Arial, sans-serif",
-        display: "flex",
-      }}
-    >
-      <aside
-        style={{
-          width: "250px",
-          minHeight: "100vh",
-          background: "rgba(15,23,42,0.88)",
-          borderRight: "1px solid rgba(255,255,255,0.08)",
-          padding: "24px 16px",
-          position: "sticky",
-          top: 0,
-          height: "100vh",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            marginBottom: "30px",
-          }}
-        >
-          <div
-            style={{
-              width: "46px",
-              height: "46px",
-              borderRadius: "14px",
-              background:
-                "linear-gradient(135deg,#22d3ee,#6366f1)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: "900",
-              boxShadow: "0 8px 30px rgba(34,211,238,.25)",
-            }}
-          >
-            AI
-          </div>
-
+    <main className="dashboard">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="logo">AI</div>
           <div>
-            <strong style={{ display: "block", fontSize: "16px" }}>
-              Business
-            </strong>
-
-            <span style={{ color: "#94a3b8", fontSize: "13px" }}>
-              Autopilot
-            </span>
+            <strong>Business</strong>
+            <span>Autopilot</span>
           </div>
         </div>
 
-        <p
-          style={{
-            fontSize: "10px",
-            color: "#64748b",
-            letterSpacing: "1.5px",
-            marginBottom: "12px",
-          }}
-        >
-          CONTROL CENTER
-        </p>
-
-        <nav style={{ display: "grid", gap: "6px" }}>
+        <nav>
           {menu.map(([icon, name, path], index) => (
             <button
               key={name}
               onClick={() => router.push(path)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "11px",
-                width: "100%",
-                padding: "11px 12px",
-                borderRadius: "10px",
-                border:
-                  index === 0
-                    ? "1px solid rgba(34,211,238,.25)"
-                    : "1px solid transparent",
-                background:
-                  index === 0
-                    ? "rgba(34,211,238,.10)"
-                    : "transparent",
-                color: index === 0 ? "#67e8f9" : "#cbd5e1",
-                cursor: "pointer",
-                textAlign: "left",
-                fontSize: "13px",
-              }}
+              className={index === 0 ? "active" : ""}
             >
               <span>{icon}</span>
-              <span>{name}</span>
+              {name}
             </button>
           ))}
         </nav>
 
-        <div
-          style={{
-            marginTop: "30px",
-            padding: "15px",
-            borderRadius: "14px",
-            background:
-              "linear-gradient(135deg,rgba(34,197,94,.10),rgba(15,23,42,.7))",
-            border: "1px solid rgba(34,197,94,.18)",
-          }}
-        >
-          <div style={{ fontSize: "12px", color: "#86efac" }}>
-            ● SISTEMA PROTEGIDO
-          </div>
-
-          <strong
-            style={{
-              display: "block",
-              marginTop: "7px",
-              fontSize: "13px",
-            }}
-          >
-            Modo simulação
-          </strong>
-
-          <small style={{ color: "#64748b" }}>
-            Operações reais bloqueadas
-          </small>
+        <div className="safe">
+          🟢
+          <strong>Modo simulação</strong>
+          <small>Ações reais bloqueadas</small>
         </div>
       </aside>
 
-      <section
-        style={{
-          flex: 1,
-          padding: "28px",
-          maxWidth: "1400px",
-          boxSizing: "border-box",
-        }}
-      >
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "20px",
-            marginBottom: "28px",
-          }}
-        >
+      <section className="content">
+        <header className="header">
           <div>
-            <div
-              style={{
-                color: "#22d3ee",
-                fontSize: "11px",
-                fontWeight: "bold",
-                letterSpacing: "2px",
-                marginBottom: "8px",
-              }}
-            >
-              PRIVATE AI SYSTEM
-            </div>
+            <span className="eyebrow">PRIVATE AI SYSTEM</span>
+            <h1>AI Business Autopilot</h1>
+            <p>Centro de controlo do teu sistema de automação.</p>
+          </div>
 
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "clamp(28px,5vw,44px)",
-                letterSpacing: "-1.5px",
-              }}
-            >
-              AI Business Autopilot
-            </h1>
+          <div className="online">● Sistema online</div>
+        </header>
 
-            <p
-              style={{
-                marginTop: "10px",
-                color: "#94a3b8",
-                fontSize: "14px",
-              }}
-            >
-              Centro de controlo inteligente do teu negócio.
+        <div className="banner">
+          <div>
+            <strong>🛡️ Ambiente seguro de testes</strong>
+            <p>
+              O Autopilot está atualmente a funcionar em modo de
+              simulação.
             </p>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 14px",
-              borderRadius: "999px",
-              background: "rgba(34,197,94,.08)",
-              border: "1px solid rgba(34,197,94,.18)",
-              color: "#86efac",
-              fontSize: "12px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span>●</span>
-            Sistema online
-          </div>
-        </header>
+          <span>SIMULAÇÃO ATIVA</span>
+        </div>
 
-        <section
-          style={{
-            padding: "18px",
-            borderRadius: "18px",
-            marginBottom: "20px",
-            background:
-              "linear-gradient(135deg,rgba(34,211,238,.10),rgba(99,102,241,.08))",
-            border: "1px solid rgba(34,211,238,.15)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "15px",
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              <strong style={{ fontSize: "14px" }}>
-                🛡️ Ambiente seguro de testes
-              </strong>
-
-              <p
-                style={{
-                  margin: "6px 0 0",
-                  color: "#94a3b8",
-                  fontSize: "12px",
-                }}
-              >
-                O Autopilot está a funcionar em modo de simulação.
-              </p>
-            </div>
-
-            <span
-              style={{
-                padding: "8px 12px",
-                borderRadius: "999px",
-                background: "rgba(250,204,21,.10)",
-                color: "#fde68a",
-                fontSize: "11px",
-                fontWeight: "bold",
-              }}
-            >
-              SIMULAÇÃO ATIVA
-            </span>
-          </div>
-        </section>
-
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(180px,1fr))",
-            gap: "14px",
-            marginBottom: "20px",
-          }}
-        >
-          <Metric
+        <div className="cards">
+          <Card
             icon="💰"
             title="Receita"
             value={`${metrics.revenue.toLocaleString("pt-PT")} MT`}
             note="Simulada"
           />
 
-          <Metric
+          <Card
             icon="📦"
             title="Produtos"
             value={String(state.products.length)}
             note="Pesquisados"
           />
 
-          <Metric
+          <Card
             icon="📢"
             title="Campanhas"
             value={String(state.campaigns.length)}
             note="Simuladas"
           />
 
-          <Metric
+          <Card
             icon="🛒"
             title="Pedidos"
             value={String(state.orders.length)}
             note="Registados"
           />
 
-          <Metric
+          <Card
             icon="⚡"
             title="Automação"
             value={
@@ -320,241 +113,111 @@ export default function Home() {
                 ? "SIMULAÇÃO"
                 : "ATIVA"
             }
-            note="Controlo protegido"
+            note="Protegida"
           />
-        </section>
+        </div>
 
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0,2fr) minmax(280px,1fr)",
-            gap: "18px",
-          }}
-        >
-          <div
-            style={{
-              background: "rgba(15,23,42,.82)",
-              border: "1px solid rgba(255,255,255,.07)",
-              borderRadius: "20px",
-              padding: "22px",
-              boxShadow: "0 20px 60px rgba(0,0,0,.18)",
-            }}
-          >
-            <div style={{ marginBottom: "18px" }}>
-              <h2 style={{ margin: 0, fontSize: "19px" }}>
-                Centro de atividade
-              </h2>
+        <div className="main-grid">
+          <section className="panel">
+            <div className="panel-head">
+              <div>
+                <h2>Centro de atividade</h2>
+                <p>Agentes disponíveis no Autopilot.</p>
+              </div>
 
-              <p
-                style={{
-                  color: "#64748b",
-                  fontSize: "12px",
-                  marginTop: "6px",
-                }}
-              >
-                Todos os agentes disponíveis no sistema.
-              </p>
+              <span className="badge">SIMULAÇÃO</span>
             </div>
 
-            <div style={{ display: "grid", gap: "8px" }}>
+            <div className="agents">
               {menu.slice(1).map(([icon, name, path]) => (
                 <button
                   key={name}
+                  className="agent"
                   onClick={() => router.push(path)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    width: "100%",
-                    padding: "13px",
-                    background: "rgba(30,41,59,.55)",
-                    border: "1px solid rgba(255,255,255,.05)",
-                    borderRadius: "12px",
-                    color: "#fff",
-                    textAlign: "left",
-                    cursor: "pointer",
-                  }}
                 >
-                  <span
-                    style={{
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "10px",
-                      background: "rgba(255,255,255,.06)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {icon}
+                  <span className="agent-icon">{icon}</span>
+
+                  <span className="agent-text">
+                    <strong>{name}</strong>
+                    <small>Agente disponível</small>
                   </span>
 
-                  <span style={{ flex: 1 }}>
-                    <strong
-                      style={{
-                        display: "block",
-                        fontSize: "13px",
-                      }}
-                    >
-                      {name}
-                    </strong>
-
-                    <small style={{ color: "#64748b" }}>
-                      Agente disponível
-                    </small>
-                  </span>
-
-                  <span
-                    style={{
-                      color: "#86efac",
-                      fontSize: "10px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    READY
-                  </span>
+                  <b>READY</b>
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div style={{ display: "grid", gap: "18px" }}>
-            <div
-              style={{
-                background: "rgba(15,23,42,.82)",
-                border: "1px solid rgba(255,255,255,.07)",
-                borderRadius: "20px",
-                padding: "22px",
-              }}
-            >
-              <h2 style={{ margin: 0, fontSize: "18px" }}>
-                Segurança
-              </h2>
+          <section className="panel">
+            <h2>🛡️ Segurança</h2>
 
-              <Security
-                label="Modo simulação"
-                value={
-                  state.automation.simulationMode
-                    ? "ATIVO"
-                    : "DESATIVADO"
-                }
-              />
+            <Security
+              title="Modo simulação"
+              value={
+                state.automation.simulationMode
+                  ? "ATIVO"
+                  : "DESATIVADO"
+              }
+            />
 
-              <Security
-                label="Compras reais"
-                value={
-                  state.automation.realPurchasesEnabled
-                    ? "ATIVAS"
-                    : "BLOQUEADAS"
-                }
-              />
+            <Security
+              title="Compras reais"
+              value={
+                state.automation.realPurchasesEnabled
+                  ? "ATIVAS"
+                  : "BLOQUEADAS"
+              }
+            />
 
-              <Security
-                label="Anúncios reais"
-                value={
-                  state.automation.realAdsEnabled
-                    ? "ATIVOS"
-                    : "BLOQUEADOS"
-                }
-              />
+            <Security
+              title="Anúncios reais"
+              value={
+                state.automation.realAdsEnabled
+                  ? "ATIVOS"
+                  : "BLOQUEADOS"
+              }
+            />
 
-              <Security
-                label="Pagamentos"
-                value={
-                  state.automation.automaticPaymentsEnabled
-                    ? "ATIVOS"
-                    : "BLOQUEADOS"
-                }
-              />
+            <Security
+              title="Pagamentos"
+              value={
+                state.automation.automaticPaymentsEnabled
+                  ? "ATIVOS"
+                  : "BLOQUEADOS"
+              }
+            />
 
-              <Security
-                label="Levantamentos"
-                value="BLOQUEADOS"
-              />
-            </div>
+            <Security
+              title="Levantamentos"
+              value="BLOQUEADOS"
+            />
+          </section>
+        </div>
 
-            <div
-              style={{
-                background:
-                  "linear-gradient(145deg,rgba(30,41,59,.9),rgba(15,23,42,.85))",
-                border: "1px solid rgba(34,211,238,.12)",
-                borderRadius: "20px",
-                padding: "22px",
-              }}
-            >
-              <p
-                style={{
-                  color: "#22d3ee",
-                  fontSize: "10px",
-                  fontWeight: "bold",
-                  letterSpacing: "1.5px",
-                }}
-              >
-                AUTOPILOT STATUS
-              </p>
+        <section className="panel finance">
+          <h2>📊 Visão financeira</h2>
+          <p>Dados simulados partilhados pelo Autopilot.</p>
 
-              <h2 style={{ margin: "8px 0", fontSize: "20px" }}>
-                Sistema protegido
-              </h2>
-
-              <p
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "12px",
-                  lineHeight: 1.6,
-                }}
-              >
-                O sistema pode ser testado livremente sem realizar
-                compras, pagamentos ou publicidade real.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section
-          style={{
-            marginTop: "18px",
-            background: "rgba(15,23,42,.82)",
-            border: "1px solid rgba(255,255,255,.07)",
-            borderRadius: "20px",
-            padding: "22px",
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: "18px" }}>
-            📊 Visão financeira
-          </h2>
-
-          <p
-            style={{
-              color: "#64748b",
-              fontSize: "12px",
-            }}
-          >
-            Dados simulados partilhados pelo Autopilot.
-          </p>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit,minmax(150px,1fr))",
-              gap: "12px",
-              marginTop: "16px",
-            }}
-          >
+          <div className="finance-grid">
             <Finance
               title="Receita"
-              value={`${metrics.revenue.toLocaleString("pt-PT")} MT`}
+              value={`${metrics.revenue.toLocaleString(
+                "pt-PT"
+              )} MT`}
             />
 
             <Finance
               title="Custos"
-              value={`${metrics.costs.toLocaleString("pt-PT")} MT`}
+              value={`${metrics.costs.toLocaleString(
+                "pt-PT"
+              )} MT`}
             />
 
             <Finance
               title="Lucro"
-              value={`${metrics.profit.toLocaleString("pt-PT")} MT`}
+              value={`${metrics.profit.toLocaleString(
+                "pt-PT"
+              )} MT`}
             />
 
             <Finance
@@ -564,70 +227,440 @@ export default function Home() {
           </div>
         </section>
 
-        <footer
-          style={{
-            textAlign: "center",
-            color: "#475569",
-            fontSize: "11px",
-            padding: "25px 10px 10px",
-          }}
-        >
+        <div className="footer">
           AI Business Autopilot • Private System • Simulation Mode
-        </footer>
+        </div>
       </section>
 
       <style jsx>{`
-        @media (max-width: 800px) {
-          main {
-            display: block !important;
-          }
-
-          aside {
-            width: 100% !important;
-            min-height: auto !important;
-            height: auto !important;
-            position: relative !important;
-            border-right: none !important;
-            border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-          }
-
-          aside nav {
-            display: flex !important;
-            overflow-x: auto !important;
-            padding-bottom: 5px !important;
-          }
-
-          aside nav button {
-            min-width: 125px !important;
-          }
-
-          section {
-            max-width: 100% !important;
-          }
+        * {
+          box-sizing: border-box;
         }
 
-        @media (max-width: 650px) {
-          section {
-            padding: 16px !important;
-          }
+        .dashboard {
+          min-height: 100vh;
+          display: flex;
+          background:
+            radial-gradient(
+              circle at top right,
+              #172554,
+              #09090b 40%,
+              #020617
+            );
+          color: #f8fafc;
+          font-family: Arial, sans-serif;
+        }
 
-          header {
-            display: block !important;
-          }
+        .sidebar {
+          width: 250px;
+          min-height: 100vh;
+          padding: 22px 15px;
+          background: rgba(15, 23, 42, 0.92);
+          border-right: 1px solid rgba(255,255,255,.08);
+        }
 
-          header > div:last-child {
-            display: inline-flex !important;
-            margin-top: 15px !important;
-          }
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 11px;
+          margin-bottom: 28px;
+        }
 
-          h1 {
-            font-size: 30px !important;
-          }
+        .logo {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 13px;
+          background: linear-gradient(135deg,#22d3ee,#6366f1);
+          font-weight: 900;
+          box-shadow: 0 8px 30px rgba(34,211,238,.2);
+        }
+
+        .brand strong,
+        .brand span {
+          display: block;
+        }
+
+        .brand span {
+          color: #94a3b8;
+          font-size: 12px;
+          margin-top: 3px;
+        }
+
+        nav {
+          display: grid;
+          gap: 5px;
+        }
+
+        nav button {
+          border: 1px solid transparent;
+          border-radius: 10px;
+          padding: 11px;
+          background: transparent;
+          color: #cbd5e1;
+          text-align: left;
+          cursor: pointer;
+          font-size: 13px;
+        }
+
+        nav button span {
+          margin-right: 10px;
+        }
+
+        nav button:hover,
+        nav button.active {
+          background: rgba(34,211,238,.1);
+          border-color: rgba(34,211,238,.2);
+          color: #67e8f9;
+        }
+
+        .safe {
+          margin-top: 25px;
+          padding: 14px;
+          border-radius: 13px;
+          background: rgba(34,197,94,.07);
+          border: 1px solid rgba(34,197,94,.15);
+        }
+
+        .safe strong,
+        .safe small {
+          display: block;
+          margin-top: 6px;
+        }
+
+        .safe small {
+          color: #64748b;
+        }
+
+        .content {
+          flex: 1;
+          width: 100%;
+          max-width: 1400px;
+          padding: 30px;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          gap: 20px;
+          align-items: flex-start;
+          margin-bottom: 25px;
+        }
+
+        .eyebrow {
+          color: #22d3ee;
+          font-size: 10px;
+          font-weight: bold;
+          letter-spacing: 2px;
+        }
+
+        h1 {
+          font-size: clamp(28px,5vw,44px);
+          margin: 8px 0;
+          letter-spacing: -1px;
+        }
+
+        h2 {
+          margin: 0;
+          font-size: 18px;
+        }
+
+        p {
+          color: #94a3b8;
+        }
+
+        .online {
+          padding: 9px 13px;
+          border-radius: 999px;
+          color: #86efac;
+          background: rgba(34,197,94,.08);
+          border: 1px solid rgba(34,197,94,.16);
+          font-size: 11px;
+          white-space: nowrap;
+        }
+
+        .banner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 15px;
+          padding: 17px;
+          margin-bottom: 18px;
+          border-radius: 17px;
+          background: linear-gradient(
+            135deg,
+            rgba(34,211,238,.1),
+            rgba(99,102,241,.08)
+          );
+          border: 1px solid rgba(34,211,238,.14);
+        }
+
+        .banner p {
+          margin: 5px 0 0;
+          font-size: 12px;
+        }
+
+        .banner > span {
+          color: #fde68a;
+          background: rgba(250,204,21,.1);
+          border-radius: 999px;
+          padding: 8px 12px;
+          font-size: 10px;
+          font-weight: bold;
+        }
+
+        .cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+
+        .card,
+        .panel {
+          background: rgba(15,23,42,.85);
+          border: 1px solid rgba(255,255,255,.07);
+          box-shadow: 0 18px 50px rgba(0,0,0,.14);
+        }
+
+        .card {
+          padding: 17px;
+          border-radius: 17px;
+        }
+
+        .card-icon {
+          font-size: 20px;
+        }
+
+        .card-title {
+          color: #64748b;
+          font-size: 11px;
+          margin: 10px 0 5px;
+        }
+
+        .card-value {
+          font-size: 20px;
+          font-weight: bold;
+        }
+
+        .card-note {
+          color: #475569;
+          display: block;
+          margin-top: 5px;
+          font-size: 10px;
+        }
+
+        .main-grid {
+          display: grid;
+          grid-template-columns: minmax(0,2fr) minmax(280px,1fr);
+          gap: 17px;
+        }
+
+        .panel {
+          padding: 20px;
+          border-radius: 19px;
+        }
+
+        .panel-head {
+          display: flex;
+          justify-content: space-between;
+          gap: 15px;
+          margin-bottom: 17px;
+        }
+
+        .panel-head p,
+        .finance > p {
+          margin: 5px 0 0;
+          font-size: 12px;
+        }
+
+        .badge {
+          color: #fde68a;
+          font-size: 9px;
+          padding: 7px 10px;
+          border-radius: 999px;
+          background: rgba(250,204,21,.08);
+          height: fit-content;
+        }
+
+        .agents {
+          display: grid;
+          gap: 7px;
+        }
+
+        .agent {
+          display: flex;
+          align-items: center;
+          gap: 11px;
+          width: 100%;
+          padding: 11px;
+          border: 1px solid rgba(255,255,255,.05);
+          border-radius: 11px;
+          background: rgba(30,41,59,.5);
+          color: white;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .agent:hover {
+          background: rgba(34,211,238,.08);
+        }
+
+        .agent-icon {
+          width: 34px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 9px;
+          background: rgba(255,255,255,.06);
+        }
+
+        .agent-text {
+          flex: 1;
+        }
+
+        .agent-text strong,
+        .agent-text small {
+          display: block;
+        }
+
+        .agent-text small {
+          color: #64748b;
+          margin-top: 3px;
+          font-size: 10px;
+        }
+
+        .agent b {
+          color: #86efac;
+          font-size: 9px;
+        }
+
+        .finance {
+          margin-top: 17px;
+        }
+
+        .finance-grid {
+          display: grid;
+          grid-template-columns: repeat(4,1fr);
+          gap: 10px;
+          margin-top: 15px;
+        }
+
+        .finance-grid > div {
+          padding: 14px;
+          border-radius: 12px;
+          background: rgba(30,41,59,.55);
+        }
+
+        .finance-grid span {
+          color: #64748b;
+          font-size: 10px;
+        }
+
+        .finance-grid strong {
+          display: block;
+          margin-top: 7px;
+          font-size: 17px;
+        }
+
+        .security-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 12px 0;
+          border-bottom: 1px solid rgba(255,255,255,.05);
+          font-size: 12px;
+        }
+
+        .security-row strong {
+          color: #86efac;
+          font-size: 9px;
+        }
+
+        .footer {
+          text-align: center;
+          color: #475569;
+          padding: 24px 5px 5px;
+          font-size: 10px;
         }
 
         @media (max-width: 900px) {
-          section > div[style*="grid-template-columns: minmax"] {
-            grid-template-columns: 1fr !important;
+          .main-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .sidebar {
+            width: 210px;
+          }
+
+          .finance-grid {
+            grid-template-columns: repeat(2,1fr);
+          }
+        }
+
+        @media (max-width: 700px) {
+          .dashboard {
+            display: block;
+          }
+
+          .sidebar {
+            width: 100%;
+            min-height: auto;
+            border-right: none;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+          }
+
+          nav {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 5px;
+          }
+
+          nav button {
+            min-width: 120px;
+          }
+
+          .safe {
+            margin-top: 15px;
+          }
+
+          .content {
+            padding: 18px 14px;
+          }
+
+          .header {
+            display: block;
+          }
+
+          .online {
+            display: inline-block;
+            margin-top: 12px;
+          }
+
+          .banner {
+            display: block;
+          }
+
+          .banner > span {
+            display: inline-block;
+            margin-top: 12px;
+          }
+
+          .finance-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
+        @media (max-width: 430px) {
+          .cards {
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .finance-grid {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
@@ -635,7 +668,7 @@ export default function Home() {
   );
 }
 
-function Metric({
+function Card({
   icon,
   title,
   value,
@@ -647,5 +680,41 @@ function Metric({
   note: string;
 }) {
   return (
-    <div
-     
+    <div className="card">
+      <div className="card-icon">{icon}</div>
+      <div className="card-title">{title}</div>
+      <div className="card-value">{value}</div>
+      <small className="card-note">{note}</small>
+    </div>
+  );
+}
+
+function Security({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
+  return (
+    <div className="security-row">
+      <span>{title}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function Finance({
+  title,
+  value,
+}: {
+  title: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <span>{title}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
