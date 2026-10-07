@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -22,6 +23,11 @@ import {
   calculateProfit,
   calculateROAS,
 } from "../../lib/autopilot";
+
+import {
+  loadAutopilotState,
+  saveAutopilotState,
+} from "../../lib/autopilot-storage";
 
 type AutopilotContextType = {
   state: AutopilotState;
@@ -77,6 +83,29 @@ export function AutopilotProvider({
     useState<AutopilotState>(
       initialAutopilotState
     );
+
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    async function loadState() {
+      const savedState =
+        await loadAutopilotState();
+
+      if (savedState) {
+        setState(savedState);
+      }
+
+      setLoaded(true);
+    }
+
+    loadState();
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    saveAutopilotState(state);
+  }, [state, loaded]);
 
   function addProduct(
     name: string,
