@@ -1,5 +1,3 @@
-// lib/autopilot-workflow.ts
-
 import type { AutopilotState } from "./autopilot";
 import {
   canActivateProduct,
@@ -50,4 +48,4 @@ export function getNextWorkflowStep(
   if (state.orders.length === 0) return "customer_orders";
 
   return "monitoring";
-    }
+}
