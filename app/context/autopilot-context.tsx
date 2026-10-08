@@ -52,9 +52,7 @@ type AutopilotContextType = {
     amount: number
   ) => void;
 
-  addFinanceRecord: (
-    record: FinanceRecord
-  ) => void;
+  addFinanceRecord: (record: FinanceRecord) => void;
 
   setAutomation: (
     key: keyof AutopilotState["automation"],
@@ -70,9 +68,7 @@ type AutopilotContextType = {
 };
 
 const AutopilotContext =
-  createContext<AutopilotContextType | undefined>(
-    undefined
-  );
+  createContext<AutopilotContextType | undefined>(undefined);
 
 export function AutopilotProvider({
   children,
@@ -80,16 +76,13 @@ export function AutopilotProvider({
   children: ReactNode;
 }) {
   const [state, setState] =
-    useState<AutopilotState>(
-      initialAutopilotState
-    );
+    useState<AutopilotState>(initialAutopilotState);
 
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     async function loadState() {
-      const savedState =
-        await loadAutopilotState();
+      const savedState = await loadAutopilotState();
 
       if (savedState) {
         setState(savedState);
@@ -112,18 +105,11 @@ export function AutopilotProvider({
     market: Product["market"],
     price: number
   ) {
-    const product = createProduct(
-      name,
-      market,
-      price
-    );
+    const product = createProduct(name, market, price);
 
     setState((current) => ({
       ...current,
-      products: [
-        ...current.products,
-        product,
-      ],
+      products: [...current.products, product],
     }));
   }
 
@@ -142,10 +128,7 @@ export function AutopilotProvider({
 
     setState((current) => ({
       ...current,
-      campaigns: [
-        ...current.campaigns,
-        campaign,
-      ],
+      campaigns: [...current.campaigns, campaign],
     }));
   }
 
@@ -164,22 +147,14 @@ export function AutopilotProvider({
 
     setState((current) => ({
       ...current,
-      orders: [
-        ...current.orders,
-        order,
-      ],
+      orders: [...current.orders, order],
     }));
   }
 
-  function addFinanceRecord(
-    record: FinanceRecord
-  ) {
+  function addFinanceRecord(record: FinanceRecord) {
     setState((current) => ({
       ...current,
-      finance: [
-        ...current.finance,
-        record,
-      ],
+      finance: [...current.finance, record],
     }));
   }
 
@@ -197,21 +172,10 @@ export function AutopilotProvider({
   }
 
   const metrics = {
-    revenue: calculateRevenue(
-      state.finance
-    ),
-
-    costs: calculateCosts(
-      state.finance
-    ),
-
-    profit: calculateProfit(
-      state.finance
-    ),
-
-    roas: calculateROAS(
-      state.finance
-    ),
+    revenue: calculateRevenue(state.finance),
+    costs: calculateCosts(state.finance),
+    profit: calculateProfit(state.finance),
+    roas: calculateROAS(state.finance),
   };
 
   return (
@@ -232,8 +196,7 @@ export function AutopilotProvider({
 }
 
 export function useAutopilot() {
-  const context =
-    useContext(AutopilotContext);
+  const context = useContext(AutopilotContext);
 
   if (!context) {
     throw new Error(
