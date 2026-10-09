@@ -220,5 +220,5 @@ export default function SuppliersPage() {
       </div>
     </main>
   );
-    }
-        
+      }
+              
