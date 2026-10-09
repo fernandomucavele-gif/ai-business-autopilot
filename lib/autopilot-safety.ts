@@ -1,67 +1,75 @@
 import type { AutopilotState } from "./autopilot";
 
-export type AutomationLimits = {
-  maxPurchaseAmount: number;
-  maxDailyAdBudget: number;
-  requireApproval: boolean;
+export type SafetyCheck = {
+  allowed: boolean;
+  reason: string;
 };
 
-export const defaultAutomationLimits: AutomationLimits = {
-  maxPurchaseAmount: 100,
-  maxDailyAdBudget: 20,
-  requireApproval: true,
-};
-
-export function checkPurchaseLimit(
-  amount: number,
-  limits: AutomationLimits = defaultAutomationLimits
-) {
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { allowed: false, reason: "Valor inválido." };
-  }
-
-  if (amount > limits.maxPurchaseAmount) {
+export function checkRealPurchases(
+  state: AutopilotState
+): SafetyCheck {
+  if (state.automation.simulationMode) {
     return {
       allowed: false,
-      reason: "Compra acima do limite permitido.",
+      reason: "Modo de simulação ativo.",
     };
   }
 
-  if (limits.requireApproval) {
+  if (!state.automation.realPurchasesEnabled) {
     return {
       allowed: false,
-      reason: "Aprovação manual necessária antes da compra.",
+      reason: "Compras reais desativadas.",
     };
   }
 
-  return { allowed: true, reason: "Dentro do limite." };
+  return {
+    allowed: true,
+    reason: "Verificações básicas aprovadas.",
+  };
 }
 
-export function checkDailyAdBudget(
-  amount: number,
-  state: AutopilotState,
-  limits: AutomationLimits = defaultAutomationLimits
-) {
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { allowed: false, reason: "Orçamento inválido." };
-  }
-
-  if (amount > limits.maxDailyAdBudget) {
+export function checkRealAds(
+  state: AutopilotState
+): SafetyCheck {
+  if (state.automation.simulationMode) {
     return {
       allowed: false,
-      reason: "Orçamento diário acima do limite.",
+      reason: "Modo de simulação ativo.",
     };
   }
 
-  if (
-    state.automation.simulationMode ||
-    !state.automation.realAdsEnabled
-  ) {
+  if (!state.automation.realAdsEnabled) {
     return {
       allowed: false,
-      reason: "Anúncios reais não estão autorizados.",
+      reason: "Anúncios reais desativados.",
     };
   }
 
-  return { allowed: true, reason: "Dentro do limite." };
-      }
+  return {
+    allowed: true,
+    reason: "Verificações básicas aprovadas.",
+  };
+}
+
+export function checkAutomaticPayments(
+  state: AutopilotState
+): SafetyCheck {
+  if (state.automation.simulationMode) {
+    return {
+      allowed: false,
+      reason: "Modo de simulação ativo.",
+    };
+  }
+
+  if (!state.automation.automaticPaymentsEnabled) {
+    return {
+      allowed: false,
+      reason: "Pagamentos automáticos desativados.",
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: "Verificações básicas aprovadas.",
+  };
+  }
