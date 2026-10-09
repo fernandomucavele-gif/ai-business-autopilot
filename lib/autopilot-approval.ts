@@ -1,41 +1,43 @@
-export type KillSwitchStatus = {
-  stopped: boolean;
-  reason: string;
-  stoppedAt: string | null;
+export type ApprovalRequest = {
+  id: string;
+  action: "purchase" | "advertisement" | "payment";
+  description: string;
+  amount: number;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
 };
 
-let status: KillSwitchStatus = {
-  stopped: false,
-  reason: "",
-  stoppedAt: null,
-};
-
-export function activateKillSwitch(
-  reason = "Paragem de emergência."
-): KillSwitchStatus {
-  status = {
-    stopped: true,
-    reason,
-    stoppedAt: new Date().toISOString(),
+export function createApprovalRequest(
+  action: ApprovalRequest["action"],
+  description: string,
+  amount: number
+): ApprovalRequest {
+  return {
+    id: `APPROVAL-${Date.now()}`,
+    action,
+    description,
+    amount,
+    status: "pending",
+    createdAt: new Date().toISOString(),
   };
-
-  return { ...status };
 }
 
-export function resetKillSwitch(): KillSwitchStatus {
-  status = {
-    stopped: false,
-    reason: "",
-    stoppedAt: null,
-  };
-
-  return { ...status };
+export function approveRequest(
+  request: ApprovalRequest
+): ApprovalRequest {
+  return { ...request, status: "approved" };
 }
 
-export function getKillSwitchStatus(): KillSwitchStatus {
-  return { ...status };
+export function rejectRequest(
+  request: ApprovalRequest
+): ApprovalRequest {
+  return { ...request, status: "rejected" };
 }
 
-export function canRunAutomation(): boolean {
-  return !status.stopped;
+export function canExecuteApprovedRequest(
+  request: ApprovalRequest
+): boolean {
+  return request.status === "approved" &&
+    Number.isFinite(request.amount) &&
+    request.amount > 0;
 }
