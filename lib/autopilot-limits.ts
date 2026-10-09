@@ -1,4 +1,4 @@
-autimport type { AutopilotState } from "./autopilot";
+import type { AutopilotState } from "./autopilot";
 
 export type AutomationLimits = {
   maxPurchaseAmount: number;
@@ -64,4 +64,4 @@ export function checkDailyAdBudget(
   }
 
   return { allowed: true, reason: "Dentro do limite." };
-}opilot-limits.ts
+  }
