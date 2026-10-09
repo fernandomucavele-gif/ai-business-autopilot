@@ -1,4 +1,3 @@
-
 export type KillSwitchStatus = {
   stopped: boolean;
   reason: string;
@@ -19,6 +18,7 @@ export function activateKillSwitch(
     reason,
     stoppedAt: new Date().toISOString(),
   };
+
   return { ...status };
 }
 
@@ -28,6 +28,7 @@ export function resetKillSwitch(): KillSwitchStatus {
     reason: "",
     stoppedAt: null,
   };
+
   return { ...status };
 }
 
@@ -37,4 +38,4 @@ export function getKillSwitchStatus(): KillSwitchStatus {
 
 export function canRunAutomation(): boolean {
   return !status.stopped;
-  }
+}
