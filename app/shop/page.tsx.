@@ -1,0 +1,683 @@
+
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  Search,
+  ShoppingBag,
+  X,
+  Plus,
+  Minus,
+  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  Menu,
+} from "lucide-react";
+
+type Product = {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  description: string;
+  image: string;
+  tag: string;
+};
+
+const products: Product[] = [
+  {
+    id: 1,
+    name: "Organizador Inteligente",
+    category: "Casa",
+    price: 1290,
+    description:
+      "Uma solução prática para organizar os teus objetos e aproveitar melhor o espaço da casa.",
+    image:
+      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+    tag: "Popular",
+  },
+  {
+    id: 2,
+    name: "Acessório para Automóvel",
+    category: "Automóvel",
+    price: 890,
+    description:
+      "Um acessório prático para melhorar a organização e o conforto durante as viagens.",
+    image:
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
+    tag: "Destaque",
+  },
+  {
+    id: 3,
+    name: "Kit de Treino Doméstico",
+    category: "Desporto",
+    price: 1590,
+    description:
+      "Uma opção para complementar os teus treinos em casa e manter uma rotina ativa.",
+    image:
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80",
+    tag: "Bem-estar",
+  },
+  {
+    id: 4,
+    name: "Organizador Pessoal",
+    category: "Acessórios",
+    price: 750,
+    description:
+      "Mantém os teus objetos essenciais organizados em casa, no trabalho ou em viagem.",
+    image:
+      "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=800&q=80",
+    tag: "Prático",
+  },
+  {
+    id: 5,
+    name: "Acessório para Telemóvel",
+    category: "Tecnologia",
+    price: 990,
+    description:
+      "Um acessório demonstrativo pensado para complementar a utilização diária do telemóvel.",
+    image:
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80",
+    tag: "Tecnologia",
+  },
+  {
+    id: 6,
+    name: "Caderno de Desenvolvimento",
+    category: "Papelaria",
+    price: 490,
+    description:
+      "Regista objetivos, planeia tarefas e acompanha o teu progresso todos os dias.",
+    image:
+      "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80",
+    tag: "Novidade",
+  },
+];
+
+const categories = [
+  "Todos",
+  "Casa",
+  "Automóvel",
+  "Desporto",
+  "Acessórios",
+  "Tecnologia",
+  "Papelaria",
+];
+
+const money = (value: number) =>
+  new Intl.NumberFormat("pt-MZ", {
+    style: "currency",
+    currency: "MZN",
+    maximumFractionDigits: 0,
+  }).format(value);
+
+export default function ShopPage() {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("Todos");
+  const [cart, setCart] = useState<Record<number, number>>({});
+  const [cartOpen, setCartOpen] = useState(false);
+  const [selected, setSelected] = useState<Product | null>(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
+
+  const filteredProducts = useMemo(
+    () =>
+      products.filter((product) => {
+        const matchesCategory =
+          category === "Todos" || product.category === category;
+        const term = search.trim().toLowerCase();
+        const matchesSearch =
+          product.name.toLowerCase().includes(term) ||
+          product.description.toLowerCase().includes(term) ||
+          product.category.toLowerCase().includes(term);
+
+        return matchesCategory && matchesSearch;
+      }),
+    [search, category],
+  );
+
+  const cartCount = Object.values(cart).reduce(
+    (sum, quantity) => sum + quantity,
+    0,
+  );
+
+  const cartItems = products.filter((product) => (cart[product.id] ?? 0) > 0);
+
+  const total = cartItems.reduce(
+    (sum, product) => sum + product.price * cart[product.id],
+    0,
+  );
+
+  function changeQuantity(id: number, amount: number) {
+    setCart((previous) => {
+      const next = { ...previous };
+      const quantity = (next[id] ?? 0) + amount;
+
+      if (quantity <= 0) {
+        delete next[id];
+      } else {
+        next[id] = quantity;
+      }
+
+      return next;
+    });
+  }
+
+  return (
+    <main className="shop">
+      <div className="demo-notice">
+        <ShieldCheck size={16} />
+        <span>
+          MODO DEMONSTRAÇÃO — produtos e preços ilustrativos. Sem pagamentos
+          nem encomendas reais.
+        </span>
+      </div>
+
+      <header className="shop-header">
+        <a href="/shop" className="shop-logo">
+          <span className="logo-mark">A</span>
+          <span>
+            AUTOPILOT
+            <small>MARKETPLACE</small>
+          </span>
+        </a>
+
+        <nav className={mobileMenu ? "shop-nav nav-open" : "shop-nav"}>
+          <a href="#inicio" onClick={() => setMobileMenu(false)}>
+            Início
+          </a>
+          <a
+            href="#catalogo"
+            onClick={() => setMobileMenu(false)}
+          >
+            Produtos
+          </a>
+          <a href="#sobre" onClick={() => setMobileMenu(false)}>
+            Sobre a loja
+          </a>
+        </nav>
+
+        <div className="header-actions">
+          <button
+            className="icon-button mobile-menu-button"
+            onClick={() => setMobileMenu(!mobileMenu)}
+            aria-label="Abrir menu"
+          >
+            <Menu size={21} />
+          </button>
+          <button
+            className="cart-button"
+            onClick={() => setCartOpen(true)}
+          >
+            <ShoppingBag size={19} />
+            <span className="cart-label">Carrinho</span>
+            <span className="cart-count">{cartCount}</span>
+          </button>
+        </div>
+      </header>
+
+      <section className="hero" id="inicio">
+        <div className="hero-content">
+          <span className="eyebrow">
+            <Sparkles size={15} /> DESCOBRE ALGO NOVO
+          </span>
+          <h1>
+            Compras mais simples.
+            <br />
+            <span>Escolhas inteligentes.</span>
+          </h1>
+          <p>
+            Descobre produtos selecionados para a tua casa, o teu dia a dia
+            e o teu estilo de vida.
+          </p>
+          <a href="#catalogo" className="primary-button">
+            Explorar produtos <ArrowRight size={18} />
+          </a>
+          <div className="hero-trust">
+            <ShieldCheck size={17} />
+            Loja em demonstração segura
+          </div>
+        </div>
+        <div className="hero-art">
+          <div className="hero-circle">
+            <ShoppingBag size={100} strokeWidth={1} />
+            <span className="hero-sparkle">✳</span>
+          </div>
+          <div className="floating-label">
+            <Sparkles size={17} />
+            <span>
+              <strong>Descobre</strong>
+              <small>Novas possibilidades</small>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section className="benefits">
+        <div>
+          <span className="benefit-icon">✦</span>
+          <span>
+            <strong>Produtos selecionados</strong>
+            <small>Descobre diferentes categorias</small>
+          </span>
+        </div>
+        <div>
+          <span className="benefit-icon">⌕</span>
+          <span>
+            <strong>Pesquisa simples</strong>
+            <small>Encontra o que procuras</small>
+          </span>
+        </div>
+        <div>
+          <span className="benefit-icon">♡</span>
+          <span>
+            <strong>Experiência intuitiva</strong>
+            <small>Compra sem complicações</small>
+          </span>
+        </div>
+      </section>
+
+      <section className="catalog" id="catalogo">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">A NOSSA SELEÇÃO</span>
+            <h2>Explora os produtos</h2>
+            <p>Encontra opções para as tuas necessidades.</p>
+          </div>
+          <span className="product-total">
+            {filteredProducts.length} produtos
+          </span>
+        </div>
+
+        <div className="search-box">
+          <Search size={20} />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Pesquisar produtos..."
+            aria-label="Pesquisar produtos"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} aria-label="Limpar pesquisa">
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+        <div className="category-list">
+          {categories.map((item) => (
+            <button
+              key={item}
+              className={category === item ? "category active" : "category"}
+              onClick={() => setCategory(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+
+        {filteredProducts.length > 0 ? (
+          <div className="product-grid">
+            {filteredProducts.map((product) => (
+              <article className="product-card" key={product.id}>
+                <button
+                  className="product-image-button"
+                  onClick={() => setSelected(product)}
+                  aria-label={`Ver ${product.name}`}
+                >
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="product-image"
+                  />
+                  <span className="product-tag">{product.tag}</span>
+                </button>
+                <div className="product-info">
+                  <span className="product-category">{product.category}</span>
+                  <button
+                    className="product-name"
+                    onClick={() => setSelected(product)}
+                  >
+                    {product.name}
+                  </button>
+                  <p className="product-description">
+                    {product.description}
+                  </p>
+                  <div className="product-bottom">
+                    <strong>{money(product.price)}</strong>
+                    <button
+                      className="add-button"
+                      onClick={() => changeQuantity(product.id, 1)}
+                      aria-label={`Adicionar ${product.name} ao carrinho`}
+                    >
+                      <Plus size={19} />
+                    </button>
+                  </div>
+                  {cart[product.id] ? (
+                    <span className="added-message">
+                      {cart[product.id]} no carrinho
+                    </span>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-results">
+            <Search size={34} />
+            <h3>Nenhum produto encontrado</h3>
+            <p>Tenta outra pesquisa ou seleciona outra categoria.</p>
+            <button
+              className="primary-button"
+              onClick={() => {
+                setSearch("");
+                setCategory("Todos");
+              }}
+            >
+              Limpar filtros
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="about-shop" id="sobre">
+        <Sparkles size={26} />
+        <h2>Uma loja preparada para crescer</h2>
+        <p>
+          Esta é a primeira versão demonstrativa da loja do AI Business
+          Autopilot. Os produtos e os preços são exemplos, não ofertas reais.
+        </p>
+      </section>
+
+      <footer className="shop-footer">
+        <a href="/shop" className="shop-logo footer-logo">
+          <span className="logo-mark">A</span>
+          <span>
+            AUTOPILOT
+            <small>MARKETPLACE</small>
+          </span>
+        </a>
+        <span>© {new Date().getFullYear()} AI Business Autopilot</span>
+        <span>Loja demonstrativa</span>
+      </footer>
+
+      {selected && (
+        <div
+          className="overlay"
+          onClick={() => setSelected(null)}
+          role="presentation"
+        >
+          <section
+            className="dialog product-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label={selected.name}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="dialog-close"
+              onClick={() => setSelected(null)}
+              aria-label="Fechar detalhes"
+            >
+              <X />
+            </button>
+            <img src={selected.image} alt={selected.name} />
+            <div className="dialog-content">
+              <span className="product-category">{selected.category}</span>
+              <h2>{selected.name}</h2>
+              <p>{selected.description}</p>
+              <strong className="dialog-price">{money(selected.price)}</strong>
+              <button
+                className="primary-button full-button"
+                onClick={() => {
+                  changeQuantity(selected.id, 1);
+                  setSelected(null);
+                  setCartOpen(true);
+                }}
+              >
+                <ShoppingBag size={18} /> Adicionar ao carrinho
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {cartOpen && (
+        <div
+          className="overlay"
+          onClick={() => setCartOpen(false)}
+          role="presentation"
+        >
+          <section
+            className="dialog cart-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Carrinho de compras"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="cart-heading">
+              <div>
+                <span className="eyebrow">A TUA SELEÇÃO</span>
+                <h2>O teu carrinho</h2>
+              </div>
+              <button
+                className="dialog-close inline-close"
+                onClick={() => setCartOpen(false)}
+                aria-label="Fechar carrinho"
+              >
+                <X />
+              </button>
+            </div>
+
+            {cartItems.length === 0 ? (
+              <div className="empty-cart">
+                <ShoppingBag size={44} />
+                <h3>O teu carrinho está vazio</h3>
+                <p>Explora os produtos e adiciona os teus favoritos.</p>
+                <button
+                  className="primary-button"
+                  onClick={() => setCartOpen(false)}
+                >
+                  Explorar produtos
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="cart-items">
+                  {cartItems.map((product) => (
+                    <div className="cart-item" key={product.id}>
+                      <img src={product.image} alt={product.name} />
+                      <div className="cart-item-info">
+                        <strong>{product.name}</strong>
+                        <span>{money(product.price)}</span>
+                        <div className="quantity-control">
+                          <button
+                            onClick={() => changeQuantity(product.id, -1)}
+                            aria-label="Diminuir quantidade"
+                          >
+                            <Minus size={15} />
+                          </button>
+                          <span>{cart[product.id]}</span>
+                          <button
+                            onClick={() => changeQuantity(product.id, 1)}
+                            aria-label="Aumentar quantidade"
+                          >
+                            <Plus size={15} />
+                          </button>
+                        </div>
+                      </div>
+                      <strong>
+                        {money(product.price * cart[product.id])}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="cart-total">
+                  <span>Total demonstrativo</span>
+                  <strong>{money(total)}</strong>
+                </div>
+                <div className="demo-checkout">
+                  <ShieldCheck size={20} />
+                  <p>
+                    Checkout ainda não ativado. Nenhum pagamento ou encomenda
+                    será efetuado.
+                  </p>
+                </div>
+                <button
+                  className="primary-button full-button"
+                  onClick={() => setCartOpen(false)}
+                >
+                  Continuar a explorar
+                </button>
+              </>
+            )}
+          </section>
+        </div>
+      )}
+
+      <a
+        className="sales-assistant"
+        href="mailto:suporte@example.com?subject=Ajuda%20sobre%20a%20loja"
+        aria-label="Pedir ajuda sobre a loja"
+        title="Ajuda sobre a loja"
+      >
+        <Sparkles size={21} />
+        <span>Ajuda</span>
+      </a>
+
+      <style jsx>{`
+        .shop {
+          --ink: #17211d;
+          --muted: #68736d;
+          --green: #245c45;
+          --light-green: #eaf2ec;
+          --line: #e7eae6;
+          min-height: 100vh;
+          background: #fff;
+          color: var(--ink);
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 14px;
+        }
+
+        .shop * {
+          box-sizing: border-box;
+        }
+
+        .shop button,
+        .shop input {
+          font: inherit;
+        }
+
+        .shop button {
+          cursor: pointer;
+        }
+
+        .demo-notice {
+          min-height: 36px;
+          padding: 9px 16px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          background: #edf5ed;
+          color: #285b3c;
+          font-size: 11px;
+          text-align: center;
+        }
+
+        .shop-header {
+          max-width: 1200px;
+          margin: auto;
+          min-height: 82px;
+          padding: 15px 28px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          border-bottom: 1px solid #f0f1ee;
+        }
+
+        .shop-logo {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          color: var(--ink);
+          font-weight: 800;
+          font-size: 15px;
+          letter-spacing: 1.5px;
+          text-decoration: none;
+        }
+
+        .shop-logo small {
+          display: block;
+          margin-top: 4px;
+          color: var(--muted);
+          font-size: 9px;
+          letter-spacing: 3px;
+        }
+
+        .logo-mark {
+          width: 39px;
+          height: 39px;
+          display: grid;
+          place-items: center;
+          background: var(--green);
+          color: white;
+          border-radius: 12px;
+          font-size: 24px;
+          font-family: Georgia, serif;
+        }
+
+        .shop-nav {
+          display: flex;
+          gap: 32px;
+        }
+
+        .shop-nav a {
+          color: #46514b;
+          text-decoration: none;
+          font-weight: 600;
+        }
+
+        .shop-nav a:hover {
+          color: var(--green);
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .cart-button,
+        .icon-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 11px 14px;
+          background: white;
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          color: var(--ink);
+        }
+
+        .cart-count {
+          display: grid;
+          place-items: center;
+          min-width: 23px;
+          height: 23px;
+          border-radius: 50%;
+          background: var(--green);
+          color: white;
+          font-size: 11px;
+        }
+
+        .mobile-menu-button {
+          display: none;
+        }
+
+        .hero {
+          max-width: 1200px;
+          min-height: 420px;
+          margin: 0 auto;
+          padding: 62px 55
