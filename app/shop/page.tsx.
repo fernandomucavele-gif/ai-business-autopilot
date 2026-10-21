@@ -1,3 +1,4 @@
+TypeScript
 
 "use client";
 
@@ -15,6 +16,10 @@ import {
   Trash2,
   ArrowLeft,
   ShoppingCart,
+  CheckCircle2,
+  Package,
+  Truck,
+  Star,
 } from "lucide-react";
 
 type Product = {
@@ -22,9 +27,11 @@ type Product = {
   name: string;
   category: string;
   price: number;
+  oldPrice: number;
+  rating: number;
   description: string;
   image: string;
-  tag: string;
+  badge?: string;
 };
 
 type CartItem = {
@@ -32,99 +39,104 @@ type CartItem = {
   quantity: number;
 };
 
-const products: Product[] = [
+const PRODUCTS: Product[] = [
   {
     id: 1,
-    name: "Organizador inteligente para casa",
-    category: "Casa",
-    price: 2490,
+    name: "Relógio Smart Pro",
+    category: "Tecnologia",
+    price: 3499,
+    oldPrice: 4299,
+    rating: 4.8,
     description:
-      "Uma solução prática para organizar os teus espaços e manter a casa arrumada.",
+      "Relógio inteligente com monitorização de atividade, notificações e design moderno para o dia a dia.",
     image:
-      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=85",
-    tag: "Destaque",
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
+    badge: "Popular",
   },
   {
     id: 2,
-    name: "Acessório portátil para automóvel",
-    category: "Automóvel",
-    price: 1890,
+    name: "Auscultadores Wireless",
+    category: "Tecnologia",
+    price: 2499,
+    oldPrice: 3199,
+    rating: 4.7,
     description:
-      "Um acessório funcional pensado para tornar as tuas viagens mais confortáveis.",
+      "Auscultadores sem fios com formato confortável e som para música, chamadas e entretenimento.",
     image:
-      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=85",
-    tag: "Popular",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
+    badge: "Oferta",
   },
   {
     id: 3,
-    name: "Acessório para treino doméstico",
-    category: "Desporto",
-    price: 3290,
+    name: "Mochila Urbana",
+    category: "Acessórios",
+    price: 1899,
+    oldPrice: 2399,
+    rating: 4.6,
     description:
-      "Uma opção versátil para complementar os teus treinos em casa.",
+      "Mochila versátil para transportar os teus objetos pessoais, acessórios e material de trabalho.",
     image:
-      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=85",
-    tag: "Novo",
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85",
   },
   {
     id: 4,
-    name: "Organizador pessoal premium",
-    category: "Acessórios",
-    price: 1590,
+    name: "Óculos Modernos",
+    category: "Moda",
+    price: 1299,
+    oldPrice: 1699,
+    rating: 4.5,
     description:
-      "Mantém os teus objetos essenciais organizados em casa ou durante as viagens.",
+      "Óculos com estilo contemporâneo para completar um visual casual ou elegante.",
     image:
-      "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=900&q=85",
-    tag: "Escolha popular",
+      "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=85",
   },
   {
     id: 5,
-    name: "Acessório moderno para telemóvel",
-    category: "Tecnologia",
-    price: 2190,
+    name: "Sapatilhas Urbanas",
+    category: "Moda",
+    price: 2999,
+    oldPrice: 3699,
+    rating: 4.8,
     description:
-      "Um complemento moderno para o teu dia a dia e para os teus dispositivos.",
+      "Sapatilhas de inspiração urbana, ideais para combinar conforto e estilo no quotidiano.",
     image:
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85",
-    tag: "Destaque",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
+    badge: "Destaque",
   },
   {
     id: 6,
-    name: "Kit de produtividade pessoal",
-    category: "Acessórios",
-    price: 2790,
+    name: "Câmara Compacta",
+    category: "Tecnologia",
+    price: 5999,
+    oldPrice: 6999,
+    rating: 4.9,
     description:
-      "Uma seleção demonstrativa de acessórios para apoiar a organização e a produtividade.",
+      "Câmara compacta para registar momentos especiais e explorar a fotografia.",
     image:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=85",
-    tag: "Recomendado",
+      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=85",
   },
 ];
 
-const categories = [
-  "Todos",
-  "Casa",
-  "Tecnologia",
-  "Automóvel",
-  "Desporto",
-  "Acessórios",
-];
+const CATEGORIES = ["Todos", "Tecnologia", "Acessórios", "Moda"];
 
-const money = (value: number) =>
+const formatPrice = (price: number) =>
   new Intl.NumberFormat("pt-MZ", {
     style: "currency",
     currency: "MZN",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(price);
 
 export default function ShopPage() {
+  const [products] = useState<Product[]>(PRODUCTS);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Todos");
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] =
     useState<Product | null>(null);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [orderComplete, setOrderComplete] = useState(false);
   const [notice, setNotice] = useState("");
 
   const filteredProducts = useMemo(() => {
@@ -135,25 +147,27 @@ export default function ShopPage() {
         category === "Todos" || product.category === category;
 
       const matchesSearch =
-        !query ||
         product.name.toLowerCase().includes(query) ||
         product.category.toLowerCase().includes(query) ||
         product.description.toLowerCase().includes(query);
 
       return matchesCategory && matchesSearch;
     });
-  }, [search, category]);
+  }, [products, search, category]);
 
   const cartCount = cart.reduce(
     (total, item) => total + item.quantity,
     0
   );
 
-  const cartTotal = cart.reduce(
-    (total, item) =>
-      total + item.product.price * item.quantity,
+  const subtotal = cart.reduce(
+    (total, item) => total + item.product.price * item.quantity,
     0
   );
+
+  const shipping = subtotal === 0 || subtotal >= 10000 ? 0 : 250;
+
+  const total = subtotal + shipping;
 
   function addToCart(product: Product) {
     setCart((current) => {
@@ -172,17 +186,16 @@ export default function ShopPage() {
       return [...current, { product, quantity: 1 }];
     });
 
+    setNotice(`${product.name} adicionado ao carrinho.`);
     setSelectedProduct(null);
-    setNotice(`${product.name} adicionado ao carrinho de demonstração.`);
-    setCartOpen(false);
   }
 
-  function changeQuantity(productId: number, amount: number) {
+  function changeQuantity(productId: number, change: number) {
     setCart((current) =>
       current
         .map((item) =>
           item.product.id === productId
-            ? { ...item, quantity: item.quantity + amount }
+            ? { ...item, quantity: item.quantity + change }
             : item
         )
         .filter((item) => item.quantity > 0)
@@ -196,386 +209,395 @@ export default function ShopPage() {
   }
 
   function simulateCheckout() {
-    setCartOpen(false);
-    setNotice(
-      "Teste concluído: nenhuma encomenda, cobrança ou pagamento real foi efetuado."
-    );
+    if (cart.length === 0) return;
+
+    setCheckoutOpen(false);
+    setOrderComplete(true);
+    setCart([]);
   }
 
   return (
-    <>
-      <main className="shop-page">
-        <div className="demo-bar">
-          <ShieldCheck size={16} />
+    <main className="shop-page">
+      <div className="demo-banner">
+        <ShieldCheck size={16} />
+        <span>
+          Loja de demonstração — não são realizados pagamentos nem
+          encomendas reais.
+        </span>
+      </div>
+
+      <header className="shop-header">
+        <button
+          className="icon-button mobile-menu"
+          aria-label="Abrir menu"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <X /> : <Menu />}
+        </button>
+
+        <a className="brand" href="/shop">
+          <span className="brand-icon">
+            <ShoppingBag size={23} />
+          </span>
           <span>
-            Loja demonstrativa — compras e pagamentos reais desativados
+            <strong>NovaStore</strong>
+            <small>SHOPPING INTELIGENTE</small>
+          </span>
+        </a>
+
+        <nav className={menuOpen ? "navigation open" : "navigation"}>
+          <a href="#inicio" onClick={() => setMenuOpen(false)}>
+            Início
+          </a>
+          <a
+            href="#produtos"
+            onClick={() => setMenuOpen(false)}
+          >
+            Produtos
+          </a>
+          <a href="#vantagens" onClick={() => setMenuOpen(false)}>
+            Vantagens
+          </a>
+          <a href="/shop/analytics">Analytics</a>
+        </nav>
+
+        <button
+          className="cart-button"
+          onClick={() => setCartOpen(true)}
+        >
+          <ShoppingCart size={19} />
+          <span className="cart-label">Carrinho</span>
+          <span className="cart-count">{cartCount}</span>
+        </button>
+      </header>
+
+      {notice && (
+        <div className="notice" role="status">
+          <CheckCircle2 size={18} />
+          {notice}
+          <button
+            aria-label="Fechar aviso"
+            onClick={() => setNotice("")}
+          >
+            <X size={17} />
+          </button>
+        </div>
+      )}
+
+      <section className="hero" id="inicio">
+        <div className="hero-content">
+          <div className="eyebrow">
+            <Sparkles size={16} />
+            UMA NOVA FORMA DE COMPRAR
+          </div>
+
+          <h1>
+            Descobre algo
+            <br />
+            <span>extraordinário.</span>
+          </h1>
+
+          <p>
+            Tecnologia, moda e acessórios selecionados para tornar
+            cada dia melhor.
+          </p>
+
+          <a className="primary-button" href="#produtos">
+            Explorar produtos <ArrowRight size={18} />
+          </a>
+
+          <div className="hero-points">
+            <span>
+              <ShieldCheck size={16} /> Compra segura*
+            </span>
+            <span>
+              <Package size={16} /> Produtos selecionados
+            </span>
+          </div>
+          <small className="disclaimer">
+            *Funcionalidades ilustrativas nesta demonstração.
+          </small>
+        </div>
+
+        <div className="hero-visual">
+          <div className="hero-image-wrap">
+            <img
+              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=85"
+              alt="Interior de uma loja moderna"
+            />
+          </div>
+          <div className="floating-card">
+            <span className="floating-icon">
+              <Star size={19} fill="currentColor" />
+            </span>
+            <span>
+              <strong>Escolhas especiais</strong>
+              <small>Explora a coleção</small>
+            </span>
+          </div>
+          <div className="hero-orbit" />
+        </div>
+      </section>
+
+      <section className="benefits" id="vantagens">
+        <div>
+          <span className="benefit-icon">
+            <Package size={22} />
+          </span>
+          <span>
+            <strong>Seleção cuidada</strong>
+            <small>Produtos para o teu dia</small>
+          </span>
+        </div>
+        <div>
+          <span className="benefit-icon">
+            <Truck size={22} />
+          </span>
+          <span>
+            <strong>Entrega ilustrativa</strong>
+            <small>Condições de demonstração</small>
+          </span>
+        </div>
+        <div>
+          <span className="benefit-icon">
+            <ShieldCheck size={22} />
+          </span>
+          <span>
+            <strong>Experiência simples</strong>
+            <small>Navegação intuitiva</small>
+          </span>
+        </div>
+      </section>
+
+      <section className="products-section" id="produtos">
+        <div className="section-heading">
+          <div>
+            <span className="section-eyebrow">A NOSSA COLEÇÃO</span>
+            <h2>Produtos em destaque</h2>
+            <p>Encontra o teu próximo favorito.</p>
+          </div>
+          <span className="product-total">
+            {filteredProducts.length} produtos
           </span>
         </div>
 
-        <header className="shop-header">
-          <a className="brand" href="/shop" aria-label="Página inicial da loja">
-            <span className="brand-icon">
-              <Sparkles size={23} />
-            </span>
-            <span>
-              <strong>Autopilot</strong>
-              <small>SHOP</small>
-            </span>
-          </a>
-
-          <nav className={`desktop-nav ${mobileMenuOpen ? "nav-open" : ""}`}>
-            <a href="#inicio" onClick={() => setMobileMenuOpen(false)}>
-              Início
-            </a>
-            <a href="#produtos" onClick={() => setMobileMenuOpen(false)}>
-              Produtos
-            </a>
-            <a href="#sobre" onClick={() => setMobileMenuOpen(false)}>
-              Sobre a loja
-            </a>
-          </nav>
-
-          <div className="header-actions">
-            <button
-              className="icon-button mobile-menu-button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Abrir menu"
-            >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-
-            <button
-              className="cart-button"
-              onClick={() => setCartOpen(true)}
-              aria-label={`Carrinho com ${cartCount} artigos`}
-            >
-              <ShoppingBag size={20} />
-              <span className="cart-label">Carrinho</span>
-              <span className="cart-count">{cartCount}</span>
-            </button>
+        <div className="filters">
+          <div className="search-box">
+            <Search size={19} />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Pesquisar produtos..."
+              aria-label="Pesquisar produtos"
+            />
+            {search && (
+              <button
+                aria-label="Limpar pesquisa"
+                onClick={() => setSearch("")}
+              >
+                <X size={17} />
+              </button>
+            )}
           </div>
-        </header>
 
-        {notice && (
-          <div className="notice" role="status">
-            <span>{notice}</span>
+          <div className="category-filters">
+            {CATEGORIES.map((item) => (
+              <button
+                key={item}
+                className={
+                  category === item ? "category active" : "category"
+                }
+                onClick={() => setCategory(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredProducts.length > 0 ? (
+          <div className="product-grid">
+            {filteredProducts.map((product) => (
+              <article className="product-card" key={product.id}>
+                <button
+                  className="product-image"
+                  onClick={() => setSelectedProduct(product)}
+                  aria-label={`Ver ${product.name}`}
+                >
+                  <img src={product.image} alt={product.name} />
+                  {product.badge && (
+                    <span className="product-badge">
+                      {product.badge}
+                    </span>
+                  )}
+                  <span className="quick-view">
+                    Ver detalhes <ArrowRight size={15} />
+                  </span>
+                </button>
+
+                <div className="product-info">
+                  <span className="product-category">
+                    {product.category}
+                  </span>
+                  <button
+                    className="product-name"
+                    onClick={() => setSelectedProduct(product)}
+                  >
+                    {product.name}
+                  </button>
+
+                  <div className="rating">
+                    <Star size={15} fill="currentColor" />
+                    <span>{product.rating}</span>
+                    <span className="rating-note">
+                      Avaliação demonstrativa
+                    </span>
+                  </div>
+
+                  <div className="product-bottom">
+                    <div className="prices">
+                      <strong>{formatPrice(product.price)}</strong>
+                      <del>{formatPrice(product.oldPrice)}</del>
+                    </div>
+                    <button
+                      className="add-button"
+                      onClick={() => addToCart(product)}
+                      aria-label={`Adicionar ${product.name} ao carrinho`}
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-results">
+            <Search size={34} />
+            <h3>Nenhum produto encontrado</h3>
+            <p>Tenta outro termo ou seleciona outra categoria.</p>
             <button
-              onClick={() => setNotice("")}
-              aria-label="Fechar aviso"
+              className="secondary-button"
+              onClick={() => {
+                setSearch("");
+                setCategory("Todos");
+              }}
             >
-              <X size={17} />
+              Limpar filtros
             </button>
           </div>
         )}
+      </section>
 
-        <section className="hero" id="inicio">
-          <div className="hero-content">
-            <span className="eyebrow">
-              <Sparkles size={15} /> DESCOBRE A NOSSA SELEÇÃO
-            </span>
-
-            <h1>
-              Boas escolhas.
-              <br />
-              <span>Um dia a dia melhor.</span>
-            </h1>
-
-            <p>
-              Explora produtos selecionados para a tua casa,
-              tecnologia e estilo de vida.
-            </p>
-
-            <a href="#produtos" className="primary-button">
-              Explorar produtos <ArrowRight size={18} />
-            </a>
-
-            <div className="hero-benefits">
-              <span>
-                <ShieldCheck size={17} /> Experiência demonstrativa
-              </span>
-              <span>
-                <Sparkles size={17} /> Seleção de produtos
-              </span>
-            </div>
-          </div>
-
-          <div className="hero-image">
-            <img
-              src="https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=1200&q=85"
-              alt="Espaço moderno com decoração contemporânea"
-            />
-            <div className="floating-card">
-              <span className="floating-icon">
-                <ShoppingBag size={20} />
-              </span>
-              <span>
-                <strong>{products.length} produtos</strong>
-                <small>Disponíveis para explorar</small>
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section className="trust-strip" id="sobre">
-          <div>
-            <ShieldCheck size={23} />
-            <span>
-              <strong>Ambiente de teste</strong>
-              <small>Sem pagamentos reais</small>
-            </span>
-          </div>
-          <div>
-            <ShoppingBag size={23} />
-            <span>
-              <strong>Carrinho interativo</strong>
-              <small>Testa quantidades e preços</small>
-            </span>
-          </div>
-          <div>
-            <Sparkles size={23} />
-            <span>
-              <strong>Experiência simples</strong>
-              <small>Pesquisa rápida de produtos</small>
-            </span>
-          </div>
-        </section>
-
-        <section className="products-section" id="produtos">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">A NOSSA COLEÇÃO</span>
-              <h2>Explora os produtos</h2>
-              <p>Encontra algo que combine contigo.</p>
-            </div>
-            <span className="results-count">
-              {filteredProducts.length} produtos
-            </span>
-          </div>
-
-          <div className="shop-controls">
-            <label className="search-box">
-              <Search size={20} />
-              <input
-                type="search"
-                placeholder="Pesquisar produtos..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-              {search && (
-                <button
-                  onClick={() => setSearch("")}
-                  aria-label="Limpar pesquisa"
-                >
-                  <X size={17} />
-                </button>
-              )}
-            </label>
-
-            <div className="category-list" aria-label="Categorias">
-              {categories.map((item) => (
-                <button
-                  key={item}
-                  className={`category-chip ${
-                    category === item ? "active" : ""
-                  }`}
-                  onClick={() => setCategory(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {filteredProducts.length > 0 ? (
-            <div className="product-grid">
-              {filteredProducts.map((product) => (
-                <article className="product-card" key={product.id}>
-                  <button
-                    className="product-image-button"
-                    onClick={() => setSelectedProduct(product)}
-                    aria-label={`Ver ${product.name}`}
-                  >
-                    <img
-                      className="product-image"
-                      src={product.image}
-                      alt={product.name}
-                      loading="lazy"
-                    />
-                    <span className="product-tag">{product.tag}</span>
-                  </button>
-
-                  <div className="product-info">
-                    <span className="product-category">
-                      {product.category}
-                    </span>
-                    <button
-                      className="product-name"
-                      onClick={() => setSelectedProduct(product)}
-                    >
-                      {product.name}
-                    </button>
-                    <p className="product-description">
-                      {product.description}
-                    </p>
-
-                    <div className="product-bottom">
-                      <strong className="product-price">
-                        {money(product.price)}
-                      </strong>
-                      <button
-                        className="add-button"
-                        onClick={() => addToCart(product)}
-                        aria-label={`Adicionar ${product.name} ao carrinho`}
-                      >
-                        <Plus size={19} />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-results">
-              <Search size={34} />
-              <h3>Nenhum produto encontrado</h3>
-              <p>Tenta outra pesquisa ou escolhe uma categoria diferente.</p>
-              <button
-                className="primary-button"
-                onClick={() => {
-                  setSearch("");
-                  setCategory("Todos");
-                }}
-              >
-                Ver todos os produtos
-              </button>
-            </div>
-          )}
-        </section>
-
-        <section className="bottom-banner">
-          <div>
-            <span className="eyebrow">AI BUSINESS AUTOPILOT</span>
-            <h2>Uma loja preparada para evoluir.</h2>
-            <p>
-              Esta versão permite testar a experiência de compra antes
-              de integrar operações comerciais reais.
-            </p>
-          </div>
-          <a href="#produtos" className="banner-link">
-            Voltar aos produtos <ArrowRight size={18} />
-          </a>
-        </section>
-
-        <footer className="shop-footer">
-          <a className="brand footer-brand" href="/shop">
-            <span className="brand-icon">
-              <Sparkles size={21} />
-            </span>
-            <span>
-              <strong>Autopilot</strong>
-              <small>SHOP</small>
-            </span>
-          </a>
-
-          <p>
-            © {new Date().getFullYear()} AI Business Autopilot.
-            Loja demonstrativa.
-          </p>
-
-          <a href="/" className="back-link">
-            <ArrowLeft size={16} /> Voltar ao Autopilot
-          </a>
-        </footer>
-      </main>
+      <footer className="shop-footer">
+        <a className="brand footer-brand" href="#inicio">
+          <span className="brand-icon">
+            <ShoppingBag size={22} />
+          </span>
+          <span>
+            <strong>NovaStore</strong>
+            <small>SHOPPING INTELIGENTE</small>
+          </span>
+        </a>
+        <p>
+          Uma experiência de loja demonstrativa criada para o AI
+          Business Autopilot.
+        </p>
+        <span>© {new Date().getFullYear()} NovaStore</span>
+      </footer>
 
       {selectedProduct && (
         <div
-          className="modal-backdrop"
+          className="overlay"
           onClick={() => setSelectedProduct(null)}
-          role="presentation"
         >
           <section
             className="product-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Detalhes do produto"
+            aria-label={selectedProduct.name}
             onClick={(event) => event.stopPropagation()}
           >
             <button
               className="modal-close"
+              aria-label="Fechar detalhes"
               onClick={() => setSelectedProduct(null)}
-              aria-label="Fechar"
             >
-              <X size={22} />
+              <X size={21} />
             </button>
-
-            <img
-              className="modal-product-image"
-              src={selectedProduct.image}
-              alt={selectedProduct.name}
-            />
-
-            <div className="modal-product-info">
-              <span className="eyebrow">{selectedProduct.category}</span>
+            <div className="modal-image">
+              <img
+                src={selectedProduct.image}
+                alt={selectedProduct.name}
+              />
+            </div>
+            <div className="modal-details">
+              <span className="section-eyebrow">
+                {selectedProduct.category}
+              </span>
               <h2>{selectedProduct.name}</h2>
+              <div className="rating">
+                <Star size={16} fill="currentColor" />
+                {selectedProduct.rating}
+                <span className="rating-note">
+                  Avaliação demonstrativa
+                </span>
+              </div>
               <p>{selectedProduct.description}</p>
-              <strong className="modal-price">
-                {money(selectedProduct.price)}
-              </strong>
-
-              <p className="demo-disclaimer">
-                Produto demonstrativo. A disponibilidade e o preço não
-                representam uma oferta comercial confirmada.
-              </p>
-
+              <div className="modal-price">
+                {formatPrice(selectedProduct.price)}
+                <del>{formatPrice(selectedProduct.oldPrice)}</del>
+              </div>
               <button
                 className="primary-button full-button"
                 onClick={() => addToCart(selectedProduct)}
               >
-                <ShoppingBag size={19} /> Adicionar ao carrinho
+                <ShoppingCart size={19} />
+                Adicionar ao carrinho
               </button>
+              <p className="modal-disclaimer">
+                Produto de demonstração. Não é uma compra real.
+              </p>
             </div>
           </section>
         </div>
       )}
 
       {cartOpen && (
-        <div
-          className="modal-backdrop cart-backdrop"
-          onClick={() => setCartOpen(false)}
-          role="presentation"
-        >
-          <section
-            className="cart-modal"
+        <div className="overlay" onClick={() => setCartOpen(false)}>
+          <aside
+            className="cart-drawer"
             role="dialog"
             aria-modal="true"
             aria-label="Carrinho de compras"
             onClick={(event) => event.stopPropagation()}
           >
-            <header className="cart-modal-header">
+            <div className="drawer-header">
               <div>
-                <span className="eyebrow">A TUA SELEÇÃO</span>
                 <h2>O teu carrinho</h2>
+                <p>{cartCount} artigo(s)</p>
               </div>
               <button
-                className="modal-close"
-                onClick={() => setCartOpen(false)}
+                className="icon-button"
                 aria-label="Fechar carrinho"
+                onClick={() => setCartOpen(false)}
               >
-                <X size={22} />
+                <X />
               </button>
-            </header>
+            </div>
 
             {cart.length === 0 ? (
               <div className="empty-cart">
-                <ShoppingCart size={45} />
+                <span className="empty-cart-icon">
+                  <ShoppingBag size={35} />
+                </span>
                 <h3>O carrinho está vazio</h3>
-                <p>Adiciona produtos para testar o carrinho.</p>
+                <p>Descobre os produtos da nossa coleção.</p>
                 <button
                   className="primary-button"
                   onClick={() => setCartOpen(false)}
                 >
-                  Explorar produtos
+                  Continuar a explorar
                 </button>
               </div>
             ) : (
@@ -590,62 +612,50 @@ export default function ShopPage() {
                         src={item.product.image}
                         alt={item.product.name}
                       />
-
                       <div className="cart-item-info">
                         <strong>{item.product.name}</strong>
-                        <span>{money(item.product.price)}</span>
-
-                        <div className="quantity-controls">
+                        <span>{formatPrice(item.product.price)}</span>
+                        <div className="quantity-control">
                           <button
+                            aria-label="Diminuir quantidade"
                             onClick={() =>
                               changeQuantity(item.product.id, -1)
                             }
-                            aria-label="Diminuir quantidade"
                           >
-                            <Minus size={15} />
+                            <Minus size={14} />
                           </button>
                           <span>{item.quantity}</span>
                           <button
+                            aria-label="Aumentar quantidade"
                             onClick={() =>
                               changeQuantity(item.product.id, 1)
                             }
-                            aria-label="Aumentar quantidade"
                           >
-                            <Plus size={15} />
+                            <Plus size={14} />
                           </button>
                         </div>
                       </div>
-
                       <button
                         className="remove-button"
+                        aria-label={`Remover ${item.product.name}`}
                         onClick={() => removeFromCart(item.product.id)}
-                        aria-label="Remover produto"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={17} />
                       </button>
                     </article>
                   ))}
                 </div>
 
                 <div className="cart-summary">
-                  <div className="cart-total-row">
-                    <span>Total demonstrativo</span>
-                    <strong>{money(cartTotal)}</strong>
+                  <div>
+                    <span>Subtotal</span>
+                    <strong>{formatPrice(subtotal)}</strong>
                   </div>
-
-                  <p>
-                    O valor é apenas uma simulação. Não será cobrado
-                    qualquer montante.
-                  </p>
-
-                  <button
-                    className="primary-button full-button"
-                    onClick={simulateCheckout}
-                  >
-                    Testar finalização <ArrowRight size={18} />
-                  </button>
-
-                  <button
-                    className="continue-shopping"
-                    onClick={() => setCartOpen(false)}
- 
+                  <div>
+                    <span>Entrega demonstrativa</span>
+                    <strong>
+                      {shipping === 0 ? "Grátis" : formatPrice(shipping)}
+                    </strong>
+                  </div>
+                  <div className="summary-total">
+                    <span>Total
