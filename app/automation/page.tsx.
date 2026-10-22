@@ -1,0 +1,524 @@
+
+"use client";
+
+import { useMemo, useState } from "react";
+
+type FlowStatus = "Ativo" | "Pausado";
+type Flow = {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  status: FlowStatus;
+  runs: number;
+  lastRun: string;
+};
+
+type Log = {
+  id: number;
+  name: string;
+  time: string;
+  result: string;
+};
+
+const initialFlows: Flow[] = [
+  {
+    id: 1,
+    name: "Pesquisa de oportunidades",
+    category: "Pesquisa",
+    description: "Simula a análise de produtos e oportunidades de mercado.",
+    status: "Ativo",
+    runs: 12,
+    lastRun: "Ainda não executada nesta sessão",
+  },
+  {
+    id: 2,
+    name: "Análise de fornecedores",
+    category: "Fornecedores",
+    description: "Simula a avaliação de preço, qualidade e risco.",
+    status: "Ativo",
+    runs: 8,
+    lastRun: "Ainda não executada nesta sessão",
+  },
+  {
+    id: 3,
+    name: "Preparação de campanhas",
+    category: "Marketing",
+    description: "Prepara uma simulação de campanha, sem publicar anúncios.",
+    status: "Pausado",
+    runs: 3,
+    lastRun: "Ainda não executada nesta sessão",
+  },
+  {
+    id: 4,
+    name: "Relatório financeiro",
+    category: "Finanças",
+    description: "Simula o resumo de receitas, custos e resultados.",
+    status: "Ativo",
+    runs: 6,
+    lastRun: "Ainda não executada nesta sessão",
+  },
+  {
+    id: 5,
+    name: "Monitorização do sistema",
+    category: "Monitorização",
+    description: "Verifica o estado local dos fluxos de demonstração.",
+    status: "Ativo",
+    runs: 15,
+    lastRun: "Ainda não executada nesta sessão",
+  },
+];
+
+const categories = [
+  "Todas",
+  "Pesquisa",
+  "Fornecedores",
+  "Marketing",
+  "Finanças",
+  "Monitorização",
+];
+
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    padding: "24px",
+    background: "#0b1020",
+    color: "#eef2ff",
+    fontFamily: "Arial, Helvetica, sans-serif",
+  },
+  container: { maxWidth: "1100px", margin: "0 auto" },
+  muted: { color: "#9aa7c4" },
+  panel: {
+    background: "#121a2e",
+    border: "1px solid #26324d",
+    borderRadius: "14px",
+    padding: "18px",
+  },
+  button: {
+    border: "1px solid #34425f",
+    background: "#1a2742",
+    color: "#eef2ff",
+    borderRadius: "9px",
+    padding: "10px 13px",
+    cursor: "pointer",
+    fontWeight: 600,
+  },
+  input: {
+    width: "100%",
+    boxSizing: "border-box",
+    background: "#0b1020",
+    border: "1px solid #34425f",
+    borderRadius: "9px",
+    color: "#eef2ff",
+    padding: "11px 12px",
+    outline: "none",
+  },
+};
+
+export default function AutomationPage() {
+  const [flows, setFlows] = useState<Flow[]>(initialFlows);
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("Todas");
+  const [status, setStatus] = useState("Todos");
+  const [selectedId, setSelectedId] = useState<number | null>(1);
+  const [newName, setNewName] = useState("");
+  const [newCategory, setNewCategory] = useState("Pesquisa");
+  const [notice, setNotice] = useState(
+    "Modo de simulação ativo. Nenhuma ação externa será executada."
+  );
+
+  const filteredFlows = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+
+    return flows.filter((flow) => {
+      const matchesQuery =
+        !normalized ||
+        flow.name.toLowerCase().includes(normalized) ||
+        flow.description.toLowerCase().includes(normalized);
+
+      const matchesCategory =
+        category === "Todas" || flow.category === category;
+
+      const matchesStatus =
+        status === "Todos" || flow.status === status;
+
+      return matchesQuery && matchesCategory && matchesStatus;
+    });
+  }, [flows, query, category, status]);
+
+  const selectedFlow =
+    flows.find((flow) => flow.id === selectedId) ?? null;
+
+  function toggleFlow(id: number) {
+    setFlows((current) =>
+      current.map((flow) =>
+        flow.id === id
+          ? {
+              ...flow,
+              status: flow.status === "Ativo" ? "Pausado" : "Ativo",
+            }
+          : flow
+      )
+    );
+    setNotice("Estado do fluxo atualizado apenas nesta sessão.");
+  }
+
+  function runSimulation(id: number) {
+    const flow = flows.find((item) => item.id === id);
+    if (!flow) return;
+
+    if (flow.status === "Pausado") {
+      setNotice("Este fluxo está pausado. Ativa-o antes de simular.");
+      return;
+    }
+
+    const now = new Date().toLocaleString();
+    const entry: Log = {
+      id: Date.now(),
+      name: flow.name,
+      time: now,
+      result: "Simulação concluída. Nenhuma ação externa foi executada.",
+    };
+
+    setLogs((current) => [entry, ...current].slice(0, 30));
+    setFlows((current) =>
+      current.map((item) =>
+        item.id === id
+          ? { ...item, runs: item.runs + 1, lastRun: now }
+          : item
+      )
+    );
+    setNotice(`Simulação de "${flow.name}" concluída.`);
+  }
+
+  function createFlow(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = newName.trim();
+
+    if (!name) {
+      setNotice("Escreve um nome para o novo fluxo.");
+      return;
+    }
+
+    const flow: Flow = {
+      id: Date.now(),
+      name,
+      category: newCategory,
+      description: "Fluxo personalizado de demonstração.",
+      status: "Pausado",
+      runs: 0,
+      lastRun: "Nunca",
+    };
+
+    setFlows((current) => [flow, ...current]);
+    setSelectedId(flow.id);
+    setNewName("");
+    setNotice("Fluxo criado e pausado. Nenhuma integração externa foi configurada.");
+  }
+
+  const activeCount = flows.filter((flow) => flow.status === "Ativo").length;
+
+  return (
+    <main style={styles.page}>
+      <div style={styles.container}>
+        <header style={{ marginBottom: 24 }}>
+          <a
+            href="/"
+            style={{ color: "#93c5fd", textDecoration: "none", fontSize: 14 }}
+          >
+            ← Voltar ao dashboard
+          </a>
+
+          <p style={{ ...styles.muted, marginTop: 22, marginBottom: 6 }}>
+            AI BUSINESS AUTOPILOT / CONTROLO
+          </p>
+
+          <h1 style={{ fontSize: 32, margin: "0 0 8px" }}>
+            Automation AI
+          </h1>
+
+          <p style={styles.muted}>
+            Gere fluxos, executa testes locais e consulta o histórico.
+          </p>
+        </header>
+
+        <section
+          style={{
+            ...styles.panel,
+            borderColor: "#7c5c22",
+            background: "#241d13",
+            marginBottom: 20,
+          }}
+          role="status"
+        >
+          <strong>Modo de simulação seguro</strong>
+          <p style={{ marginBottom: 0, color: "#f3d7a0" }}>
+            {notice} Compras, pagamentos, anúncios, encomendas reais e
+            contactos externos não são executados por esta página.
+          </p>
+        </section>
+
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 14,
+            marginBottom: 22,
+          }}
+        >
+          {[
+            { label: "Fluxos registados", value: flows.length },
+            { label: "Fluxos ativos", value: activeCount },
+            { label: "Fluxos pausados", value: flows.length - activeCount },
+            { label: "Simulações nesta sessão", value: logs.length },
+          ].map((item) => (
+            <div key={item.label} style={styles.panel}>
+              <p style={{ ...styles.muted, marginTop: 0 }}>{item.label}</p>
+              <strong style={{ fontSize: 28 }}>{item.value}</strong>
+            </div>
+          ))}
+        </section>
+
+        <section style={{ ...styles.panel, marginBottom: 20 }}>
+          <h2 style={{ marginTop: 0, fontSize: 20 }}>Criar fluxo</h2>
+          <form
+            onSubmit={createFlow}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 12,
+              alignItems: "end",
+            }}
+          >
+            <label>
+              <span style={{ display: "block", marginBottom: 7 }}>Nome</span>
+              <input
+                style={styles.input}
+                value={newName}
+                onChange={(event) => setNewName(event.target.value)}
+                placeholder="Ex.: Verificar inventário"
+                maxLength={80}
+              />
+            </label>
+
+            <label>
+              <span style={{ display: "block", marginBottom: 7 }}>
+                Categoria
+              </span>
+              <select
+                style={styles.input}
+                value={newCategory}
+                onChange={(event) => setNewCategory(event.target.value)}
+              >
+                {categories.filter((item) => item !== "Todas").map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button type="submit" style={styles.button}>
+              + Criar fluxo
+            </button>
+          </form>
+        </section>
+
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
+            gap: 18,
+            alignItems: "start",
+          }}
+        >
+          <div style={styles.panel}>
+            <h2 style={{ marginTop: 0, fontSize: 20 }}>Fluxos de automação</h2>
+
+            <label style={{ display: "block", marginBottom: 12 }}>
+              <span style={{ display: "block", marginBottom: 7 }}>Pesquisar</span>
+              <input
+                style={styles.input}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Pesquisar fluxos..."
+              />
+            </label>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 10,
+                marginBottom: 15,
+              }}
+            >
+              <select
+                aria-label="Filtrar por categoria"
+                style={styles.input}
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+              >
+                {categories.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+
+              <select
+                aria-label="Filtrar por estado"
+                style={styles.input}
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+              >
+                {["Todos", "Ativo", "Pausado"].map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+
+            {filteredFlows.length === 0 && (
+              <p style={styles.muted}>Nenhum fluxo corresponde aos filtros.</p>
+            )}
+
+            <div style={{ display: "grid", gap: 10 }}>
+              {filteredFlows.map((flow) => (
+                <button
+                  key={flow.id}
+                  type="button"
+                  onClick={() => setSelectedId(flow.id)}
+                  style={{
+                    ...styles.button,
+                    textAlign: "left",
+                    background: selectedId === flow.id ? "#24385e" : "#0e1629",
+                    borderColor: selectedId === flow.id ? "#6b9cff" : "#26324d",
+                    padding: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      alignItems: "center",
+                    }}
+                  >
+                    <strong>{flow.name}</strong>
+                    <span
+                      style={{
+                        color: flow.status === "Ativo" ? "#86efac" : "#fcd34d",
+                        fontSize: 12,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {flow.status}
+                    </span>
+                  </div>
+                  <p style={{ ...styles.muted, fontSize: 13, marginBottom: 0 }}>
+                    {flow.category} · {flow.runs} execuções registadas
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={styles.panel}>
+            <h2 style={{ marginTop: 0, fontSize: 20 }}>Detalhes do fluxo</h2>
+
+            {!selectedFlow ? (
+              <p style={styles.muted}>Seleciona um fluxo para ver os detalhes.</p>
+            ) : (
+              <>
+                <p style={styles.muted}>{selectedFlow.category}</p>
+                <h3 style={{ fontSize: 23 }}>{selectedFlow.name}</h3>
+                <p>{selectedFlow.description}</p>
+
+                <div style={{ lineHeight: 1.9, margin: "16px 0" }}>
+                  <div>
+                    Estado: <strong>{selectedFlow.status}</strong>
+                  </div>
+                  <div>
+                    Execuções registadas: <strong>{selectedFlow.runs}</strong>
+                  </div>
+                  <div>
+                    Última execução: <strong>{selectedFlow.lastRun}</strong>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    style={styles.button}
+                    onClick={() => runSimulation(selectedFlow.id)}
+                  >
+                    ▶ Executar simulação
+                  </button>
+                  <button
+                    type="button"
+                    style={styles.button}
+                    onClick={() => toggleFlow(selectedFlow.id)}
+                  >
+                    {selectedFlow.status === "Ativo" ? "Ⅱ Pausar" : "▶ Ativar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        <section style={{ ...styles.panel, marginTop: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <h2 style={{ marginTop: 0, fontSize: 20 }}>Histórico de simulações</h2>
+            <button
+              type="button"
+              style={styles.button}
+              onClick={() => {
+                setLogs([]);
+                setNotice("Histórico local limpo.");
+              }}
+            >
+              Limpar histórico
+            </button>
+          </div>
+
+          {logs.length === 0 ? (
+            <p style={styles.muted}>
+              Ainda não existem simulações nesta sessão. Seleciona um fluxo e
+              carrega em “Executar simulação”.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              {logs.map((log) => (
+                <article
+                  key={log.id}
+                  style={{
+                    borderTop: "1px solid #26324d",
+                    paddingTop: 12,
+                  }}
+                >
+                  <strong>{log.name}</strong>
+                  <p style={{ ...styles.muted, fontSize: 13 }}>{log.time}</p>
+                  <p style={{ marginBottom: 0 }}>{log.result}</p>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <p style={{ ...styles.muted, fontSize: 12, marginBottom: 0, marginTop: 18 }}>
+            Nota: os dados são mantidos apenas no estado desta página. Ao
+            atualizar o navegador, os dados de demonstração e o histórico podem
+            ser reiniciados. Não estão ligados ao Supabase.
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}
