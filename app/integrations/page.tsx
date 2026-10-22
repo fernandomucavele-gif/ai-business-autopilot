@@ -4,29 +4,26 @@
 import { useMemo, useState } from "react";
 import {
   Activity,
-  ArrowLeft,
+  ArrowUpRight,
   CheckCircle2,
-  Circle,
+  CircleHelp,
   Cloud,
+  CreditCard,
   Database,
-  ExternalLink,
   Globe,
-  Link2,
-  LockKeyhole,
   MessageSquare,
   Search,
   ShieldCheck,
   ShoppingBag,
-  SlidersHorizontal,
-  Wallet,
+  Sparkles,
+  Workflow,
   X,
-  Zap,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 type Category =
+  | "Todas"
   | "Dados"
-  | "Lojas"
+  | "Vendas"
   | "Marketing"
   | "Comunicação"
   | "Pagamentos";
@@ -34,680 +31,442 @@ type Category =
 type Integration = {
   id: string;
   name: string;
+  category: Exclude<Category, "Todas">;
   description: string;
-  category: Category;
-  icon: LucideIcon;
-  color: string;
   requirements: string[];
-  purpose: string;
+  status: "Disponível" | "Planeada";
+  icon: typeof Database;
+  color: string;
 };
-
-const categories = [
-  "Todas",
-  "Dados",
-  "Lojas",
-  "Marketing",
-  "Comunicação",
-  "Pagamentos",
-] as const;
 
 const integrations: Integration[] = [
   {
     id: "supabase",
     name: "Supabase",
-    description: "Base de dados e autenticação da aplicação.",
     category: "Dados",
-    icon: Database,
-    color: "#3ecf8e",
+    description: "Base de dados, autenticação e armazenamento.",
     requirements: [
-      "Confirmar o projeto Supabase",
-      "Verificar as variáveis de ambiente",
-      "Testar a ligação em ambiente seguro",
+      "URL do projeto",
+      "Chave pública anon",
+      "Políticas de segurança RLS",
     ],
-    purpose:
-      "Armazenar dados da aplicação, utilizadores e registos dos módulos, de acordo com as permissões configuradas.",
+    status: "Disponível",
+    icon: Database,
+    color: "text-emerald-600 bg-emerald-500/10",
   },
   {
     id: "store",
     name: "Loja online",
-    description: "Preparar a ligação a uma plataforma de comércio eletrónico.",
-    category: "Lojas",
-    icon: ShoppingBag,
-    color: "#a78bfa",
+    category: "Vendas",
+    description: "Preparação para sincronizar produtos e encomendas.",
     requirements: [
-      "Escolher a plataforma da loja",
-      "Definir as permissões necessárias",
-      "Testar a leitura de produtos",
+      "URL da loja",
+      "Credenciais de API",
+      "Permissões mínimas necessárias",
     ],
-    purpose:
-      "Preparar a sincronização de produtos e dados da loja. Não cria encomendas nem altera produtos reais nesta demonstração.",
+    status: "Disponível",
+    icon: ShoppingBag,
+    color: "text-violet-600 bg-violet-500/10",
   },
   {
     id: "meta",
     name: "Meta Ads",
-    description: "Preparar a integração com ferramentas de publicidade.",
     category: "Marketing",
-    icon: Globe,
-    color: "#60a5fa",
+    description: "Acesso futuro a campanhas e métricas publicitárias.",
     requirements: [
-      "Identificar a conta de anúncios",
-      "Configurar permissões de acesso",
-      "Testar a leitura de relatórios",
+      "Conta empresarial",
+      "Token de acesso",
+      "Permissões de anúncios",
     ],
-    purpose:
-      "Permitir uma futura análise de campanhas e resultados publicitários. Não publica nem altera anúncios.",
+    status: "Planeada",
+    icon: Activity,
+    color: "text-blue-600 bg-blue-500/10",
   },
   {
     id: "google",
     name: "Google",
-    description: "Preparar serviços e fontes de dados Google.",
-    category: "Dados",
-    icon: Cloud,
-    color: "#fbbf24",
+    category: "Marketing",
+    description: "Preparação para ferramentas de análise e publicidade.",
     requirements: [
-      "Escolher o serviço Google",
-      "Configurar credenciais seguras",
-      "Verificar os acessos autorizados",
+      "Projeto Google Cloud",
+      "OAuth configurado",
+      "APIs necessárias ativadas",
     ],
-    purpose:
-      "Preparar o acesso a serviços Google compatíveis, conforme as APIs e permissões que vierem a ser configuradas.",
+    status: "Planeada",
+    icon: Globe,
+    color: "text-amber-600 bg-amber-500/10",
   },
   {
     id: "messages",
     name: "Mensagens",
-    description: "Preparar canais de comunicação com clientes.",
     category: "Comunicação",
-    icon: MessageSquare,
-    color: "#34d399",
+    description: "Estrutura para futuras notificações e apoio ao cliente.",
     requirements: [
-      "Escolher o canal de comunicação",
-      "Definir as permissões",
-      "Testar num ambiente de demonstração",
+      "Fornecedor de mensagens",
+      "Conta ou número verificado",
+      "Consentimento dos destinatários",
     ],
-    purpose:
-      "Preparar futuras integrações de comunicação. Não envia mensagens reais nem contacta clientes.",
+    status: "Planeada",
+    icon: MessageSquare,
+    color: "text-cyan-600 bg-cyan-500/10",
   },
   {
     id: "payments",
     name: "Pagamentos",
-    description: "Preparar uma futura integração com um fornecedor de pagamentos.",
     category: "Pagamentos",
-    icon: Wallet,
-    color: "#fb923c",
+    description: "Preparação para consultar pagamentos com segurança.",
     requirements: [
-      "Escolher um fornecedor compatível",
-      "Configurar credenciais de teste",
-      "Validar o fluxo de pagamento de teste",
+      "Conta comercial",
+      "Credenciais de teste",
+      "Webhooks verificados",
     ],
-    purpose:
-      "Preparar testes de pagamentos em ambiente sandbox. Não cobra, transfere ou movimenta dinheiro.",
+    status: "Planeada",
+    icon: CreditCard,
+    color: "text-rose-600 bg-rose-500/10",
   },
 ];
 
+const categories: Category[] = [
+  "Todas",
+  "Dados",
+  "Vendas",
+  "Marketing",
+  "Comunicação",
+  "Pagamentos",
+];
+
 export default function IntegrationsPage() {
-  const [category, setCategory] =
-    useState<(typeof categories)[number]>("Todas");
-  const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [reviewed, setReviewed] = useState<string[]>([]);
-  const [completed, setCompleted] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<Category>("Todas");
+  const [selectedId, setSelectedId] = useState("supabase");
+  const [prepared, setPrepared] = useState<string[]>([]);
+  const [notice, setNotice] = useState("");
 
-  const filteredIntegrations = useMemo(() => {
-    const term = search.trim().toLowerCase();
+  const filtered = useMemo(
+    () =>
+      integrations.filter((item) => {
+        const matchesCategory =
+          category === "Todas" || item.category === category;
+        const searchable =
+          `${item.name} ${item.description} ${item.category}`.toLowerCase();
 
-    return integrations.filter((integration) => {
-      const matchesCategory =
-        category === "Todas" || integration.category === category;
+        return (
+          matchesCategory &&
+          searchable.includes(query.trim().toLowerCase())
+        );
+      }),
+    [category, query],
+  );
 
-      const matchesSearch =
-        !term ||
-        integration.name.toLowerCase().includes(term) ||
-        integration.description.toLowerCase().includes(term) ||
-        integration.category.toLowerCase().includes(term);
+  const selected =
+    integrations.find((item) => item.id === selectedId) ??
+    integrations[0];
 
-      return matchesCategory && matchesSearch;
-    });
-  }, [category, search]);
-
-  const selectedIntegration =
-    integrations.find((item) => item.id === selectedId) ?? null;
-
-  const progress =
-    selectedIntegration && selectedIntegration.requirements.length > 0
-      ? Math.round(
-          (selectedIntegration.requirements.filter((item) =>
-            completed.includes(`${selectedIntegration.id}:${item}`)
-          ).length /
-            selectedIntegration.requirements.length) *
-            100
-        )
-      : 0;
-
-  function toggleRequirement(integrationId: string, requirement: string) {
-    const key = `${integrationId}:${requirement}`;
-
-    setCompleted((previous) =>
-      previous.includes(key)
-        ? previous.filter((item) => item !== key)
-        : [...previous, key]
+  function prepareDemo(id: string) {
+    setPrepared((current) =>
+      current.includes(id) ? current : [...current, id],
     );
-  }
-
-  function markReviewed(integrationId: string) {
-    setReviewed((previous) =>
-      previous.includes(integrationId)
-        ? previous
-        : [...previous, integrationId]
+    setNotice(
+      "Preparação registada apenas nesta sessão. Nenhuma conta foi ligada.",
     );
   }
 
   return (
-    <main className="integrations-page">
-      <header className="topbar">
-        <a className="back-link" href="/">
-          <ArrowLeft size={17} />
-          <span>Painel principal</span>
-        </a>
-
-        <div className="environment">
-          <span className="environment-dot" />
-          Modo de demonstração
-        </div>
-      </header>
-
-      <section className="hero">
-        <div className="hero-copy">
-          <div className="eyebrow">
-            <Zap size={15} />
-            AI BUSINESS AUTOPILOT
-          </div>
-
-          <h1>
-            Integrations <span>AI</span>
-          </h1>
-
-          <p>
-            Organiza as integrações do teu negócio num único lugar.
-            Prepara os requisitos, acompanha a configuração e mantém
-            o controlo dos acessos.
-          </p>
-
-          <div className="hero-note">
-            <ShieldCheck size={17} />
-            <span>
-              Seguro por defeito: nenhuma conta real é ligada neste módulo.
-            </span>
-          </div>
-        </div>
-
-        <div className="hero-visual" aria-hidden="true">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="orbit-core">
-            <Link2 size={35} />
-          </div>
-          <div className="orbit-node node-one">
-            <Database size={19} />
-          </div>
-          <div className="orbit-node node-two">
-            <Globe size={19} />
-          </div>
-          <div className="orbit-node node-three">
-            <Cloud size={19} />
-          </div>
-        </div>
-      </section>
-
-      <section className="stats-grid">
-        <article className="stat-card">
-          <div className="stat-icon purple">
-            <Link2 size={19} />
-          </div>
+    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+        <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <span className="stat-label">Integrações disponíveis</span>
-            <strong>{integrations.length}</strong>
-          </div>
-        </article>
-
-        <article className="stat-card">
-          <div className="stat-icon green">
-            <CheckCircle2 size={19} />
-          </div>
-          <div>
-            <span className="stat-label">Revisões realizadas</span>
-            <strong>{reviewed.length}</strong>
-          </div>
-        </article>
-
-        <article className="stat-card">
-          <div className="stat-icon blue">
-            <Activity size={19} />
-          </div>
-          <div>
-            <span className="stat-label">Etapas verificadas</span>
-            <strong>{completed.length}</strong>
-          </div>
-        </article>
-      </section>
-
-      <section className="workspace">
-        <div className="section-heading">
-          <div>
-            <span className="section-kicker">CENTRO DE LIGAÇÕES</span>
-            <h2>As tuas integrações</h2>
-            <p>Seleciona um serviço para consultar os requisitos.</p>
-          </div>
-
-          <div className="available-label">
-            <span />
-            Catálogo disponível
-          </div>
-        </div>
-
-        <div className="toolbar">
-          <div className="search-box">
-            <Search size={18} />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Pesquisar integrações..."
-              aria-label="Pesquisar integrações"
-            />
-            {search && (
-              <button
-                className="clear-search"
-                type="button"
-                onClick={() => setSearch("")}
-                aria-label="Limpar pesquisa"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          <div className="filter-label">
-            <SlidersHorizontal size={17} />
-            <span>Categoria</span>
-          </div>
-        </div>
-
-        <div className="category-list" aria-label="Filtrar por categoria">
-          {categories.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`category-button ${
-                category === item ? "active" : ""
-              }`}
-              onClick={() => setCategory(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-
-        {filteredIntegrations.length === 0 ? (
-          <div className="empty-state">
-            <Search size={28} />
-            <h3>Nenhum resultado encontrado</h3>
-            <p>Tenta outro nome ou seleciona uma categoria diferente.</p>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => {
-                setSearch("");
-                setCategory("Todas");
-              }}
-            >
-              Limpar filtros
-            </button>
-          </div>
-        ) : (
-          <div className="integration-grid">
-            {filteredIntegrations.map((integration) => {
-              const Icon = integration.icon;
-              const isSelected = selectedId === integration.id;
-              const isReviewed = reviewed.includes(integration.id);
-
-              return (
-                <article
-                  className={`integration-card ${
-                    isSelected ? "selected" : ""
-                  }`}
-                  key={integration.id}
-                >
-                  <div className="card-top">
-                    <div
-                      className="integration-icon"
-                      style={{
-                        color: integration.color,
-                        backgroundColor: `${integration.color}18`,
-                      }}
-                    >
-                      <Icon size={23} />
-                    </div>
-
-                    <span
-                      className={`status-pill ${
-                        isReviewed ? "reviewed" : ""
-                      }`}
-                    >
-                      <span />
-                      {isReviewed ? "Revista" : "Por configurar"}
-                    </span>
-                  </div>
-
-                  <div className="card-content">
-                    <span className="card-category">
-                      {integration.category}
-                    </span>
-                    <h3>{integration.name}</h3>
-                    <p>{integration.description}</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="card-action"
-                    onClick={() => setSelectedId(integration.id)}
-                  >
-                    Consultar requisitos
-                    <ExternalLink size={16} />
-                  </button>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {selectedIntegration && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              setSelectedId(null);
-            }
-          }}
-        >
-          <section
-            className="details-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="details-title"
-          >
-            <div className="details-header">
-              <div>
-                <span className="section-kicker">DETALHES DA INTEGRAÇÃO</span>
-                <h2 id="details-title">{selectedIntegration.name}</h2>
-              </div>
-
-              <button
-                type="button"
-                className="close-button"
-                onClick={() => setSelectedId(null)}
-                aria-label="Fechar detalhes"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <p className="details-description">
-              {selectedIntegration.purpose}
+            <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+              <Workflow size={17} />
+              AI BUSINESS AUTOPILOT / MÓDULOS
             </p>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Integrations AI
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Gere e prepara as integrações dos serviços externos do teu
+              negócio num único painel.
+            </p>
+          </div>
 
-            <div className="safety-message">
-              <LockKeyhole size={19} />
+          <span className="flex w-fit items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+            <ShieldCheck size={16} />
+            Modo de simulação ativo
+          </span>
+        </header>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Metric
+            icon={Workflow}
+            label="Integrações no catálogo"
+            value={String(integrations.length)}
+            detail="Serviços registados"
+          />
+          <Metric
+            icon={CheckCircle2}
+            label="Disponíveis"
+            value={String(
+              integrations.filter((item) => item.status === "Disponível")
+                .length,
+            )}
+            detail="Prontas para futura configuração"
+          />
+          <Metric
+            icon={Cloud}
+            label="Preparações"
+            value={String(prepared.length)}
+            detail="Nesta sessão de demonstração"
+          />
+          <Metric
+            icon={ShieldCheck}
+            label="Ligações reais"
+            value="0"
+            detail="Nenhuma ligação executada"
+          />
+        </section>
+
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/20">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-0.5 shrink-0 text-amber-700 dark:text-amber-300" />
+            <div>
+              <h2 className="font-semibold text-amber-950 dark:text-amber-200">
+                Segurança e controlo
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-amber-900/80 dark:text-amber-100/70">
+                Esta versão não envia credenciais nem executa operações
+                externas. Compras, pagamentos, anúncios, encomendas e
+                mensagens reais permanecem desativados. As chaves secretas
+                devem ser guardadas no servidor, nunca no navegador.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid items-start gap-6 xl:grid-cols-[1.4fr_0.8fr]">
+          <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
               <div>
-                <strong>Ligação real ainda não configurada</strong>
-                <p>
-                  Esta lista serve para planear e acompanhar tarefas.
-                  Assinalar etapas não testa credenciais nem estabelece
-                  uma ligação externa.
+                <h2 className="text-lg font-bold">
+                  Catálogo de integrações
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Pesquisa um serviço ou escolhe uma categoria.
                 </p>
               </div>
+
+              <label className="relative block sm:w-64">
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Pesquisar integração..."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-9 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    aria-label="Limpar pesquisa"
+                    onClick={() => setQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+              </label>
             </div>
 
-            <div className="progress-heading">
-              <span>Lista de preparação</span>
-              <strong>{progress}%</strong>
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+              {categories.map((item) => (
+                <button
+                  type="button"
+                  key={item}
+                  onClick={() => setCategory(item)}
+                  className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition ${
+                    category === item
+                      ? "bg-indigo-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
             </div>
 
-            <div
-              className="progress-track"
-              role="progressbar"
-              aria-label="Progresso da preparação"
-              aria-valuenow={progress}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="progress-fill"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-
-            <div className="requirements-list">
-              {selectedIntegration.requirements.map((requirement) => {
-                const key = `${selectedIntegration.id}:${requirement}`;
-                const isComplete = completed.includes(key);
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {filtered.map((item) => {
+                const Icon = item.icon;
+                const active = selectedId === item.id;
 
                 return (
                   <button
                     type="button"
-                    key={requirement}
-                    className={`requirement-row ${
-                      isComplete ? "complete" : ""
+                    key={item.id}
+                    onClick={() => {
+                      setSelectedId(item.id);
+                      setNotice("");
+                    }}
+                    className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
+                      active
+                        ? "border-indigo-500 bg-indigo-50/60 ring-1 ring-indigo-500/20 dark:bg-indigo-950/30"
+                        : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
                     }`}
-                    onClick={() =>
-                      toggleRequirement(selectedIntegration.id, requirement)
-                    }
                   >
-                    {isComplete ? (
-                      <CheckCircle2 size={20} />
-                    ) : (
-                      <Circle size={20} />
-                    )}
-                    <span>{requirement}</span>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className={`rounded-xl p-2.5 ${item.color}`}>
+                        <Icon size={21} />
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-1 text-[10px] font-bold ${
+                          item.status === "Disponível"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-3 font-bold">{item.name}</h3>
+                    <p className="mt-1 min-h-10 text-sm leading-5 text-slate-500 dark:text-slate-400">
+                      {item.description}
+                    </p>
+                    <div className="mt-4 flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                      {prepared.includes(item.id)
+                        ? "Preparação simulada"
+                        : "Ver requisitos"}
+                      <ArrowUpRight size={15} />
+                    </div>
                   </button>
                 );
               })}
-            </div>
 
-            <div className="details-footer">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setSelectedId(null)}
-              >
-                Fechar
-              </button>
-
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => {
-                  markReviewed(selectedIntegration.id);
-                  setSelectedId(null);
-                }}
-              >
-                <CheckCircle2 size={17} />
-                Marcar como revista
-              </button>
+              {filtered.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 md:col-span-2">
+                  Nenhuma integração encontrada.
+                </div>
+              )}
             </div>
           </section>
+
+          <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              Detalhes do serviço
+            </p>
+
+            <div className="mt-3 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold">{selected.name}</h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {selected.category}
+                </p>
+              </div>
+              {(() => {
+                const Icon = selected.icon;
+                return (
+                  <span className={`rounded-xl p-3 ${selected.color}`}>
+                    <Icon size={24} />
+                  </span>
+                );
+              })()}
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              {selected.description}
+            </p>
+
+            <div className="my-5 h-px bg-slate-100 dark:bg-slate-800" />
+
+            <h3 className="font-semibold">Requisitos de configuração</h3>
+            <ul className="mt-3 space-y-3">
+              {selected.requirements.map((requirement) => (
+                <li
+                  key={requirement}
+                  className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300"
+                >
+                  <CircleHelp
+                    size={17}
+                    className="mt-0.5 shrink-0 text-slate-400"
+                  />
+                  {requirement}
+                </li>
+              ))}
+            </ul>
+
+            <button
+              type="button"
+              onClick={() => prepareDemo(selected.id)}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/20"
+            >
+              <Sparkles size={17} />
+              Preparar em simulação
+            </button>
+
+            {prepared.includes(selected.id) && (
+              <p className="mt-3 flex items-center gap-2 text-xs font-medium text-emerald-600">
+                <CheckCircle2 size={15} />
+                Preparação demonstrativa registada.
+              </p>
+            )}
+
+            {notice && (
+              <p
+                role="status"
+                className="mt-3 rounded-lg bg-slate-100 p-3 text-xs leading-5 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              >
+                {notice}
+              </p>
+            )}
+
+            <div className="mt-5 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+              <strong className="text-slate-700 dark:text-slate-200">
+                Próxima etapa:
+              </strong>{" "}
+              implementar a ligação no servidor, validar permissões e testar
+              primeiro com credenciais de sandbox.
+            </div>
+          </aside>
         </div>
-      )}
 
-      <footer className="page-footer">
-        <div className="footer-icon">
-          <ShieldCheck size={18} />
-        </div>
-        <div>
-          <strong>Controlo e segurança</strong>
-          <p>
-            Não introduzas palavras-passe, chaves privadas ou tokens
-            neste ecrã. Quando houver integrações reais, as credenciais
-            deverão ser guardadas em variáveis de ambiente seguras.
-          </p>
-        </div>
-      </footer>
+        <footer className="flex flex-col gap-2 border-t border-slate-200 pt-4 text-xs text-slate-500 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+          <span>AI Business Autopilot · Integrations AI</span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck size={14} />
+            Seguro por defeito · Sem ações externas
+          </span>
+        </footer>
+      </div>
+    </main>
+  );
+}
 
-      <style jsx>{`
-        .integrations-page {
-          --bg: #0a0d14;
-          --panel: #111722;
-          --panel-light: #151d2b;
-          --border: #253044;
-          --text: #f3f6fc;
-          --muted: #96a2b7;
-          --accent: #a78bfa;
-          min-height: 100vh;
-          padding: 28px;
-          background: var(--bg);
-          color: var(--text);
-          font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .topbar {
-          max-width: 1240px;
-          margin: 0 auto 32px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .back-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 9px;
-          color: #c4ccda;
-          text-decoration: none;
-          font-size: 14px;
-        }
-
-        .back-link:hover {
-          color: white;
-        }
-
-        .environment,
-        .available-label {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          border: 1px solid var(--border);
-          border-radius: 999px;
-          padding: 9px 12px;
-          color: #c6d0df;
-          background: #101621;
-          font-size: 12px;
-        }
-
-        .environment-dot,
-        .available-label > span {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: #fbbf24;
-        }
-
-        .hero {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 30px;
-          max-width: 1240px;
-          min-height: 265px;
-          margin: 0 auto 22px;
-          padding: 34px 38px;
-          overflow: hidden;
-          border: 1px solid #2c2948;
-          border-radius: 24px;
-          background:
-            radial-gradient(
-              circle at 78% 50%,
-              rgba(124, 92, 246, 0.16),
-              transparent 34%
-            ),
-            linear-gradient(115deg, #151625, #111827 75%);
-        }
-
-        .hero-copy {
-          position: relative;
-          z-index: 2;
-          max-width: 650px;
-        }
-
-        .eyebrow,
-        .section-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          color: #b5a2ff;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 1.5px;
-        }
-
-        h1 {
-          margin: 18px 0 12px;
-          font-size: clamp(34px, 5vw, 54px);
-          line-height: 1.05;
-          letter-spacing: -2px;
-        }
-
-        h1 span {
-          color: #b5a2ff;
-        }
-
-        .hero-copy > p {
-          max-width: 590px;
-          margin: 0;
-          color: #aab5c8;
-          font-size: 15px;
-          line-height: 1.8;
-        }
-
-        .hero-note {
-          display: flex;
-          align-items: flex-start;
-          gap: 9px;
-          margin-top: 22px;
-          color: #c3b7ff;
-          font-size: 12px;
-          line-height: 1.6;
-        }
-
-        .hero-note :global(svg) {
-          flex-shrink: 0;
-          margin-top: 1px;
-        }
-
-        .hero-visual {
-          position: relative;
-          width: 225px;
-          height: 225px;
-          flex-shrink: 0;
-          margin-right: 25px;
-        }
-
-        .orbit {
-          position: absolute;
-          inset: 15px;
-          border: 1px solid rgba(167, 139, 250, 0.28);
-          border-radius: 50%;
-        }
-
-        .orbit-one {
-          transform: rotateX(58deg) rotate(-25deg);
-        }
-
-        .orbit-two {
-          transform: rotateY(58deg) rotate(25deg);
-        }
-
-        .orbit-core {
-          position: ab
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: typeof Database;
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+          {label}
+        </p>
+        <span className="rounded-lg bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+          <Icon size={18} />
+        </span>
+      </div>
+      <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        {detail}
+      </p>
+    </div>
+  );
+}
