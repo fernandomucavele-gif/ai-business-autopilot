@@ -19,31 +19,53 @@ import {
   ShoppingBag,
   SlidersHorizontal,
   Wallet,
-  XCircle,
+  X,
   Zap,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-type Category = "Todos" | "Dados" | "Lojas" | "Marketing" | "Comunicação" | "Pagamentos";
+type Category =
+  | "Dados"
+  | "Lojas"
+  | "Marketing"
+  | "Comunicação"
+  | "Pagamentos";
 
 type Integration = {
   id: string;
   name: string;
   description: string;
-  category: Exclude<Category, "Todos">;
-  icon: typeof Database;
+  category: Category;
+  icon: LucideIcon;
   color: string;
   requirements: string[];
+  purpose: string;
 };
+
+const categories = [
+  "Todas",
+  "Dados",
+  "Lojas",
+  "Marketing",
+  "Comunicação",
+  "Pagamentos",
+] as const;
 
 const integrations: Integration[] = [
   {
     id: "supabase",
     name: "Supabase",
-    description: "Base de dados, autenticação e armazenamento.",
+    description: "Base de dados e autenticação da aplicação.",
     category: "Dados",
     icon: Database,
     color: "#3ecf8e",
-    requirements: ["URL do projeto", "Chave pública apropriada", "Políticas de segurança"],
+    requirements: [
+      "Confirmar o projeto Supabase",
+      "Verificar as variáveis de ambiente",
+      "Testar a ligação em ambiente seguro",
+    ],
+    purpose:
+      "Armazenar dados da aplicação, utilizadores e registos dos módulos, de acordo com as permissões configuradas.",
   },
   {
     id: "store",
@@ -51,441 +73,641 @@ const integrations: Integration[] = [
     description: "Preparar a ligação a uma plataforma de comércio eletrónico.",
     category: "Lojas",
     icon: ShoppingBag,
-    color: "#8b5cf6",
-    requirements: ["Plataforma escolhida", "Credenciais de API", "Permissões mínimas"],
+    color: "#a78bfa",
+    requirements: [
+      "Escolher a plataforma da loja",
+      "Definir as permissões necessárias",
+      "Testar a leitura de produtos",
+    ],
+    purpose:
+      "Preparar a sincronização de produtos e dados da loja. Não cria encomendas nem altera produtos reais nesta demonstração.",
   },
   {
     id: "meta",
     name: "Meta Ads",
-    description: "Preparar a integração para análise de campanhas publicitárias.",
+    description: "Preparar a integração com ferramentas de publicidade.",
     category: "Marketing",
-    icon: Activity,
-    color: "#4388ff",
-    requirements: ["Conta empresarial", "Aplicação autorizada", "Permissões de leitura"],
+    icon: Globe,
+    color: "#60a5fa",
+    requirements: [
+      "Identificar a conta de anúncios",
+      "Configurar permissões de acesso",
+      "Testar a leitura de relatórios",
+    ],
+    purpose:
+      "Permitir uma futura análise de campanhas e resultados publicitários. Não publica nem altera anúncios.",
   },
   {
     id: "google",
     name: "Google",
-    description: "Preparar serviços de análise e dados de desempenho.",
-    category: "Marketing",
-    icon: Globe,
-    color: "#eab308",
-    requirements: ["Serviço selecionado", "Projeto configurado", "Autorização"],
+    description: "Preparar serviços e fontes de dados Google.",
+    category: "Dados",
+    icon: Cloud,
+    color: "#fbbf24",
+    requirements: [
+      "Escolher o serviço Google",
+      "Configurar credenciais seguras",
+      "Verificar os acessos autorizados",
+    ],
+    purpose:
+      "Preparar o acesso a serviços Google compatíveis, conforme as APIs e permissões que vierem a ser configuradas.",
   },
   {
-    id: "messaging",
+    id: "messages",
     name: "Mensagens",
-    description: "Preparar um canal de atendimento ao cliente.",
+    description: "Preparar canais de comunicação com clientes.",
     category: "Comunicação",
     icon: MessageSquare,
-    color: "#22c55e",
-    requirements: ["Fornecedor escolhido", "Número ou canal autorizado", "Consentimento aplicável"],
+    color: "#34d399",
+    requirements: [
+      "Escolher o canal de comunicação",
+      "Definir as permissões",
+      "Testar num ambiente de demonstração",
+    ],
+    purpose:
+      "Preparar futuras integrações de comunicação. Não envia mensagens reais nem contacta clientes.",
   },
   {
     id: "payments",
     name: "Pagamentos",
-    description: "Planear a integração futura de pagamentos com segurança.",
+    description: "Preparar uma futura integração com um fornecedor de pagamentos.",
     category: "Pagamentos",
     icon: Wallet,
-    color: "#f59e0b",
-    requirements: ["Fornecedor de pagamentos", "Ambiente de testes", "Verificação de segurança"],
+    color: "#fb923c",
+    requirements: [
+      "Escolher um fornecedor compatível",
+      "Configurar credenciais de teste",
+      "Validar o fluxo de pagamento de teste",
+    ],
+    purpose:
+      "Preparar testes de pagamentos em ambiente sandbox. Não cobra, transfere ou movimenta dinheiro.",
   },
 ];
 
-const categories: Category[] = [
-  "Todos",
-  "Dados",
-  "Lojas",
-  "Marketing",
-  "Comunicação",
-  "Pagamentos",
-];
-
 export default function IntegrationsPage() {
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<Category>("Todos");
-  const [selected, setSelected] = useState<string[]>([]);
+  const [category, setCategory] =
+    useState<(typeof categories)[number]>("Todas");
+  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [reviewed, setReviewed] = useState<string[]>([]);
   const [completed, setCompleted] = useState<string[]>([]);
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [showChecklist, setShowChecklist] = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+  const filteredIntegrations = useMemo(() => {
+    const term = search.trim().toLowerCase();
 
-    return integrations.filter((item) => {
-      const matchesCategory = category === "Todos" || item.category === category;
-      const matchesQuery =
-        !q ||
-        item.name.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q);
+    return integrations.filter((integration) => {
+      const matchesCategory =
+        category === "Todas" || integration.category === category;
 
-      return matchesCategory && matchesQuery;
+      const matchesSearch =
+        !term ||
+        integration.name.toLowerCase().includes(term) ||
+        integration.description.toLowerCase().includes(term) ||
+        integration.category.toLowerCase().includes(term);
+
+      return matchesCategory && matchesSearch;
     });
-  }, [query, category]);
+  }, [category, search]);
 
-  function toggleSelected(id: string) {
-    setSelected((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
+  const selectedIntegration =
+    integrations.find((item) => item.id === selectedId) ?? null;
+
+  const progress =
+    selectedIntegration && selectedIntegration.requirements.length > 0
+      ? Math.round(
+          (selectedIntegration.requirements.filter((item) =>
+            completed.includes(`${selectedIntegration.id}:${item}`)
+          ).length /
+            selectedIntegration.requirements.length) *
+            100
+        )
+      : 0;
+
+  function toggleRequirement(integrationId: string, requirement: string) {
+    const key = `${integrationId}:${requirement}`;
+
+    setCompleted((previous) =>
+      previous.includes(key)
+        ? previous.filter((item) => item !== key)
+        : [...previous, key]
     );
   }
 
-  function toggleTask(task: string) {
-    setCompleted((current) =>
-      current.includes(task)
-        ? current.filter((item) => item !== task)
-        : [...current, task]
+  function markReviewed(integrationId: string) {
+    setReviewed((previous) =>
+      previous.includes(integrationId)
+        ? previous
+        : [...previous, integrationId]
     );
   }
-
-  const checklist = [
-    "Escolher os serviços que serão integrados",
-    "Confirmar as permissões necessárias",
-    "Configurar variáveis de ambiente no Vercel",
-    "Testar as ligações em ambiente de demonstração",
-    "Rever segurança e proteção de dados",
-    "Autorizar separadamente qualquer operação real",
-  ];
 
   return (
-    <main className="page">
-      <div className="container">
-        <a className="back" href="/">
-          <ArrowLeft size={17} /> Voltar ao AI Business Autopilot
+    <main className="integrations-page">
+      <header className="topbar">
+        <a className="back-link" href="/">
+          <ArrowLeft size={17} />
+          <span>Painel principal</span>
         </a>
 
-        <header className="hero">
-          <div className="heroTop">
-            <div className="heroIcon"><Link2 size={27} /></div>
-            <span className="mode"><span /> MODO DE DEMONSTRAÇÃO</span>
+        <div className="environment">
+          <span className="environment-dot" />
+          Modo de demonstração
+        </div>
+      </header>
+
+      <section className="hero">
+        <div className="hero-copy">
+          <div className="eyebrow">
+            <Zap size={15} />
+            AI BUSINESS AUTOPILOT
           </div>
 
-          <p className="eyebrow">AI BUSINESS AUTOPILOT / SISTEMA</p>
-          <h1>Integrations AI</h1>
-          <p className="intro">
-            Organiza as integrações do Autopilot num único local.
-            Prepara os serviços, acompanha os requisitos e planeia os próximos passos.
+          <h1>
+            Integrations <span>AI</span>
+          </h1>
+
+          <p>
+            Organiza as integrações do teu negócio num único lugar.
+            Prepara os requisitos, acompanha a configuração e mantém
+            o controlo dos acessos.
           </p>
 
-          <div className="notice">
-            <ShieldCheck size={20} />
-            <div>
-              <strong>Controlo de segurança ativo</strong>
-              <p>
-                Nenhuma conta será ligada e nenhuma operação externa será executada
-                por esta página. Os estados apresentados são demonstrativos.
-              </p>
-            </div>
+          <div className="hero-note">
+            <ShieldCheck size={17} />
+            <span>
+              Seguro por defeito: nenhuma conta real é ligada neste módulo.
+            </span>
           </div>
-        </header>
+        </div>
 
-        <section className="stats">
-          <article className="stat">
-            <span>Serviços disponíveis</span>
+        <div className="hero-visual" aria-hidden="true">
+          <div className="orbit orbit-one" />
+          <div className="orbit orbit-two" />
+          <div className="orbit-core">
+            <Link2 size={35} />
+          </div>
+          <div className="orbit-node node-one">
+            <Database size={19} />
+          </div>
+          <div className="orbit-node node-two">
+            <Globe size={19} />
+          </div>
+          <div className="orbit-node node-three">
+            <Cloud size={19} />
+          </div>
+        </div>
+      </section>
+
+      <section className="stats-grid">
+        <article className="stat-card">
+          <div className="stat-icon purple">
+            <Link2 size={19} />
+          </div>
+          <div>
+            <span className="stat-label">Integrações disponíveis</span>
             <strong>{integrations.length}</strong>
-            <small>Opções para planear</small>
-          </article>
-          <article className="stat">
-            <span>Selecionados</span>
-            <strong>{selected.length}</strong>
-            <small>Seleção local</small>
-          </article>
-          <article className="stat">
-            <span>Checklist concluída</span>
-            <strong>{completed.length}/{checklist.length}</strong>
-            <small>Progresso desta sessão</small>
-          </article>
-        </section>
+          </div>
+        </article>
 
-        <section className="section">
-          <div className="sectionHead">
-            <div>
-              <p className="eyebrow">CATÁLOGO</p>
-              <h2>Serviços e plataformas</h2>
-              <p className="muted">Seleciona os serviços que pretendes preparar.</p>
-            </div>
-            <button className="secondary" onClick={() => setShowChecklist(!showChecklist)}>
-              <SlidersHorizontal size={16} />
-              {showChecklist ? "Ocultar plano" : "Plano de integração"}
-            </button>
+        <article className="stat-card">
+          <div className="stat-icon green">
+            <CheckCircle2 size={19} />
+          </div>
+          <div>
+            <span className="stat-label">Revisões realizadas</span>
+            <strong>{reviewed.length}</strong>
+          </div>
+        </article>
+
+        <article className="stat-card">
+          <div className="stat-icon blue">
+            <Activity size={19} />
+          </div>
+          <div>
+            <span className="stat-label">Etapas verificadas</span>
+            <strong>{completed.length}</strong>
+          </div>
+        </article>
+      </section>
+
+      <section className="workspace">
+        <div className="section-heading">
+          <div>
+            <span className="section-kicker">CENTRO DE LIGAÇÕES</span>
+            <h2>As tuas integrações</h2>
+            <p>Seleciona um serviço para consultar os requisitos.</p>
           </div>
 
-          <div className="search">
+          <div className="available-label">
+            <span />
+            Catálogo disponível
+          </div>
+        </div>
+
+        <div className="toolbar">
+          <div className="search-box">
             <Search size={18} />
             <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Pesquisar serviços..."
-              aria-label="Pesquisar serviços"
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Pesquisar integrações..."
+              aria-label="Pesquisar integrações"
             />
-            {query && (
-              <button className="iconButton" onClick={() => setQuery("")} aria-label="Limpar pesquisa">
-                <XCircle size={18} />
+            {search && (
+              <button
+                className="clear-search"
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Limpar pesquisa"
+              >
+                <X size={16} />
               </button>
             )}
           </div>
 
-          <div className="filters">
-            {categories.map((item) => (
-              <button
-                key={item}
-                className={`filter ${category === item ? "active" : ""}`}
-                onClick={() => setCategory(item)}
-              >
-                {item}
-              </button>
-            ))}
+          <div className="filter-label">
+            <SlidersHorizontal size={17} />
+            <span>Categoria</span>
           </div>
+        </div>
 
-          <div className="grid">
-            {filtered.map((item) => {
-              const Icon = item.icon;
-              const isSelected = selected.includes(item.id);
-              const isExpanded = expanded === item.id;
+        <div className="category-list" aria-label="Filtrar por categoria">
+          {categories.map((item) => (
+            <button
+              key={item}
+              type="button"
+              className={`category-button ${
+                category === item ? "active" : ""
+              }`}
+              onClick={() => setCategory(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+
+        {filteredIntegrations.length === 0 ? (
+          <div className="empty-state">
+            <Search size={28} />
+            <h3>Nenhum resultado encontrado</h3>
+            <p>Tenta outro nome ou seleciona uma categoria diferente.</p>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setSearch("");
+                setCategory("Todas");
+              }}
+            >
+              Limpar filtros
+            </button>
+          </div>
+        ) : (
+          <div className="integration-grid">
+            {filteredIntegrations.map((integration) => {
+              const Icon = integration.icon;
+              const isSelected = selectedId === integration.id;
+              const isReviewed = reviewed.includes(integration.id);
 
               return (
-                <article className={`integration ${isSelected ? "chosen" : ""}`} key={item.id}>
-                  <div className="cardTop">
-                    <div className="serviceIcon" style={{ color: item.color }}>
-                      <Icon size={24} />
+                <article
+                  className={`integration-card ${
+                    isSelected ? "selected" : ""
+                  }`}
+                  key={integration.id}
+                >
+                  <div className="card-top">
+                    <div
+                      className="integration-icon"
+                      style={{
+                        color: integration.color,
+                        backgroundColor: `${integration.color}18`,
+                      }}
+                    >
+                      <Icon size={23} />
                     </div>
-                    <span className="status"><span /> Não ligado</span>
+
+                    <span
+                      className={`status-pill ${
+                        isReviewed ? "reviewed" : ""
+                      }`}
+                    >
+                      <span />
+                      {isReviewed ? "Revista" : "Por configurar"}
+                    </span>
                   </div>
 
-                  <div className="cardTitle">
-                    <h3>{item.name}</h3>
-                    <span className="category">{item.category}</span>
+                  <div className="card-content">
+                    <span className="card-category">
+                      {integration.category}
+                    </span>
+                    <h3>{integration.name}</h3>
+                    <p>{integration.description}</p>
                   </div>
-                  <p className="description">{item.description}</p>
-
-                  <button className="details" onClick={() => setExpanded(isExpanded ? null : item.id)}>
-                    {isExpanded ? "Ocultar requisitos" : "Ver requisitos"}
-                    <ExternalLink size={14} />
-                  </button>
-
-                  {isExpanded && (
-                    <div className="requirements">
-                      <strong>Antes de ligar</strong>
-                      {item.requirements.map((requirement) => (
-                        <div className="requirement" key={requirement}>
-                          <Circle size={14} /> {requirement}
-                        </div>
-                      ))}
-                    </div>
-                  )}
 
                   <button
-                    className={isSelected ? "selectedButton" : "selectButton"}
-                    onClick={() => toggleSelected(item.id)}
+                    type="button"
+                    className="card-action"
+                    onClick={() => setSelectedId(integration.id)}
                   >
-                    {isSelected ? <CheckCircle2 size={17} /> : <Link2 size={17} />}
-                    {isSelected ? "Selecionado para planeamento" : "Selecionar serviço"}
+                    Consultar requisitos
+                    <ExternalLink size={16} />
                   </button>
                 </article>
               );
             })}
           </div>
+        )}
+      </section>
 
-          {filtered.length === 0 && (
-            <div className="empty">
-              <Search size={25} />
-              <strong>Nenhum serviço encontrado</strong>
-              <p>Tenta outra pesquisa ou seleciona outra categoria.</p>
-              <button className="secondary" onClick={() => { setQuery(""); setCategory("Todos"); }}>
-                Limpar filtros
+      {selectedIntegration && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedId(null);
+            }
+          }}
+        >
+          <section
+            className="details-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="details-title"
+          >
+            <div className="details-header">
+              <div>
+                <span className="section-kicker">DETALHES DA INTEGRAÇÃO</span>
+                <h2 id="details-title">{selectedIntegration.name}</h2>
+              </div>
+
+              <button
+                type="button"
+                className="close-button"
+                onClick={() => setSelectedId(null)}
+                aria-label="Fechar detalhes"
+              >
+                <X size={20} />
               </button>
             </div>
-          )}
-        </section>
 
-        {selected.length > 0 && (
-          <section className="selectedPanel">
-            <div>
-              <p className="eyebrow">PLANEAMENTO</p>
-              <h2>{selected.length} serviço(s) selecionado(s)</h2>
-              <p className="muted">
-                {integrations
-                  .filter((item) => selected.includes(item.id))
-                  .map((item) => item.name)
-                  .join(" · ")}
-              </p>
-            </div>
-            <button className="secondary" onClick={() => setSelected([])}>
-              Limpar seleção
-            </button>
-          </section>
-        )}
+            <p className="details-description">
+              {selectedIntegration.purpose}
+            </p>
 
-        {showChecklist && (
-          <section className="section checklist">
-            <div className="sectionHead">
+            <div className="safety-message">
+              <LockKeyhole size={19} />
               <div>
-                <p className="eyebrow">PRÓXIMAS ETAPAS</p>
-                <h2>Checklist de integração</h2>
-                <p className="muted">
-                  Marca cada tarefa à medida que for concluída.
+                <strong>Ligação real ainda não configurada</strong>
+                <p>
+                  Esta lista serve para planear e acompanhar tarefas.
+                  Assinalar etapas não testa credenciais nem estabelece
+                  uma ligação externa.
                 </p>
               </div>
-              <Zap size={25} />
             </div>
 
-            <div className="progressTrack">
-              <div style={{ width: `${(completed.length / checklist.length) * 100}%` }} />
+            <div className="progress-heading">
+              <span>Lista de preparação</span>
+              <strong>{progress}%</strong>
             </div>
 
-            {checklist.map((task) => {
-              const done = completed.includes(task);
-              return (
-                <button
-                  className={`task ${done ? "taskDone" : ""}`}
-                  key={task}
-                  onClick={() => toggleTask(task)}
-                >
-                  {done ? <CheckCircle2 size={19} /> : <Circle size={19} />}
-                  <span>{task}</span>
-                </button>
-              );
-            })}
-            <p className="footnote">
-              O progresso é temporário e fica apenas nesta sessão. Não representa
-              uma integração real.
-            </p>
+            <div
+              className="progress-track"
+              role="progressbar"
+              aria-label="Progresso da preparação"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="progress-fill"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            <div className="requirements-list">
+              {selectedIntegration.requirements.map((requirement) => {
+                const key = `${selectedIntegration.id}:${requirement}`;
+                const isComplete = completed.includes(key);
+
+                return (
+                  <button
+                    type="button"
+                    key={requirement}
+                    className={`requirement-row ${
+                      isComplete ? "complete" : ""
+                    }`}
+                    onClick={() =>
+                      toggleRequirement(selectedIntegration.id, requirement)
+                    }
+                  >
+                    {isComplete ? (
+                      <CheckCircle2 size={20} />
+                    ) : (
+                      <Circle size={20} />
+                    )}
+                    <span>{requirement}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="details-footer">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setSelectedId(null)}
+              >
+                Fechar
+              </button>
+
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  markReviewed(selectedIntegration.id);
+                  setSelectedId(null);
+                }}
+              >
+                <CheckCircle2 size={17} />
+                Marcar como revista
+              </button>
+            </div>
           </section>
-        )}
+        </div>
+      )}
 
-        <section className="security">
-          <div className="securityIcon"><LockKeyhole size={22} /></div>
-          <div>
-            <h3>Operações reais continuam protegidas</h3>
-            <p>
-              Credenciais devem ficar em variáveis de ambiente protegidas.
-              Nunca coloques chaves secretas no código do navegador.
-              A ativação de cada integração deverá ser implementada e testada
-              separadamente.
-            </p>
-          </div>
-        </section>
-
-        <footer>
-          <Cloud size={15} />
-          Integrations AI · Interface de demonstração · AI Business Autopilot
-        </footer>
-      </div>
+      <footer className="page-footer">
+        <div className="footer-icon">
+          <ShieldCheck size={18} />
+        </div>
+        <div>
+          <strong>Controlo e segurança</strong>
+          <p>
+            Não introduzas palavras-passe, chaves privadas ou tokens
+            neste ecrã. Quando houver integrações reais, as credenciais
+            deverão ser guardadas em variáveis de ambiente seguras.
+          </p>
+        </div>
+      </footer>
 
       <style jsx>{`
-        .page {
+        .integrations-page {
+          --bg: #0a0d14;
+          --panel: #111722;
+          --panel-light: #151d2b;
+          --border: #253044;
+          --text: #f3f6fc;
+          --muted: #96a2b7;
+          --accent: #a78bfa;
           min-height: 100vh;
-          background: #080d18;
-          color: #edf2ff;
-          padding: 28px 18px 60px;
+          padding: 28px;
+          background: var(--bg);
+          color: var(--text);
           font-family: Arial, Helvetica, sans-serif;
         }
-        .container { max-width: 1120px; margin: 0 auto; }
-        .back {
-          display: inline-flex; align-items: center; gap: 9px;
-          color: #aab8d3; text-decoration: none; font-size: 14px;
-          margin-bottom: 26px;
+
+        .topbar {
+          max-width: 1240px;
+          margin: 0 auto 32px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
         }
-        .back:hover { color: white; }
+
+        .back-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          color: #c4ccda;
+          text-decoration: none;
+          font-size: 14px;
+        }
+
+        .back-link:hover {
+          color: white;
+        }
+
+        .environment,
+        .available-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid var(--border);
+          border-radius: 999px;
+          padding: 9px 12px;
+          color: #c6d0df;
+          background: #101621;
+          font-size: 12px;
+        }
+
+        .environment-dot,
+        .available-label > span {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #fbbf24;
+        }
+
         .hero {
-          padding: 30px; border: 1px solid #24334c; border-radius: 22px;
-          background: linear-gradient(135deg, #111d32, #0b1220 70%);
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 30px;
+          max-width: 1240px;
+          min-height: 265px;
+          margin: 0 auto 22px;
+          padding: 34px 38px;
+          overflow: hidden;
+          border: 1px solid #2c2948;
+          border-radius: 24px;
+          background:
+            radial-gradient(
+              circle at 78% 50%,
+              rgba(124, 92, 246, 0.16),
+              transparent 34%
+            ),
+            linear-gradient(115deg, #151625, #111827 75%);
         }
-        .heroTop, .sectionHead, .cardTop, .cardTitle {
-          display: flex; align-items: center; justify-content: space-between; gap: 14px;
+
+        .hero-copy {
+          position: relative;
+          z-index: 2;
+          max-width: 650px;
         }
-        .heroIcon {
-          width: 54px; height: 54px; border-radius: 16px;
-          display: grid; place-items: center; color: #83b7ff;
-          background: #1b3457;
+
+        .eyebrow,
+        .section-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #b5a2ff;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
         }
-        .mode {
-          display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px;
-          border: 1px solid #42516a; border-radius: 30px; color: #c1cde0;
-          font-size: 10px; letter-spacing: .07em;
+
+        h1 {
+          margin: 18px 0 12px;
+          font-size: clamp(34px, 5vw, 54px);
+          line-height: 1.05;
+          letter-spacing: -2px;
         }
-        .mode span, .status span {
-          width: 7px; height: 7px; border-radius: 50%; background: #fbbf24;
+
+        h1 span {
+          color: #b5a2ff;
         }
-        .eyebrow { color: #8dbaff; font-size: 10px; letter-spacing: .16em; font-weight: 700; margin: 0 0 10px; }
-        .hero .eyebrow { margin-top: 28px; }
-        h1 { font-size: clamp(30px, 5vw, 46px); letter-spacing: -.04em; margin: 0 0 12px; }
-        .intro { color: #afbdd3; max-width: 720px; line-height: 1.7; margin: 0; }
-        .notice {
-          display: flex; gap: 13px; margin-top: 25px; padding: 16px;
-          border: 1px solid #294c48; border-radius: 13px;
-          background: #102521; color: #81e4bd;
+
+        .hero-copy > p {
+          max-width: 590px;
+          margin: 0;
+          color: #aab5c8;
+          font-size: 15px;
+          line-height: 1.8;
         }
-        .notice strong { font-size: 13px; }
-        .notice p { margin: 5px 0 0; color: #b2cfc5; font-size: 12px; line-height: 1.6; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0 38px; }
-        .stat { border: 1px solid #25334a; border-radius: 15px; padding: 20px; background: #101827; }
-        .stat span, .stat small { display: block; color: #9baac2; font-size: 12px; }
-        .stat strong { display: block; font-size: 29px; margin: 10px 0 5px; }
-        .stat small { color: #7487a3; }
-        .section { margin-top: 34px; }
-        h2 { margin: 0 0 7px; font-size: 22px; letter-spacing: -.025em; }
-        .muted { margin: 0; color: #98a8c1; font-size: 13px; line-height: 1.6; }
-        .secondary, .selectButton, .selectedButton, .filter, .iconButton {
-          display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-          border-radius: 10px; border: 1px solid #34445e; cursor: pointer;
-          font: inherit; transition: .15s ease;
+
+        .hero-note {
+          display: flex;
+          align-items: flex-start;
+          gap: 9px;
+          margin-top: 22px;
+          color: #c3b7ff;
+          font-size: 12px;
+          line-height: 1.6;
         }
-        .secondary { background: #111c2d; color: #dbe7fb; padding: 11px 13px; font-size: 12px; }
-        .secondary:hover, .filter:hover { border-color: #719cdb; }
-        .search {
-          display: flex; align-items: center; gap: 11px; padding: 0 14px;
-          border: 1px solid #2b3b55; border-radius: 12px; background: #0f1726;
-          color: #8fa4c2; margin-top: 22px;
+
+        .hero-note :global(svg) {
+          flex-shrink: 0;
+          margin-top: 1px;
         }
-        .search input { width: 100%; padding: 15px 0; border: 0; outline: 0; color: #f1f5ff; background: transparent; font-size: 14px; }
-        .search input::placeholder { color: #73839d; }
-        .iconButton { border: 0; background: transparent; color: #91a1bb; padding: 4px; }
-        .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 20px; }
-        .filter { padding: 8px 12px; background: #101827; color: #aebbd0; font-size: 12px; }
-        .filter.active { background: #1c3b62; border-color: #5487c7; color: #e4efff; }
-        .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
-        .integration { min-width: 0; padding: 20px; border-radius: 16px; background: #101827; border: 1px solid #27364d; }
-        .integration.chosen { border-color: #5794d9; box-shadow: 0 0 0 1px #5794d933; }
-        .serviceIcon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; background: #1a2638; }
-        .status { display: inline-flex; align-items: center; gap: 6px; color: #c4cddd; font-size: 10px; }
-        .cardTitle { align-items: flex-start; margin-top: 19px; flex-wrap: wrap; }
-        h3 { margin: 0; font-size: 16px; }
-        .category { color: #9eb3d0; background: #1a273b; border-radius: 6px; padding: 5px 7px; font-size: 10px; }
-        .description { min-height: 44px; color: #9eacc2; font-size: 12px; line-height: 1.7; margin: 12px 0 15px; }
-        .details { border: 0; background: transparent; color: #8ebcff; display: flex; align-items: center; gap: 7px; padding: 0; cursor: pointer; font-size: 12px; }
-        .requirements { margin-top: 13px; padding: 12px; background: #0b1321; border-radius: 10px; color: #d8e4f7; font-size: 11px; }
-        .requirements strong { display: block; margin-bottom: 10px; }
-        .requirement { display: flex; gap: 7px; align-items: flex-start; margin: 8px 0; color: #9eafc7; line-height: 1.5; }
-        .requirement :global(svg) { flex-shrink: 0; margin-top: 1px; }
-        .selectButton, .selectedButton { width: 100%; padding: 11px 9px; margin-top: 19px; font-size: 11px; }
-        .selectButton { background: #17253a; color: #d9e7fc; }
-        .selectButton:hover { background: #203958; }
-        .selectedButton { color: #9ae6c5; background: #102b25; border-color: #2c6654; }
-        .empty { text-align: center; padding: 40px 15px; border: 1px dashed #34445e; border-radius: 15px; color: #9fb0c8; }
-        .empty strong { display: block; margin: 12px 0 6px; color: #edf2ff; }
-        .empty p { font-size: 13px; }
-        .empty .secondary { margin-top: 12px; }
-        .selectedPanel { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 20px; padding: 22px; border: 1px solid #2c4b70; background: #111e30; border-radius: 15px; }
-        .checklist { padding: 24px; border: 1px solid #27364d; border-radius: 17px; background: #101827; }
-        .checklist .sectionHead { margin-bottom: 20px; }
-        .progressTrack { height: 6px; border-radius: 20px; overflow: hidden; background: #26354a; margin-bottom: 15px; }
-        .progressTrack div { height: 100%; background: #56d6a2; transition: width .2s ease; }
-        .task { width: 100%; display: flex; gap: 12px; align-items: center; text-align: left; padding: 13px 2px; border: 0; border-bottom: 1px solid #263349; color: #d2ddef; background: transparent; cursor: pointer; font-size: 13px; }
-        .task :global(svg) { color: #8296b4; flex-shrink: 0; }
-        .taskDone { color: #81dfb8; }
-        .taskDone :global(svg) { color: #67d8a6; }
-        .footnote { color: #788aa5; font-size: 11px; line-height: 1.6; margin: 15px 0 0; }
-        .security { display: flex; gap: 14px; padding: 21px; margin-top: 30px; border: 1px solid #3d3940; background: #191821; border-radius: 15px; }
-        .securityIcon { color: #f0c779; }
-        .security h3 { font-size: 14px; }
-        .security p { color: #a7a4b1; font-size: 12px; line-height: 1.8; margin: 8px 0 0; }
-        footer { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 30px; color: #71819b; font-size: 11px; text-align: center; }
-        @media (max-width: 850px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        @media (max-width: 560px) {
-          .page { padding: 18px 12px 40px; }
-          .hero { padding: 21px; }
-          .stats { gap: 8px; }
- 
+
+        .hero-visual {
+          position: relative;
+          width: 225px;
+          height: 225px;
+          flex-shrink: 0;
+          margin-right: 25px;
+        }
+
+        .orbit {
+          position: absolute;
+          inset: 15px;
+          border: 1px solid rgba(167, 139, 250, 0.28);
+          border-radius: 50%;
+        }
+
+        .orbit-one {
+          transform: rotateX(58deg) rotate(-25deg);
+        }
+
+        .orbit-two {
+          transform: rotateY(58deg) rotate(25deg);
+        }
+
+        .orbit-core {
+          position: ab
