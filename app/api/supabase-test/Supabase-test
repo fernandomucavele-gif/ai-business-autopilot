@@ -1,25 +1,39 @@
+
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 export async function GET() {
-  const { error } = await supabase
-    .from("autopilot_state")
-    .select("id")
-    .limit(1);
+  try {
+    const { error } = await supabase
+      .from("autopilot_state")
+      .select("id")
+      .limit(1);
 
-  if (error) {
+    if (error) {
+      console.error("Falha na verificação do Supabase:", error.message);
+
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "Não foi possível consultar a tabela do Supabase.",
+        },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      message: "A consulta ao Supabase foi bem-sucedida.",
+    });
+  } catch (error) {
+    console.error("Erro ao verificar o Supabase:", error);
+
     return NextResponse.json(
       {
         ok: false,
-        message: "Supabase conectado, mas a tabela ainda não está disponível.",
-        error: error.message,
+        message: "Erro interno ao verificar a ligação ao Supabase.",
       },
-      { status: 200 }
+      { status: 503 }
     );
   }
-
-  return NextResponse.json({
-    ok: true,
-    message: "Supabase conectado e tabela disponível.",
-  });
 }
