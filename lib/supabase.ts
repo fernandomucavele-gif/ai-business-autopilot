@@ -1,16 +1,12 @@
-
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://aczodbaraolugwovtmzx.supabase.co";
-
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseAnonKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    "Configuração em falta: define NEXT_PUBLIC_SUPABASE_ANON_KEY na Vercel."
+    "Configuração do Supabase em falta na Vercel."
   );
 }
 
@@ -18,6 +14,3 @@ export const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey
 );
-
-
-
