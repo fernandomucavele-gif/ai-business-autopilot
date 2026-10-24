@@ -1,13 +1,14 @@
+
 import { supabase } from "./supabase";
 import type { AutopilotState } from "./autopilot";
 
-const STATE_ID = 1;
+const STATE_KEY = "main";
 
 export async function loadAutopilotState(): Promise<AutopilotState | null> {
   const { data, error } = await supabase
     .from("autopilot_state")
-    .select("data")
-    .eq("id", STATE_ID)
+    .select("state_value")
+    .eq("state_key", STATE_KEY)
     .maybeSingle();
 
   if (error) {
@@ -15,11 +16,11 @@ export async function loadAutopilotState(): Promise<AutopilotState | null> {
     return null;
   }
 
-  if (!data?.data) {
+  if (!data?.state_value) {
     return null;
   }
 
-  return data.data as AutopilotState;
+  return data.state_value as AutopilotState;
 }
 
 export async function saveAutopilotState(
@@ -29,12 +30,12 @@ export async function saveAutopilotState(
     .from("autopilot_state")
     .upsert(
       {
-        id: STATE_ID,
-        data: state,
+        state_key: STATE_KEY,
+        state_value: state,
         updated_at: new Date().toISOString(),
       },
       {
-        onConflict: "id",
+        onConflict: "state_key",
       }
     );
 
