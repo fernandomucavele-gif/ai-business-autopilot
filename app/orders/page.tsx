@@ -21,7 +21,7 @@ const statuses: OrderStatus[] = [
 ];
 
 export default function OrdersPage() {
-  const { state, addOrder } = useAutopilot();
+  const { state, addOrder, updateOrder } = useAutopilot();
 
   const [productId, setProductId] = useState(
     state.products[0]?.id || ""
@@ -47,6 +47,12 @@ export default function OrdersPage() {
       return;
     }
 
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setMessage("⚠️ O valor da encomenda deve ser maior que zero.");
+      return;
+    }
+
     addOrder(
       product.id,
       customer.trim(),
@@ -58,7 +64,7 @@ export default function OrdersPage() {
         | "Europa"
         | "EUA"
         | "Global",
-      Number(amount)
+      numericAmount
     );
 
     setMessage(
@@ -83,11 +89,9 @@ export default function OrdersPage() {
     id: string,
     status: OrderStatus
   ) {
-    // O estado dos pedidos será expandido no próximo ciclo
-    // de integração. Por enquanto esta ação permanece
-    // apenas informativa e segura em modo de simulação.
+    updateOrder(id, status);
     setMessage(
-      `🔄 ${id}: estado selecionado "${status}".`
+      `✅ ${id}: estado atualizado para "${status}" no modo de simulação. Nenhuma ação real foi executada.`
     );
   }
 
