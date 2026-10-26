@@ -42,6 +42,12 @@ export default function ResearchPage() {
     useState<string[]>([]);
 
   function runResearch() {
+    const numericPrice = Number(price);
+    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+      setMessage("⚠️ Define um preço estimado válido, maior que zero.");
+      return;
+    }
+
     setSearching(true);
     setMessage("");
 
@@ -59,8 +65,11 @@ export default function ResearchPage() {
   }
 
   function addResearchProduct(name: string) {
-    const numericPrice =
-      Number(price) || 500;
+    const numericPrice = Number(price);
+    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+      setMessage("⚠️ Define um preço estimado válido, maior que zero.");
+      return;
+    }
 
     addProduct(
       name,
@@ -190,6 +199,8 @@ export default function ResearchPage() {
 
               <input
                 type="number"
+                min="1"
+                step="0.01"
                 value={price}
                 onChange={(event) =>
                   setPrice(event.target.value)
