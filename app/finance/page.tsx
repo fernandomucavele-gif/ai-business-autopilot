@@ -31,13 +31,21 @@ export default function FinancePage() {
       : 0;
 
   function addSimulation() {
+    const rawValues = [revenue, productCost, ads, shipping];
+    const values = rawValues.map((value) => value.trim() === "" ? 0 : Number(value));
+
+    if (values.some((value) => !Number.isFinite(value) || value < 0)) {
+      setMessage("⚠️ Introduz apenas valores numéricos válidos e não negativos.");
+      return;
+    }
+
     if (
       simulatedRevenue === 0 &&
       simulatedProductCost === 0 &&
       simulatedAds === 0 &&
       simulatedShipping === 0
     ) {
-      setMessage("⚠️ Introduz pelo menos um valor.");
+      setMessage("⚠️ Introduz pelo menos um valor maior que zero.");
       return;
     }
 
