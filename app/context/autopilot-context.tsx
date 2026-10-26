@@ -52,6 +52,8 @@ type AutopilotContextType = {
     amount: number
   ) => void;
 
+  updateOrder: (id: string, status: Order["status"]) => void;
+
   addFinanceRecord: (record: FinanceRecord) => void;
 
   setAutomation: (
@@ -151,6 +153,15 @@ export function AutopilotProvider({
     }));
   }
 
+  function updateOrder(id: string, status: Order["status"]) {
+    setState((current) => ({
+      ...current,
+      orders: current.orders.map((order) =>
+        order.id === id ? { ...order, status } : order
+      ),
+    }));
+  }
+
   function addFinanceRecord(record: FinanceRecord) {
     setState((current) => ({
       ...current,
@@ -185,6 +196,7 @@ export function AutopilotProvider({
         addProduct,
         addCampaign,
         addOrder,
+        updateOrder,
         addFinanceRecord,
         setAutomation,
         metrics,
