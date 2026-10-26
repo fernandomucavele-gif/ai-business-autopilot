@@ -21,7 +21,7 @@ const statuses: OrderStatus[] = [
 ];
 
 export default function OrdersPage() {
-  const { state, addOrder } = useAutopilot();
+  const { state, addOrder, updateOrder } = useAutopilot();
 
   const [productId, setProductId] = useState(
     state.products[0]?.id || ""
@@ -33,8 +33,9 @@ export default function OrdersPage() {
   const [message, setMessage] = useState("");
 
   function createOrder() {
-    if (!productId || !customer.trim() || !amount.trim()) {
-      setMessage("⚠️ Preenche o produto, cliente e valor.");
+    const numericAmount = Number(amount);
+    if (!productId || !customer.trim() || !amount.trim() || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setMessage("⚠️ Preenche o produto, cliente e um valor maior que zero.");
       return;
     }
 
@@ -58,7 +59,7 @@ export default function OrdersPage() {
         | "Europa"
         | "EUA"
         | "Global",
-      Number(amount)
+      numericAmount
     );
 
     setMessage(
@@ -79,16 +80,9 @@ export default function OrdersPage() {
     return "#f1f5f9";
   }
 
-  function updateStatus(
-    id: string,
-    status: OrderStatus
-  ) {
-    // O estado dos pedidos será expandido no próximo ciclo
-    // de integração. Por enquanto esta ação permanece
-    // apenas informativa e segura em modo de simulação.
-    setMessage(
-      `🔄 ${id}: estado selecionado "${status}".`
-    );
+  function updateStatus(id: string, status: OrderStatus) {
+    updateOrder(id, { status });
+    setMessage(`✅ ${id}: estado atualizado para "${status}" em modo de simulação.`);
   }
 
   return (
