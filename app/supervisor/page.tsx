@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -44,6 +45,7 @@ const protections = [
 ];
 
 export default function SupervisorPage() {
+  const { state, metrics } = useAutopilot();
   const [checking, setChecking] = useState(false);
   const [lastCheck, setLastCheck] = useState("");
   const [message, setMessage] = useState("");
@@ -58,7 +60,7 @@ export default function SupervisorPage() {
     // Diagnóstico local de demonstração.
     // Não executa compras, pagamentos, anúncios ou levantamentos.
     const result =
-      "Verificação local concluída: controlos de segurança mantidos.";
+      `Diagnóstico local concluído: ${state.products.length} produto(s), ${state.campaigns.length} campanha(s), ${state.orders.length} encomenda(s); lucro simulado de ${metrics.profit.toLocaleString("pt-PT")} MT. Compras, pagamentos e anúncios reais continuam bloqueados.`;
 
     setLastCheck(
       new Date().toLocaleString("pt-MZ", {
@@ -108,7 +110,7 @@ export default function SupervisorPage() {
           <section className={styles.statsGrid} aria-label="Estado do sistema">
             <article className={styles.statCard}>
               <span className={styles.statLabel}>Modo de operação</span>
-              <strong className={styles.statValue}>Teste</strong>
+              <strong className={styles.statValue}>Simulação</strong>
               <span className={styles.successText}>Ativo</span>
             </article>
 
@@ -126,7 +128,7 @@ export default function SupervisorPage() {
               <Activity size={25} />
               <div>
                 <h3>Diagnóstico do sistema</h3>
-                <p>Executa verificações locais</p>
+                <p>Verifica os registos atuais do Autopilot e os controlos locais</p>
               </div>
             </div>
 
