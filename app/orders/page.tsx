@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
+import type { Market, Order } from "../../lib/autopilot";
 
 type OrderStatus =
   | "Novo"
@@ -21,7 +22,7 @@ const statuses: OrderStatus[] = [
 ];
 
 export default function OrdersPage() {
-  const { state, addOrder } = useAutopilot();
+  const { state, addOrder, updateOrder } = useAutopilot();
 
   const [productId, setProductId] = useState(
     state.products[0]?.id || ""
@@ -33,8 +34,13 @@ export default function OrdersPage() {
   const [message, setMessage] = useState("");
 
   function createOrder() {
+    const numericAmount = Number(amount);
     if (!productId || !customer.trim() || !amount.trim()) {
       setMessage("⚠️ Preenche o produto, cliente e valor.");
+      return;
+    }
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setMessage("⚠️ Introduz um valor válido maior que zero.");
       return;
     }
 
@@ -58,7 +64,7 @@ export default function OrdersPage() {
         | "Europa"
         | "EUA"
         | "Global",
-      Number(amount)
+      numericAmount
     );
 
     setMessage(
@@ -79,16 +85,29 @@ export default function OrdersPage() {
     return "#f1f5f9";
   }
 
-  function updateStatus(
-    id: string,
-    status: OrderStatus
-  ) {
-    // O estado dos pedidos será expandido no próximo ciclo
-    // de integração. Por enquanto esta ação permanece
-    // apenas informativa e segura em modo de simulação.
-    setMessage(
-      `🔄 ${id}: estado selecionado "${status}".`
-    );
+  function updateStatus(id: string, status: OrderStatus) {
+    updateOrder(id, { status });
+    setMessage(`✅ ${id}: estado atualizado para "${status}" (simulação).`);
+  }
+
+  function formatDate(value?: string) {
+    if (!value) return "Não definida";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Data inválida";
+    return date.toLocaleDateString("pt-PT", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  function getDeliveryText(order: Order) {
+    if (order.status === "Entregue") return "Encomenda marcada como entregue (simulação).";
+    if (!order.estimatedDeliveryAt) return "Data estimada não definida.";
+    const remaining = new Date(order.estimatedDeliveryAt).getTime() - Date.now();
+    if (remaining < 0) return "Prazo estimado ultrapassado. Confirma o estado manualmente.";
+    const days = Math.ceil(remaining / (1000 * 60 * 60 * 24));
+    return `Entrega estimada: ${formatDate(order.estimatedDeliveryAt)} (aprox. ${days} dia(s)).`;
   }
 
   return (
@@ -405,8 +424,19 @@ export default function OrdersPage() {
 
                   <p>
                     💰 <strong>Valor:</strong>{" "}
-                    {order.amount.toLocaleString()} MT
+                    {order.amount.toLocaleString("pt-PT")} MT
                   </p>
+
+                  <p>
+                    🗓️ <strong>Prazo:</strong>{" "}
+                    {getDeliveryText(order)}
+                  </p>
+
+                  {order.delayNotice && (
+                    <p style={{ padding: 12, borderRadius: 9, background: "#fff7ed", color: "#9a3412" }}>
+                      ⚠️ <strong>Aviso de atraso:</strong> {order.delayNotice}
+                    </p>
+                  )}
 
                   <label>
                     <strong>Estado:</strong>
@@ -431,7 +461,7 @@ export default function OrdersPage() {
                     }}
                   >
                     {statuses.map((status) => (
-                      <option key={status}>
+                      <option key={status} value={status}>
                         {status}
                       </option>
                     ))}
