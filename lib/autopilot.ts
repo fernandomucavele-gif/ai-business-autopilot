@@ -13,6 +13,7 @@ export type Product = {
   name: string;
   market: Market;
   price: number;
+  estimatedUnitCost?: number;
   supplier?: string;
   supplierCountry?: string;
   score: number;
@@ -83,13 +84,15 @@ export const initialAutopilotState: AutopilotState = {
 export function createProduct(
   name: string,
   market: Market,
-  price: number
+  price: number,
+  estimatedUnitCost?: number
 ): Product {
   return {
     id: `PROD-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     name,
     market,
     price,
+    estimatedUnitCost,
     score: 0,
     status: "research",
   };
