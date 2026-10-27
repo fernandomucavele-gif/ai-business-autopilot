@@ -32,6 +32,9 @@ export default function ResearchPage() {
   const [price, setPrice] =
     useState("500");
 
+  const [unitCost, setUnitCost] =
+    useState("250");
+
   const [searching, setSearching] =
     useState(false);
 
@@ -43,8 +46,17 @@ export default function ResearchPage() {
 
   function runResearch() {
     const numericPrice = Number(price);
+    const numericCost = Number(unitCost);
     if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
       setMessage("⚠️ Define um preço estimado válido, maior que zero.");
+      return;
+    }
+    if (!Number.isFinite(numericCost) || numericCost < 0) {
+      setMessage("⚠️ Define um custo estimado válido, igual ou superior a zero.");
+      return;
+    }
+    if (numericCost >= numericPrice) {
+      setMessage("⚠️ O custo estimado é igual ou superior ao preço de venda. Revê os valores antes de avançar.");
       return;
     }
 
@@ -66,8 +78,13 @@ export default function ResearchPage() {
 
   function addResearchProduct(name: string) {
     const numericPrice = Number(price);
+    const numericCost = Number(unitCost);
     if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
       setMessage("⚠️ Define um preço estimado válido, maior que zero.");
+      return;
+    }
+    if (!Number.isFinite(numericCost) || numericCost < 0 || numericCost >= numericPrice) {
+      setMessage("⚠️ O custo deve ser válido, não negativo e inferior ao preço de venda.");
       return;
     }
 
@@ -239,7 +256,36 @@ export default function ResearchPage() {
                 }}
               />
             </label>
+
+            <label
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              Custo estimado por unidade
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={unitCost}
+                onChange={(event) => setUnitCost(event.target.value)}
+                style={{
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d0d5dd",
+                }}
+              />
+            </label>
           </div>
+
+          <p style={{ color: "#475467", fontSize: "14px", marginTop: "14px" }}>
+            Margem bruta estimada: {(Number(price) - Number(unitCost)).toFixed(2)} MT por unidade
+            {Number(price) > 0 ? ` (${(((Number(price) - Number(unitCost)) / Number(price)) * 100).toFixed(1)}%)` : ""}.
+            Não inclui transporte, impostos, taxas, devoluções, armazenamento nem publicidade.
+          </p>
 
           <button
             onClick={runResearch}
@@ -329,7 +375,16 @@ export default function ResearchPage() {
                       color: "#667085",
                     }}
                   >
-                    Preço: {price} MT
+                    Preço de venda: {price} MT
+                  </p>
+
+                  <p style={{ color: "#475467" }}>
+                    Custo estimado: {unitCost} MT
+                  </p>
+
+                  <p style={{ fontWeight: 700, color: Number(price) > Number(unitCost) ? "#027a48" : "#b42318" }}>
+                    Margem bruta: {(Number(price) - Number(unitCost)).toFixed(2)} MT
+                    {Number(price) > 0 ? ` (${(((Number(price) - Number(unitCost)) / Number(price)) * 100).toFixed(1)}%)` : ""}
                   </p>
 
                   <button
