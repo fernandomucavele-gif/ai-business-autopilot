@@ -102,7 +102,8 @@ export default function ResearchPage() {
     addProduct(
       name,
       market,
-      numericPrice
+      numericPrice,
+      numericCost
     );
 
     setMessage(
@@ -490,9 +491,20 @@ export default function ResearchPage() {
                       {product.market}
                     </span>
 
-                    <span>
-                      {product.price} MT
-                    </span>
+                    <div style={{ display: "grid", gap: "4px", fontSize: "14px" }}>
+                      <span>Venda: {product.price.toFixed(2)} MT</span>
+                      {typeof product.estimatedUnitCost === "number" ? (
+                        <>
+                          <span>Custo estimado: {product.estimatedUnitCost.toFixed(2)} MT</span>
+                          <strong style={{ color: product.price > product.estimatedUnitCost ? "#027a48" : "#b42318" }}>
+                            Margem bruta: {(product.price - product.estimatedUnitCost).toFixed(2)} MT
+                            {" "}({product.price > 0 ? (((product.price - product.estimatedUnitCost) / product.price) * 100).toFixed(1) : "0.0"}%)
+                          </strong>
+                        </>
+                      ) : (
+                        <span style={{ color: "#667085" }}>Custo estimado ainda não definido</span>
+                      )}
+                    </div>
 
                     <span>
                       {product.status}
