@@ -25,6 +25,11 @@ export default function FinancePage() {
   const simulatedProfit =
     simulatedRevenue - simulatedCosts;
 
+  const simulatedMarginPercent =
+    simulatedRevenue > 0
+      ? (simulatedProfit / simulatedRevenue) * 100
+      : 0;
+
   const simulatedROAS =
     simulatedAds > 0
       ? simulatedRevenue / simulatedAds
@@ -242,8 +247,13 @@ export default function FinancePage() {
             </p>
 
             <p>
-              Lucro:{" "}
+              Lucro estimado:{" "}
               {simulatedProfit.toFixed(2)} MT
+            </p>
+
+            <p>
+              Margem líquida estimada:{" "}
+              {simulatedMarginPercent.toFixed(1)}%
             </p>
 
             <p>
