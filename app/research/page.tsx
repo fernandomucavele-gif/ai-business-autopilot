@@ -71,6 +71,17 @@ export default function ResearchPage() {
       return;
     }
 
+    const alreadyExists = state.products.some(
+      (product) =>
+        product.name.trim().toLocaleLowerCase() === name.trim().toLocaleLowerCase() &&
+        product.market === market
+    );
+
+    if (alreadyExists) {
+      setMessage("⚠️ Este produto já existe no Autopilot para esse mercado.");
+      return;
+    }
+
     addProduct(
       name,
       market,
@@ -131,6 +142,22 @@ export default function ResearchPage() {
           >
             Pesquisa e descoberta de produtos
             com potencial de venda.
+          </p>
+
+          <p
+            style={{
+              marginTop: "12px",
+              padding: "12px",
+              borderRadius: "10px",
+              background: "#fffaeb",
+              border: "1px solid #fedf89",
+              color: "#93370d",
+              fontSize: "14px",
+            }}
+          >
+            MODO DE DEMONSTRAÇÃO: as sugestões abaixo são exemplos ilustrativos,
+            não resultados de pesquisa em tempo real. Confirma procura, concorrência,
+            fornecedores, custos e impostos antes de investir.
           </p>
         </header>
 
