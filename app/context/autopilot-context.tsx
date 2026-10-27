@@ -35,7 +35,8 @@ type AutopilotContextType = {
   addProduct: (
     name: string,
     market: Product["market"],
-    price: number
+    price: number,
+    estimatedUnitCost?: number
   ) => void;
 
   addCampaign: (
@@ -105,9 +106,10 @@ export function AutopilotProvider({
   function addProduct(
     name: string,
     market: Product["market"],
-    price: number
+    price: number,
+    estimatedUnitCost?: number
   ) {
-    const product = createProduct(name, market, price);
+    const product = createProduct(name, market, price, estimatedUnitCost);
 
     setState((current) => ({
       ...current,
