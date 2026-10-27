@@ -45,7 +45,7 @@ export default function MonitoringPage() {
         id: Date.now(),
         time: "Agora",
         message:
-          "Monitoramento atualizado com sucesso.",
+          `Painel atualizado: ${state.products.length} produtos, ${state.campaigns.length} campanhas e ${state.orders.length} pedidos no estado local.`,
         type: "success",
       },
       ...old,
@@ -62,8 +62,8 @@ export default function MonitoringPage() {
         id: Date.now(),
         time: "Agora",
         message: next
-          ? "Autopilot ativado em modo simulação."
-          : "Autopilot pausado.",
+          ? "Indicador visual do painel reativado; isto não inicia automações reais."
+          : "Indicador visual do painel pausado; os dados continuam sem alterações.",
         type: next ? "success" : "warning",
       },
       ...old,
@@ -161,7 +161,7 @@ export default function MonitoringPage() {
 
           <StatusCard
             title="🤖 Autopilot"
-            value={active ? "Ativo" : "Pausado"}
+            value={active ? "Indicador ativo" : "Indicador pausado"}
             background="#082f49"
             border="#0369a1"
             valueColor="#67e8f9"
@@ -235,8 +235,7 @@ export default function MonitoringPage() {
           </h2>
 
           <p style={{ color: "#94a3b8" }}>
-            Controla a atividade do Autopilot durante
-            os testes.
+            Este controlo altera apenas o indicador visual desta página; não inicia nem pausa tarefas reais.
           </p>
 
           <button
@@ -254,8 +253,8 @@ export default function MonitoringPage() {
             }}
           >
             {active
-              ? "⏸ Pausar Autopilot"
-              : "▶ Ativar Autopilot"}
+              ? "⏸ Pausar indicador visual"
+              : "▶ Reativar indicador visual"}
           </button>
         </section>
 
