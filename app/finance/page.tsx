@@ -7,14 +7,18 @@ export default function FinancePage() {
   const { state, metrics, addFinanceRecord } = useAutopilot();
 
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [quantity, setQuantity] = useState("1");
   const [revenue, setRevenue] = useState("");
   const [productCost, setProductCost] = useState("");
   const [ads, setAds] = useState("");
   const [shipping, setShipping] = useState("");
   const [message, setMessage] = useState("");
 
-  const simulatedRevenue = Number(revenue) || 0;
-  const simulatedProductCost = Number(productCost) || 0;
+  const simulatedQuantity = Number(quantity) || 0;
+  const revenuePerUnit = Number(revenue) || 0;
+  const productCostPerUnit = Number(productCost) || 0;
+  const simulatedRevenue = revenuePerUnit * simulatedQuantity;
+  const simulatedProductCost = productCostPerUnit * simulatedQuantity;
   const simulatedAds = Number(ads) || 0;
   const simulatedShipping = Number(shipping) || 0;
 
@@ -48,10 +52,10 @@ export default function FinancePage() {
   }
 
   function addSimulation() {
-    const rawValues = [revenue, productCost, ads, shipping];
+    const rawValues = [quantity, revenue, productCost, ads, shipping];
     const values = rawValues.map((value) => value.trim() === "" ? 0 : Number(value));
 
-    if (values.some((value) => !Number.isFinite(value) || value < 0)) {
+    if (values.some((value) => !Number.isFinite(value) || value < 0) || !Number.isInteger(simulatedQuantity) || simulatedQuantity < 1) {
       setMessage("⚠️ Introduz apenas valores numéricos válidos e não negativos.");
       return;
     }
@@ -72,7 +76,7 @@ export default function FinancePage() {
         type: "revenue",
         amount: simulatedRevenue,
         currency: "MT",
-        description: "Receita simulada",
+        description: `Receita simulada (${simulatedQuantity} unidade${simulatedQuantity === 1 ? "" : "s"})`,
       });
     }
 
@@ -82,7 +86,7 @@ export default function FinancePage() {
         type: "product_cost",
         amount: simulatedProductCost,
         currency: "MT",
-        description: "Custo de produto simulado",
+        description: `Custo de produto simulado (${simulatedQuantity} unidade${simulatedQuantity === 1 ? "" : "s"})`,
       });
     }
 
@@ -110,6 +114,7 @@ export default function FinancePage() {
       "✅ Dados financeiros adicionados ao Autopilot em modo de simulação."
     );
 
+    setQuantity("1");
     setRevenue("");
     setProductCost("");
     setAds("");
@@ -230,13 +235,20 @@ export default function FinancePage() {
           </label>
 
           <Input
-            label="Receita"
+            label="Quantidade de unidades"
+            value={quantity}
+            setValue={setQuantity}
+            integer
+          />
+
+          <Input
+            label="Preço de venda por unidade (MT)"
             value={revenue}
             setValue={setRevenue}
           />
 
           <Input
-            label="Custo do produto"
+            label="Custo do produto por unidade (MT)"
             value={productCost}
             setValue={setProductCost}
           />
@@ -266,7 +278,11 @@ export default function FinancePage() {
             </strong>
 
             <p>
-              Receita:{" "}
+              Unidades: {simulatedQuantity}
+            </p>
+
+            <p>
+              Receita total:{" "}
               {simulatedRevenue.toFixed(2)} MT
             </p>
 
@@ -519,10 +535,12 @@ function Input({
   label,
   value,
   setValue,
+  integer = false,
 }: {
   label: string;
   value: string;
   setValue: (value: string) => void;
+  integer?: boolean;
 }) {
   return (
     <label
@@ -536,7 +554,8 @@ function Input({
 
       <input
         type="number"
-        min="0"
+        min={integer ? "1" : "0"}
+        step={integer ? "1" : "any"}
         value={value}
         onChange={(e) =>
           setValue(e.target.value)
