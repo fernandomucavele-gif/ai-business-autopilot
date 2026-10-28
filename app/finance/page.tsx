@@ -6,6 +6,7 @@ import { useAutopilot } from "../context/autopilot-context";
 export default function FinancePage() {
   const { state, metrics, addFinanceRecord } = useAutopilot();
 
+  const [selectedProductId, setSelectedProductId] = useState("");
   const [revenue, setRevenue] = useState("");
   const [productCost, setProductCost] = useState("");
   const [ads, setAds] = useState("");
@@ -34,6 +35,17 @@ export default function FinancePage() {
     simulatedAds > 0
       ? simulatedRevenue / simulatedAds
       : 0;
+
+  function selectProduct(productId: string) {
+    setSelectedProductId(productId);
+    const product = state.products.find((item) => item.id === productId);
+    if (!product) return;
+    setRevenue(String(product.price));
+    setProductCost(typeof product.estimatedUnitCost === "number" ? String(product.estimatedUnitCost) : "");
+    setMessage(product.estimatedUnitCost === undefined
+      ? "Produto selecionado. O custo ainda não está definido; introduz uma estimativa."
+      : "Preço e custo estimado preenchidos a partir do produto guardado.");
+  }
 
   function addSimulation() {
     const rawValues = [revenue, productCost, ads, shipping];
@@ -199,6 +211,23 @@ export default function FinancePage() {
             o Finance AI. Nenhuma operação financeira
             real será executada.
           </p>
+
+          <label style={{ display: "block", marginTop: "16px", fontWeight: 700 }}>
+            Produto guardado (opcional)
+            <select
+              value={selectedProductId}
+              onChange={(event) => selectProduct(event.target.value)}
+              style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: "7px", padding: "13px", borderRadius: "10px", border: "1px solid #dbe3ee", fontSize: "16px", background: "#fff" }}
+            >
+              <option value="">Selecionar produto...</option>
+              {state.products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name} — {product.price.toFixed(2)} MT
+                </option>
+              ))}
+            </select>
+            {state.products.length === 0 && <small style={{ display: "block", marginTop: "6px", color: "#64748b" }}>Adiciona primeiro um produto no Research AI.</small>}
+          </label>
 
           <Input
             label="Receita"
