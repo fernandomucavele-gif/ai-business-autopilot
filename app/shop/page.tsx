@@ -1,565 +1,71 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Search,
-  ShoppingBag,
-  X,
-  Plus,
-  Minus,
-  ArrowRight,
-  ShieldCheck,
-  Sparkles,
-  Menu,
-  Trash2,
-  ArrowLeft,
-  ShoppingCart,
-  Heart,
-  Check,
-  ChevronDown,
-  SlidersHorizontal,
-  Star,
-  Truck,
-  RotateCcw,
-  LockKeyhole,
-} from "lucide-react";
+import { Search, ShoppingBag, Plus, Minus, X, ShieldCheck, Store } from "lucide-react";
 
-type Product = {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  oldPrice?: number;
-  description: string;
-  image: string;
-  tag?: string;
-  rating: number;
-};
-
-type CartItem = {
-  product: Product;
-  quantity: number;
-};
+type Product = { id: number; name: string; category: string; price: number; description: string; image: string };
+type CartLine = { product: Product; quantity: number };
 
 const products: Product[] = [
-  {
-    id: 1,
-    name: "Aurora Signature",
-    category: "Acessórios",
-    price: 12500,
-    oldPrice: 15000,
-    description: "Elegância minimalista para todos os dias.",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85",
-    tag: "MAIS VENDIDO",
-    rating: 4.9,
-  },
-  {
-    id: 2,
-    name: "Éclat Prestige",
-    category: "Acessórios",
-    price: 18900,
-    description: "Um detalhe distinto, uma presença inesquecível.",
-    image:
-      "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1000&q=85",
-    tag: "SELEÇÃO EXCLUSIVA",
-    rating: 4.8,
-  },
-  {
-    id: 3,
-    name: "Noir Collection",
-    category: "Moda",
-    price: 9800,
-    description: "Design contemporâneo com acabamento premium.",
-    image:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85",
-    rating: 4.7,
-  },
-  {
-    id: 4,
-    name: "Velvet Essence",
-    category: "Beleza",
-    price: 7500,
-    description: "Uma experiência sensorial sofisticada.",
-    image:
-      "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=1000&q=85",
-    tag: "NOVO",
-    rating: 4.9,
-  },
-  {
-    id: 5,
-    name: "Maison Élégance",
-    category: "Casa & Lifestyle",
-    price: 14200,
-    description: "Peças escolhidas para elevar o seu espaço.",
-    image:
-      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=85",
-    rating: 4.8,
-  },
-  {
-    id: 6,
-    name: "Urban Gold",
-    category: "Moda",
-    price: 11200,
-    description: "Personalidade urbana com um toque de luxo.",
-    image:
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1000&q=85",
-    rating: 4.6,
-  },
-  {
-    id: 7,
-    name: "Lumière Atelier",
-    category: "Beleza",
-    price: 8900,
-    description: "Sofisticação nos pequenos detalhes.",
-    image:
-      "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=1000&q=85",
-    rating: 4.8,
-  },
-  {
-    id: 8,
-    name: "Signature Living",
-    category: "Casa & Lifestyle",
-    price: 16500,
-    description: "Uma seleção que transforma o quotidiano.",
-    image:
-      "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1000&q=85",
-    tag: "ESCOLHA DO ATELIER",
-    rating: 4.9,
-  },
+  { id: 1, name: "Aurora Signature", category: "Acessórios", price: 12500, description: "Elegância minimalista para todos os dias.", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80" },
+  { id: 2, name: "Éclat Prestige", category: "Acessórios", price: 18900, description: "Um detalhe distinto, uma presença inesquecível.", image: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80" },
+  { id: 3, name: "Casa Serena", category: "Casa", price: 7600, description: "Peças funcionais para um espaço mais harmonioso.", image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=80" },
+  { id: 4, name: "Essencial Diário", category: "Tecnologia", price: 9900, description: "Tecnologia prática com design intemporal.", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80" },
 ];
 
-const categories = [
-  "Todos",
-  "Moda",
-  "Acessórios",
-  "Beleza",
-  "Casa & Lifestyle",
-];
+const money = (value: number) => new Intl.NumberFormat("pt-MZ", { style: "currency", currency: "MZN", maximumFractionDigits: 0 }).format(value);
 
-const money = (amount: number) =>
-  new Intl.NumberFormat("pt-MZ", {
-    style: "currency",
-    currency: "MZN",
-    maximumFractionDigits: 0,
-  }).format(amount);
-
-export default function ShopPage() {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [category, setCategory] = useState("Todos");
+export default function PublicShopPage() {
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("featured");
+  const [category, setCategory] = useState("Todos");
+  const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [notice, setNotice] = useState("");
-  const [customer, setCustomer] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-    notes: "",
-  });
-
-  const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
-      const matchesCategory =
-        category === "Todos" || product.category === category;
-      const matchesSearch =
-        product.name.toLowerCase().includes(search.toLowerCase()) ||
-        product.category.toLowerCase().includes(search.toLowerCase()) ||
-        product.description.toLowerCase().includes(search.toLowerCase());
-
-      return matchesCategory && matchesSearch;
-    });
-
-    if (sort === "price-low") {
-      result = [...result].sort((a, b) => a.price - b.price);
-    } else if (sort === "price-high") {
-      result = [...result].sort((a, b) => b.price - a.price);
-    } else if (sort === "rating") {
-      result = [...result].sort((a, b) => b.rating - a.rating);
-    }
-
-    return result;
-  }, [category, search, sort]);
-
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
-  );
-
-  const addToCart = (product: Product) => {
+  const categories = ["Todos", ...Array.from(new Set(products.map((product) => product.category)))];
+  const filtered = useMemo(() => products.filter((product) => (category === "Todos" || product.category === category) && (product.name + " " + product.description).toLowerCase().includes(search.toLowerCase())), [category, search]);
+  const count = cart.reduce((sum, line) => sum + line.quantity, 0);
+  const total = cart.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  function add(product: Product) {
     setCart((current) => {
-      const existing = current.find(
-        (item) => item.product.id === product.id
-      );
-
-      if (existing) {
-        return current.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-
-      return [...current, { product, quantity: 1 }];
+      const found = current.find((line) => line.product.id === product.id);
+      return found ? current.map((line) => line.product.id === product.id ? { ...line, quantity: line.quantity + 1 } : line) : [...current, { product, quantity: 1 }];
     });
-
-    setNotice(`${product.name} foi adicionado ao carrinho.`);
-    window.setTimeout(() => setNotice(""), 2800);
-  };
-
-  const changeQuantity = (productId: number, amount: number) => {
-    setCart((current) =>
-      current
-        .map((item) =>
-          item.product.id === productId
-            ? { ...item, quantity: item.quantity + amount }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  const removeFromCart = (productId: number) => {
-    setCart((current) =>
-      current.filter((item) => item.product.id !== productId)
-    );
-  };
-
-  const toggleFavorite = (productId: number) => {
-    setFavorites((current) =>
-      current.includes(productId)
-        ? current.filter((id) => id !== productId)
-        : [...current, productId]
-    );
-  };
-
-  const submitOrder = (event: React.FormEvent<HTMLFormElement>) => {
+    setNotice("");
+  }
+  function change(id: number, delta: number) {
+    setCart((current) => current.map((line) => line.product.id === id ? { ...line, quantity: line.quantity + delta } : line).filter((line) => line.quantity > 0));
+  }
+  function submitOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    // A integração com pagamentos e registo real de encomendas
-    // será adicionada através de um backend seguro.
-    setNotice(
-      "Formulário validado. A finalização real será ativada após a integração dos pagamentos."
-    );
+    setNotice("Pedido de demonstração validado. Nenhuma encomenda real foi enviada e nenhum pagamento foi cobrado. A integração de encomendas e pagamentos será configurada antes da abertura comercial.");
     setCheckoutOpen(false);
-    setCartOpen(false);
-    window.setTimeout(() => setNotice(""), 5500);
-  };
+  }
 
   return (
     <main className="min-h-screen bg-[#f8f6f1] text-[#171713]">
-      {/* Top announcement */}
-      <div className="bg-[#171713] px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.22em] text-[#e4c98b] sm:text-xs">
-        Uma experiência de compra extraordinária · Descubra a coleção
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-black/10 bg-[#f8f6f1]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-4 sm:px-8 lg:px-12">
-          <button
-            className="rounded-full p-2 lg:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Abrir menu"
-          >
-            {mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
-          </button>
-
-          <a href="#inicio" className="group text-center">
-            <span className="block font-serif text-2xl tracking-[0.16em] sm:text-3xl">
-              ATELIER
-            </span>
-            <span className="mt-0.5 block text-[8px] tracking-[0.42em] text-[#9a793a] sm:text-[9px]">
-              MAISON DE LUXE
-            </span>
-          </a>
-
-          <nav className="hidden items-center gap-8 lg:flex">
-            <a
-              href="#colecao"
-              className="text-xs uppercase tracking-[0.16em] transition hover:text-[#9a793a]"
-            >
-              Coleção
-            </a>
-            <a
-              href="#sobre"
-              className="text-xs uppercase tracking-[0.16em] transition hover:text-[#9a793a]"
-            >
-              A nossa essência
-            </a>
-            <a
-              href="#vantagens"
-              className="text-xs uppercase tracking-[0.16em] transition hover:text-[#9a793a]"
-            >
-              Serviço exclusivo
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="hidden items-center border-b border-black/30 pb-1 md:flex">
-              <Search size={16} className="mr-2 text-black/60" />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Pesquisar..."
-                className="w-28 bg-transparent text-xs outline-none placeholder:text-black/40 lg:w-36"
-                aria-label="Pesquisar produtos"
-              />
-            </div>
-
-            <button
-              onClick={() => setCartOpen(true)}
-              className="relative flex items-center gap-2 rounded-full p-2 transition hover:bg-black/5"
-              aria-label="Abrir carrinho"
-            >
-              <ShoppingBag size={21} strokeWidth={1.5} />
-              <span className="hidden text-xs uppercase tracking-wider sm:inline">
-                Sacola
-              </span>
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#b39455] px-1 text-[10px] font-semibold text-white">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="border-t border-black/10 px-5 py-4 lg:hidden">
-            <div className="mb-4 flex items-center border-b border-black/20 pb-2">
-              <Search size={17} className="mr-2" />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Pesquisar produtos..."
-                className="w-full bg-transparent py-1 text-sm outline-none"
-              />
-            </div>
-            <nav className="flex flex-col gap-4 text-xs uppercase tracking-[0.18em]">
-              <a href="#colecao" onClick={() => setMobileMenuOpen(false)}>
-                Coleção
-              </a>
-              <a href="#sobre" onClick={() => setMobileMenuOpen(false)}>
-                A nossa essência
-              </a>
-              <a href="#vantagens" onClick={() => setMobileMenuOpen(false)}>
-                Serviço exclusivo
-              </a>
-            </nav>
-          </div>
-        )}
+      <div className="bg-[#171713] px-4 py-2 text-center text-[10px] tracking-[0.18em] text-white sm:text-xs">AUTOPILOT MARKETPLACE · LOJA EM DEMONSTRAÇÃO</div>
+      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 sm:px-8">
+        <a href="/shop" className="flex items-center gap-3" aria-label="Autopilot Marketplace início"><span className="grid h-10 w-10 place-items-center bg-[#171713] text-white"><Store size={20}/></span><span><strong className="block text-sm tracking-[0.16em]">AUTOPILOT</strong><span className="text-[10px] tracking-[0.25em] text-black/55">MARKETPLACE</span></span></a>
+        <div className="flex items-center gap-3"><span className="hidden text-xs text-black/55 sm:inline">Uma seleção para o dia a dia</span><button onClick={() => setCartOpen(true)} className="relative flex items-center gap-2 border border-black/20 px-4 py-3 text-xs uppercase tracking-wider hover:bg-black hover:text-white"><ShoppingBag size={16}/> Carrinho <span>({count})</span></button></div>
       </header>
-
-      {/* Hero */}
-      <section
-        id="inicio"
-        className="relative isolate flex min-h-[580px] items-center overflow-hidden bg-[#24231f] sm:min-h-[680px]"
-      >
-        <div
-          className="absolute inset-0 -z-20 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=2200&q=90')",
-          }}
-        />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/35 to-transparent" />
-
-        <div className="mx-auto w-full max-w-[1500px] px-6 py-20 sm:px-12 lg:px-20">
-          <div className="max-w-2xl">
-            <div className="mb-7 flex items-center gap-3 text-[#e4c98b]">
-              <span className="h-px w-10 bg-[#c6a96b]" />
-              <span className="text-[10px] uppercase tracking-[0.32em] sm:text-xs">
-                A arte de escolher bem
-              </span>
-            </div>
-
-            <h1 className="font-serif text-5xl leading-[1.08] text-[#fffdf7] sm:text-7xl lg:text-8xl">
-              O luxo está
-              <br />
-              nos <span className="italic text-[#d9bd7e]">detalhes.</span>
-            </h1>
-
-            <p className="mt-7 max-w-lg text-sm leading-7 text-white/75 sm:text-base sm:leading-8">
-              Descubra uma seleção especial de peças, acessórios e objetos
-              pensados para quem valoriza a elegância, a qualidade e a
-              individualidade.
-            </p>
-
-            <div className="mt-9 flex flex-wrap gap-3">
-              <a
-                href="#colecao"
-                className="group inline-flex items-center gap-4 bg-[#c4a568] px-7 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#171713] transition hover:bg-[#dfc58f] sm:text-xs"
-              >
-                Explorar coleção
-                <ArrowRight
-                  size={16}
-                  className="transition group-hover:translate-x-1"
-                />
-              </a>
-              <a
-                href="#sobre"
-                className="inline-flex items-center border border-white/40 px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-white/10 sm:text-xs"
-              >
-                Conheça-nos
-              </a>
-            </div>
-
-            <div className="mt-12 flex items-center gap-4 text-white/65">
-              <div className="flex text-[#d9bd7e]">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} size={12} fill="currentColor" />
-                ))}
-              </div>
-              <span className="text-[10px] tracking-[0.08em] sm:text-xs">
-                Curadoria com atenção a cada detalhe
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-8 right-8 hidden items-center gap-3 text-white/60 lg:flex">
-          <span className="text-[9px] uppercase tracking-[0.25em]">
-            Elegância intemporal
-          </span>
-          <span className="h-px w-12 bg-white/40" />
-        </div>
+      <section className="mx-auto grid max-w-7xl items-center gap-8 px-5 pb-12 pt-6 sm:px-8 md:grid-cols-2 md:pb-20">
+        <div className="py-8 md:py-14"><p className="mb-5 text-[10px] tracking-[0.3em] text-[#8d7445]">DESIGN · QUALIDADE · SIMPLICIDADE</p><h1 className="max-w-xl text-4xl leading-[1.08] tracking-tight sm:text-6xl">Escolhas cuidadas. <em className="font-serif font-normal">Vida mais simples.</em></h1><p className="mt-6 max-w-md text-sm leading-7 text-black/60">Descobre a nossa seleção de produtos para casa, acessórios e tecnologia.</p><a href="#catalogo" className="mt-8 inline-flex bg-[#171713] px-6 py-4 text-xs uppercase tracking-[0.16em] text-white hover:bg-[#8d7445]">Explorar coleção</a></div>
+        <div className="relative"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85" alt="Interior elegante e acolhedor" className="h-[300px] w-full object-cover sm:h-[430px]"/><div className="absolute bottom-4 left-4 bg-[#f8f6f1]/95 px-4 py-3 text-xs tracking-wide">COLEÇÃO · ESSENCIAIS CONTEMPORÂNEOS</div></div>
       </section>
-
-      {/* Benefits strip */}
-      <section className="border-b border-black/10 bg-[#efebe2]">
-        <div className="mx-auto grid max-w-[1500px] grid-cols-1 divide-y divide-black/10 px-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-8">
-          <div className="flex items-center justify-center gap-3 py-5">
-            <ShieldCheck size={20} className="text-[#a08449]" strokeWidth={1.4} />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em]">
-                Escolha cuidada
-              </p>
-              <p className="mt-1 text-[11px] text-black/55">
-                Seleção de produtos
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-3 py-5">
-            <Truck size={20} className="text-[#a08449]" strokeWidth={1.4} />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em]">
-                Entrega a combinar
-              </p>
-              <p className="mt-1 text-[11px] text-black/55">
-                Informação antes da compra
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-3 py-5">
-            <RotateCcw size={20} className="text-[#a08449]" strokeWidth={1.4} />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em]">
-                Apoio personalizado
-              </p>
-              <p className="mt-1 text-[11px] text-black/55">
-                Atendimento dedicado
-              </p>
-            </div>
-          </div>
-        </div>
+      <section id="catalogo" className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mb-8 flex flex-col justify-between gap-5 border-b border-black/15 pb-6 sm:flex-row sm:items-end"><div><p className="mb-3 text-[10px] tracking-[0.25em] text-[#8d7445]">A NOSSA SELEÇÃO</p><h2 className="text-3xl tracking-tight sm:text-4xl">Catálogo</h2></div><label className="flex items-center gap-2 border border-black/20 bg-white/60 px-3 py-3 sm:w-72"><Search size={16} className="text-black/45"/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar produtos..." className="w-full bg-transparent text-sm outline-none"/></label></div>
+        <div className="mb-8 flex gap-2 overflow-x-auto pb-1">{categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`whitespace-nowrap border px-4 py-2.5 text-[10px] uppercase tracking-[0.13em] ${category === item ? "border-[#171713] bg-[#171713] text-white" : "border-black/15 hover:border-[#8d7445]"}`}>{item}</button>)}</div>
+        {filtered.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">{filtered.map((product) => <article key={product.id} className="group min-w-0"><div className="overflow-hidden bg-[#ece8df]"><img src={product.image} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition duration-500 group-hover:scale-105"/></div><p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-black/45">{product.category}</p><h3 className="mt-2 text-sm sm:text-base">{product.name}</h3><p className="mt-2 text-xs leading-5 text-black/55">{product.description}</p><div className="mt-4 flex flex-wrap items-center justify-between gap-2"><strong className="text-sm">{money(product.price)}</strong><button onClick={() => add(product)} className="bg-[#171713] px-3 py-2.5 text-[10px] uppercase tracking-wider text-white hover:bg-[#8d7445]">Adicionar +</button></div></article>)}</div> : <p className="py-12 text-center text-sm text-black/55">Não encontrámos produtos para essa pesquisa.</p>}
+        <p className="mt-12 border border-[#b79c67]/40 bg-[#eee8da] p-4 text-xs leading-6 text-black/65"><ShieldCheck size={16} className="mr-2 inline-block"/> <strong>Modo de demonstração:</strong> produtos e preços ilustrativos. O checkout não processa pagamentos nem envia encomendas reais.</p>
       </section>
-
-      {/* Collection */}
-      <section id="colecao" className="mx-auto max-w-[1500px] px-4 py-16 sm:px-8 sm:py-24 lg:px-12">
-        <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <div className="mb-4 flex items-center gap-3 text-[#9a793a]">
-              <Sparkles size={15} />
-              <span className="text-[10px] uppercase tracking-[0.28em]">
-                A seleção do atelier
-              </span>
-            </div>
-            <h2 className="font-serif text-4xl sm:text-5xl">
-              Peças para <span className="italic text-[#a1844b]">admirar.</span>
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-black/55">
-              Produtos escolhidos para complementar o seu estilo e tornar
-              especiais os momentos do dia a dia.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-black/55">
-            <span className="font-medium text-black">
-              {filteredProducts.length}
-            </span>
-            produtos
-          </div>
-        </div>
-
-        {/* Search and filters */}
-        <div className="mb-8 space-y-5 border-y border-black/10 py-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {categories.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setCategory(item)}
-                  className={`whitespace-nowrap border px-4 py-2.5 text-[10px] uppercase tracking-[0.13em] transition sm:text-xs ${
-                    category === item
-                      ? "border-[#171713] bg-[#171713] text-white"
-                      : "border-black/15 text-black/60 hover:border-[#a1844b] hover:text-black"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex min-w-0 flex-1 items-center border border-black/15 bg-white/60 px-3 py-2.5 lg:hidden">
-                <Search size={16} className="mr-2 shrink-0 text-black/45" />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Pesquisar..."
-                  className="w-full min-w-0 bg-transparent text-xs outline-none"
-                />
-              </div>
-              <SlidersHorizontal size={16} className="hidden text-black/50 sm:block" />
-              <div className="relative">
-                <select
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value)}
-                  className="appearance-none border border-black/15 bg-transparent py-2.5 pl-3 pr-8 text-[10px] uppercase tracking-[0.1em] outline-none sm:text-xs"
-                  aria-label="Ordenar produtos"
-                >
-                  <option value="featured">Destaques</option>
-                  <option value="price-low">Menor preço</option>
-                  <option value="price-high">Maior preço</option>
-                  <option value="rating">Melhor avaliação</option>
-                </select>
-                <ChevronDown size={13} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Product grid */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-4">
-            {filteredProducts.map((product) => (
-              <article key={product.id} className="group min-w-0">
-                <div className="relative overflow-hidden bg-[#ece8df]">
-                  <a
-                    href={`#produto-${product.id}`}
-                    onClick={(event) => event.preventDefault()}
-                    aria-label={`Ver ${product.name}`}
-                    className="block aspect-[4/5] overflow-hidden"
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      loading="lazy"
-                      classN
+      <footer className="border-t border-black/15 px-5 py-8 text-center text-[10px] tracking-[0.15em] text-black/50">AUTOPILOT MARKETPLACE · EXPERIÊNCIA DE DEMONSTRAÇÃO</footer>
+      {cartOpen && <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={() => setCartOpen(false)}><aside className="h-full w-full max-w-md overflow-y-auto bg-[#f8f6f1] p-5 sm:p-7" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between border-b border-black/15 pb-5"><h2 className="text-xl">O teu carrinho ({count})</h2><button aria-label="Fechar carrinho" onClick={() => setCartOpen(false)}><X/></button></div>{cart.length ? <><div className="divide-y divide-black/10">{cart.map((line) => <div key={line.product.id} className="flex gap-4 py-5"><img src={line.product.image} alt="" className="h-20 w-16 object-cover"/><div className="flex-1"><strong className="text-sm">{line.product.name}</strong><p className="mt-2 text-sm">{money(line.product.price * line.quantity)}</p><div className="mt-3 flex items-center gap-3"><button aria-label="Diminuir quantidade" onClick={() => change(line.product.id, -1)}><Minus size={15}/></button><span className="text-sm">{line.quantity}</span><button aria-label="Aumentar quantidade" onClick={() => change(line.product.id, 1)}><Plus size={15}/></button></div></div></div>)}</div><div className="border-t border-black/15 pt-5"><div className="mb-5 flex justify-between"><span>Total estimado</span><strong>{money(total)}</strong></div><button onClick={() => { setCartOpen(false); setCheckoutOpen(true); }} className="w-full bg-[#171713] px-5 py-4 text-xs uppercase tracking-widest text-white">Continuar para checkout</button><p className="mt-3 text-xs leading-5 text-black/55">Demonstração apenas. Não haverá cobrança.</p></div></> : <p className="py-12 text-sm text-black/55">O carrinho ainda está vazio.</p>}</aside></div>}
+      {checkoutOpen && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4"><section className="my-6 w-full max-w-lg bg-[#f8f6f1] p-6 sm:p-8"><div className="mb-5 flex items-center justify-between"><h2 className="text-xl">Dados de demonstração</h2><button aria-label="Fechar checkout" onClick={() => setCheckoutOpen(false)}><X/></button></div><p className="mb-5 text-xs leading-5 text-black/55">Este formulário não envia pedidos reais nem processa pagamentos.</p><form onSubmit={submitOrder} className="grid gap-4"><label className="grid gap-2 text-xs">Nome<input required value={customerName} onChange={(event) => setCustomerName(event.target.value)} className="border border-black/20 bg-white/60 px-3 py-3 text-sm" placeholder="Nome completo"/></label><label className="grid gap-2 text-xs">Email<input required type="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} className="border border-black/20 bg-white/60 px-3 py-3 text-sm" placeholder="email@exemplo.com"/></label><label className="grid gap-2 text-xs">Telefone<input required value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} className="border border-black/20 bg-white/60 px-3 py-3 text-sm" placeholder="+258"/></label><div className="flex justify-between border-t border-black/15 pt-4 text-sm"><span>Total estimado</span><strong>{money(total)}</strong></div><button type="submit" className="bg-[#171713] px-5 py-4 text-xs uppercase tracking-widest text-white">Validar demonstração</button></form></section></div>}
+      {notice && <div role="status" className="fixed bottom-4 left-4 right-4 z-[60] mx-auto max-w-2xl border border-[#b79c67] bg-[#f8f6f1] p-4 text-sm shadow-xl"><div className="flex items-start justify-between gap-3"><p className="leading-6">{notice}</p><button aria-label="Fechar aviso" onClick={() => setNotice("")}><X size={18}/></button></div></div>}
+    </main>
+  );
+}
