@@ -180,9 +180,7 @@ export default function CreativePage() {
               lineHeight: 1.6,
             }}
           >
-            Cria ideias de vídeos, imagens e textos de
-            anúncios para os produtos encontrados pelo
-            Research AI.
+            Adapta modelos de referência para vídeos, imagens e textos de anúncios usando os dados dos produtos do Autopilot.
           </p>
 
           <div
@@ -195,8 +193,7 @@ export default function CreativePage() {
               fontWeight: 600,
             }}
           >
-            🟢 Modo simulação ativo — os anúncios não serão
-            publicados.
+            🟡 Biblioteca de modelos — não existe geração por IA ligada nesta versão e nenhum anúncio é publicado.
           </div>
         </section>
 
@@ -378,8 +375,8 @@ export default function CreativePage() {
             }}
           >
             {generating
-              ? "🎨 A criar criativos..."
-              : "✨ Gerar criativos"}
+              ? "🎨 A preparar modelos..."
+              : "✨ Preparar modelos"}
           </button>
 
           {generated && (
@@ -392,7 +389,7 @@ export default function CreativePage() {
                 color: "#6d28d9",
               }}
             >
-              ✅ Criativos simulados gerados para{" "}
+              ✅ Modelos predefinidos preparados para{" "}
               <strong>{product}</strong>.
             </div>
           )}
@@ -411,7 +408,7 @@ export default function CreativePage() {
           </h2>
 
           <p style={{ color: "#64748b" }}>
-            Ideias preparadas para vídeos e anúncios.
+            Modelos de referência editáveis para vídeos e anúncios. Revê cada benefício e não uses alegações que não possas comprovar.
           </p>
 
           <div
