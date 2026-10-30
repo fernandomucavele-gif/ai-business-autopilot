@@ -27,7 +27,7 @@ import styles from "./supervisor.module.css";
 
 const modules = [
   { name: "Research AI", href: "/research", icon: Search },
-  { name: "Supplier AI", href: "/supplier", icon: Truck },
+  { name: "Supplier AI", href: "/suppliers", icon: Truck },
   { name: "Creative AI", href: "/creative", icon: Palette },
   { name: "Ads AI", href: "/ads", icon: Megaphone },
   { name: "Analytics AI", href: "/analytics", icon: ChartNoAxesCombined },
