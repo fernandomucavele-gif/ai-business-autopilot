@@ -76,7 +76,7 @@ export default function FinancePage() {
         type: "revenue",
         amount: simulatedRevenue,
         currency: "MT",
-        description: `Receita simulada (${simulatedQuantity} unidade${simulatedQuantity === 1 ? "" : "s"})`,
+        description: `Registo manual de receita (${simulatedQuantity} unidade${simulatedQuantity === 1 ? "" : "s"})`,
       });
     }
 
@@ -86,7 +86,7 @@ export default function FinancePage() {
         type: "product_cost",
         amount: simulatedProductCost,
         currency: "MT",
-        description: `Custo de produto simulado (${simulatedQuantity} unidade${simulatedQuantity === 1 ? "" : "s"})`,
+        description: `Registo manual de custo de produto (${simulatedQuantity} unidade${simulatedQuantity === 1 ? "" : "s"})`,
       });
     }
 
@@ -96,7 +96,7 @@ export default function FinancePage() {
         type: "ad_cost",
         amount: simulatedAds,
         currency: "MT",
-        description: "Custo de anúncios simulado",
+        description: "Registo manual de custo de anúncios",
       });
     }
 
@@ -106,12 +106,12 @@ export default function FinancePage() {
         type: "shipping",
         amount: simulatedShipping,
         currency: "MT",
-        description: "Custo de envio simulado",
+        description: "Registo manual de custo de envio",
       });
     }
 
     setMessage(
-      "✅ Dados financeiros adicionados ao Autopilot em modo de simulação."
+      "✅ Registos manuais guardados no Autopilot. Confirma se cada valor é real ou estimado; este ecrã não valida documentos nem executa pagamentos."
     );
 
     setQuantity("1");
@@ -212,9 +212,7 @@ export default function FinancePage() {
           <h2>🧮 Simulador financeiro</h2>
 
           <p style={{ color: "#64748b" }}>
-            Introduz valores de teste para alimentar
-            o Finance AI. Nenhuma operação financeira
-            real será executada.
+            Introduz valores reais já confirmados ou estimativas. Os registos são apenas lançados no Autopilot: não validam extratos/faturas nem executam pagamentos, transferências ou cobranças. Identifica mentalmente quais valores são reais e quais são estimativas.
           </p>
 
           <label style={{ display: "block", marginTop: "16px", fontWeight: 700 }}>
