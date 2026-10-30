@@ -1,82 +1,93 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Users, Search, UserPlus, Mail, Phone,
-  ShoppingBag, Clock3, CheckCircle2
-} from "lucide-react";
-
-const initialCustomers = [
-  { id: 1, name: "Cliente Demonstração 1", email: "cliente1@example.com", orders: 3, status: "Ativo" },
-  { id: 2, name: "Cliente Demonstração 2", email: "cliente2@example.com", orders: 1, status: "Novo" },
-  { id: 3, name: "Cliente Demonstração 3", email: "cliente3@example.com", orders: 0, status: "Potencial" },
-];
+import { useAutopilot } from "../context/autopilot-context";
+import { Search, Users, ShoppingBag, CircleHelp } from "lucide-react";
 
 export default function CustomerPage() {
+  const { state } = useAutopilot();
   const [search, setSearch] = useState("");
-  const [showDemo, setShowDemo] = useState(true);
 
-  const customers = useMemo(
-    () =>
-      (showDemo ? initialCustomers : []).filter((customer) =>
-        `${customer.name} ${customer.email}`
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      ),
-    [search, showDemo]
-  );
+  const customers = useMemo(() => {
+    const grouped = new Map<string, {
+      name: string;
+      orders: typeof state.orders;
+      total: number;
+      markets: Set<string>;
+    }>();
 
-  const cardStyle = {
+    for (const order of state.orders) {
+      const key = order.customerName.trim().toLocaleLowerCase();
+      if (!key) continue;
+      const existing = grouped.get(key);
+      if (existing) {
+        existing.orders.push(order);
+        existing.total += order.amount;
+        existing.markets.add(order.market);
+      } else {
+        grouped.set(key, {
+          name: order.customerName.trim(),
+          orders: [order],
+          total: order.amount,
+          markets: new Set([order.market]),
+        });
+      }
+    }
+
+    return Array.from(grouped.values())
+      .filter((customer) =>
+        customer.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+      )
+      .sort((a, b) => a.name.localeCompare(b.name, "pt"));
+  }, [state.orders, search]);
+
+  const totalOrders = customers.reduce((sum, customer) => sum + customer.orders.length, 0);
+  const totalValue = customers.reduce((sum, customer) => sum + customer.total, 0);
+
+  const card: React.CSSProperties = {
     background: "#fff",
     border: "1px solid #e5eaf2",
     borderRadius: 16,
     padding: 18,
-  } as const;
+  };
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: 24, color: "#17233c" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <div>
-          <p style={{ color: "#64748b", marginBottom: 6 }}>AI BUSINESS AUTOPILOT / CLIENTES</p>
-          <h1 style={{ fontSize: 30, margin: 0 }}>Customer AI</h1>
-          <p style={{ color: "#64748b" }}>Gestão e acompanhamento de clientes.</p>
-        </div>
-        <span style={{ background: "#fff4d6", color: "#8a5a00", padding: "8px 12px", borderRadius: 20 }}>
-          Modo demonstração
-        </span>
+      <header>
+        <p style={{ color: "#64748b", marginBottom: 6 }}>AI BUSINESS AUTOPILOT / CLIENTES</p>
+        <h1 style={{ fontSize: 30, margin: 0 }}>Customer AI</h1>
+        <p style={{ color: "#64748b" }}>Clientes identificados a partir das encomendas registadas no Autopilot.</p>
+        <p style={{ background: "#fff7e6", color: "#8a5300", border: "1px solid #f5d79b", borderRadius: 10, padding: 12, lineHeight: 1.5 }}>
+          Os dados apresentados vêm dos registos de encomendas. Esta página não cria clientes fictícios, não inventa contactos e não envia mensagens. O modo de simulação continua ativo para operações comerciais.
+        </p>
+      </header>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 14, margin: "22px 0" }}>
+        <section style={card}>
+          <Users color="#4768d8" />
+          <p style={{ color: "#64748b", marginBottom: 6 }}>Clientes nas encomendas</p>
+          <strong style={{ fontSize: 28 }}>{customers.length}</strong>
+        </section>
+        <section style={card}>
+          <ShoppingBag color="#4768d8" />
+          <p style={{ color: "#64748b", marginBottom: 6 }}>Encomendas encontradas</p>
+          <strong style={{ fontSize: 28 }}>{totalOrders}</strong>
+        </section>
+        <section style={card}>
+          <CircleHelp color="#4768d8" />
+          <p style={{ color: "#64748b", marginBottom: 6 }}>Valor registado</p>
+          <strong style={{ fontSize: 25 }}>{totalValue.toLocaleString("pt-MZ")} MT</strong>
+        </section>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 14, margin: "24px 0" }}>
-        {[
-          { title: "Clientes listados", value: customers.length, icon: <Users /> },
-          { title: "Pedidos ilustrativos", value: showDemo ? 4 : 0, icon: <ShoppingBag /> },
-          { title: "Clientes ativos", value: showDemo ? 1 : 0, icon: <CheckCircle2 /> },
-        ].map((item) => (
-          <section key={item.title} style={cardStyle}>
-            <div style={{ color: "#4768d8" }}>{item.icon}</div>
-            <p style={{ color: "#64748b", marginBottom: 6 }}>{item.title}</p>
-            <strong style={{ fontSize: 28 }}>{item.value}</strong>
-          </section>
-        ))}
-      </div>
-
-      <section style={cardStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <h2 style={{ margin: 0, fontSize: 20 }}>Lista de clientes</h2>
-          <button
-            onClick={() => setShowDemo((value) => !value)}
-            style={{ border: 0, borderRadius: 10, padding: "10px 14px", background: "#2447c6", color: "#fff", cursor: "pointer" }}
-          >
-            {showDemo ? "Ocultar demonstração" : "Mostrar demonstração"}
-          </button>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid #dbe2ed", borderRadius: 10, padding: "10px 12px", margin: "18px 0" }}>
+      <section style={card}>
+        <h2 style={{ margin: "0 0 14px", fontSize: 20 }}>Lista de clientes</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid #dbe2ed", borderRadius: 10, padding: "10px 12px", marginBottom: 18 }}>
           <Search size={18} />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Pesquisar nome ou email..."
+            placeholder="Pesquisar pelo nome do cliente..."
             aria-label="Pesquisar clientes"
             style={{ width: "100%", border: 0, outline: "none", fontSize: 15 }}
           />
@@ -84,35 +95,42 @@ export default function CustomerPage() {
 
         {customers.length === 0 ? (
           <div style={{ textAlign: "center", padding: 28, color: "#64748b" }}>
-            <Users size={32} />
-            <p>Não existem clientes para mostrar.</p>
-            <p>Os registos apresentados nesta versão são apenas demonstrativos.</p>
+            <Users size={34} />
+            <p>{state.orders.length === 0 ? "Ainda não existem encomendas registadas; por isso, não há clientes para listar." : "Nenhum cliente corresponde à pesquisa."}</p>
+            <p style={{ fontSize: 13 }}>Quando registares encomendas com nomes de clientes, estes aparecerão aqui automaticamente.</p>
           </div>
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
             {customers.map((customer) => (
-              <article key={customer.id} style={{ border: "1px solid #e5eaf2", borderRadius: 12, padding: 14, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                <div>
+              <article key={customer.name.toLocaleLowerCase()} style={{ border: "1px solid #e5eaf2", borderRadius: 12, padding: 15 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <strong>{customer.name}</strong>
-                  <p style={{ margin: "8px 0", color: "#64748b", display: "flex", gap: 8, alignItems: "center" }}>
-                    <Mail size={15} /> {customer.email}
-                  </p>
-                  <small style={{ color: "#64748b" }}>
-                    <ShoppingBag size={14} style={{ verticalAlign: "middle" }} /> {customer.orders} pedidos ilustrativos
-                  </small>
+                  <span style={{ color: "#2447c6", background: "#edf2ff", borderRadius: 20, padding: "5px 10px", fontSize: 13 }}>
+                    {customer.orders.length} encomenda(s)
+                  </span>
                 </div>
-                <span style={{ alignSelf: "center", background: "#edf2ff", color: "#2447c6", padding: "6px 10px", borderRadius: 20 }}>
-                  {customer.status}
-                </span>
+                <p style={{ color: "#64748b", margin: "9px 0 4px" }}>
+                  Valor total registado: {customer.total.toLocaleString("pt-MZ")} MT
+                </p>
+                <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>
+                  Mercado(s): {Array.from(customer.markets).join(", ")}
+                </p>
+                <div style={{ marginTop: 12, display: "grid", gap: 6 }}>
+                  {customer.orders.map((order) => (
+                    <div key={order.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", background: "#f8fafc", borderRadius: 8, padding: 9, fontSize: 13 }}>
+                      <span>{order.id} · {order.status}</span>
+                      <strong>{order.amount.toLocaleString("pt-MZ")} MT</strong>
+                    </div>
+                  ))}
+                </div>
               </article>
             ))}
           </div>
         )}
       </section>
-
-      <p style={{ fontSize: 13, color: "#64748b", marginTop: 18 }}>
-        <Clock3 size={14} style={{ verticalAlign: "middle" }} /> Demonstração local. Não há clientes reais ligados a esta lista nem contactos enviados.
+      <p style={{ color: "#64748b", fontSize: 13, marginTop: 16 }}>
+        Nota: o Customer AI mostra apenas nomes e valores que já constam nas encomendas. Email, telefone e histórico externo ainda não estão integrados.
       </p>
     </main>
   );
-  }
+}
