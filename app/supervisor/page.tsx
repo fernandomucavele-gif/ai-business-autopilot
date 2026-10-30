@@ -32,7 +32,7 @@ const modules = [
   { name: "Ads AI", href: "/ads", icon: Megaphone },
   { name: "Analytics AI", href: "/analytics", icon: ChartNoAxesCombined },
   { name: "Finance AI", href: "/finance", icon: Wallet },
-  { name: "Customer AI", href: "/customers", icon: Users },
+  { name: "Customer AI", href: "/customer", icon: Users },
   { name: "Orders AI", href: "/orders", icon: Package },
   { name: "Monitoramento", href: "/monitoring", icon: Activity },
 ];
