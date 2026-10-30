@@ -20,14 +20,14 @@ export default function MonitoringPage() {
       id: 1,
       time: "Agora",
       message:
-        "Autopilot está online em modo simulação.",
+        "Painel local carregado. Estado dos serviços externos não verificado.",
       type: "success",
     },
     {
       id: 2,
       time: "Agora",
       message:
-        "Monitoramento automático ativo.",
+        "Atualização manual do estado local disponível; monitorização automática ainda não integrada.",
       type: "info",
     },
     {
@@ -144,6 +144,19 @@ export default function MonitoringPage() {
 
         <section
           style={{
+            background: "#422006",
+            border: "1px solid #a16207",
+            borderRadius: "16px",
+            padding: "18px",
+            marginBottom: "20px",
+            color: "#fde68a",
+          }}
+        >
+          <strong>Limitação da monitorização:</strong> este ecrã consulta apenas o estado guardado no contexto do Autopilot. Ainda não verifica a disponibilidade de Supabase, autenticação, APIs, Vercel ou serviços externos. Esses serviços são apresentados como não verificados, não como online.
+        </section>
+
+        <section
+          style={{
             display: "grid",
             gridTemplateColumns:
               "repeat(auto-fit, minmax(200px, 1fr))",
@@ -152,11 +165,11 @@ export default function MonitoringPage() {
           }}
         >
           <StatusCard
-            title="🟢 Sistema"
-            value="Online"
+            title="Estado dos serviços"
+            value="Não verificado"
             background="#052e16"
             border="#166534"
-            valueColor="#86efac"
+            valueColor="#fde68a"
           />
 
           <StatusCard
