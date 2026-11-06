@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { supabase } from "../../lib/supabase";
 
 import {
   AutopilotState,
@@ -65,18 +66,34 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    async function loadState() {
-      try {
-        const savedState = await loadAutopilotState();
-        if (mounted && savedState) setState(enforceSimulationSafety(savedState));
-      } catch (error) {
-        console.error("Não foi possível carregar os dados do Autopilot:", error);
-      } finally {
-        if (mounted) setLoaded(true);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (event === "SIGNED_OUT" || !session) {
+        setLoaded(false);
+        setState(initialAutopilotState);
+        return;
       }
-    }
-    void loadState();
-    return () => { mounted = false; };
+
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        setLoaded(false);
+        Promise.resolve().then(async () => {
+          try {
+            const savedState = await loadAutopilotState();
+            if (mounted && savedState) setState(enforceSimulationSafety(savedState));
+          } catch (error) {
+            console.error("Não foi possível carregar os dados do Autopilot:", error);
+          } finally {
+            if (mounted) setLoaded(true);
+          }
+        });
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -118,7 +135,6 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   }
 
   function setAutomation(_key: keyof AutopilotState["automation"], _value: boolean) {
-    // Segurança fixa nesta versão: nenhum módulo pode ativar operações reais.
     setState(current => ({
       ...current,
       automation: {
