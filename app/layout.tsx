@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AutopilotProvider } from "./context/autopilot-context";
+import { AuthGate } from "./components/auth-gate";
 
 export const metadata: Metadata = {
   title: "AI Business Autopilot",
@@ -16,7 +17,7 @@ export default function RootLayout({
     <html lang="pt">
       <body>
         <AutopilotProvider>
-          {children}
+          <AuthGate>{children}</AuthGate>
         </AutopilotProvider>
       </body>
     </html>
