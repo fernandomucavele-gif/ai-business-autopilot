@@ -3,10 +3,6 @@ import type { AutopilotState } from "./autopilot";
 
 const STATE_KEY = "main";
 
-/**
- * Mirrors core records into normalized tables while keeping the JSON state
- * for backwards compatibility during the module migration.
- */
 async function syncOperationalTables(state: AutopilotState, userId: string): Promise<void> {
   if (state.products.length) {
     const { error } = await supabase.from("autopilot_products").upsert(
@@ -54,7 +50,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
         name: creative.name,
         format: creative.format,
         headline: creative.headline,
-        primary_text: [creative.primaryText, creative.script].filter(Boolean).join("\\n\\n"),
+        primary_text: [creative.primaryText, creative.script].filter(Boolean).join("\n\n"),
         call_to_action: creative.callToAction,
         status: "draft",
         is_simulation: true,
@@ -140,7 +136,6 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
   }
 }
 
-
 export async function loadAutopilotState(): Promise<AutopilotState | null> {
   const {
     data: { user },
@@ -167,9 +162,7 @@ export async function loadAutopilotState(): Promise<AutopilotState | null> {
   return (data?.state_value as AutopilotState | null) ?? null;
 }
 
-export async function saveAutopilotState(
-  state: AutopilotState
-): Promise<boolean> {
+export async function saveAutopilotState(state: AutopilotState): Promise<boolean> {
   const {
     data: { user },
     error: authError,
@@ -189,9 +182,7 @@ export async function saveAutopilotState(
         state_value: state,
         updated_at: new Date().toISOString(),
       },
-      {
-        onConflict: "user_id,state_key",
-      }
+      { onConflict: "user_id,state_key" }
     );
 
   if (error) {
