@@ -1,15 +1,62 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
+import { supabase } from "../../lib/supabase";
 import type { Market } from "../../lib/autopilot";
 
+type AdMetric = {
+  id: string;
+  campaign_id: string;
+  metric_date: string;
+  impressions: number;
+  clicks: number;
+  spend: number | string;
+  conversions: number;
+  attributed_revenue: number | string;
+  currency: string;
+  is_simulation: boolean;
+};
+
 const markets: Market[] = ["Moçambique", "Brasil", "Portugal", "África do Sul", "Europa", "EUA", "Global"];
-const money = (value: number) => value.toLocaleString("pt-MZ", { maximumFractionDigits: 2 }) + " MT";
+const money = (value: number, currency = "MZN") =>
+  new Intl.NumberFormat("pt-MZ", { maximumFractionDigits: 2 }).format(value) + " " + currency;
+const number = (value: number) => new Intl.NumberFormat("pt-MZ").format(value);
+const amount = (value: number | string) => Number(value) || 0;
 
 export default function AnalyticsPage() {
-  const { state, metrics } = useAutopilot();
+  const { state } = useAutopilot();
   const [market, setMarket] = useState<Market>("Global");
+  const [adMetrics, setAdMetrics] = useState<AdMetric[]>([]);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAdMetrics() {
+      setMetricsLoading(true);
+      setMetricsError("");
+      const { data, error } = await supabase
+        .from("ad_metrics_daily")
+        .select("id,campaign_id,metric_date,impressions,clicks,spend,conversions,attributed_revenue,currency,is_simulation")
+        .eq("is_simulation", true)
+        .order("metric_date", { ascending: false })
+        .limit(500);
+
+      if (!active) return;
+      if (error) {
+        setMetricsError("Não foi possível ler as métricas guardadas. Verifica a sessão e as permissões da base de dados.");
+        setAdMetrics([]);
+      } else {
+        setAdMetrics((data ?? []) as AdMetric[]);
+      }
+      setMetricsLoading(false);
+    }
+
+    void loadAdMetrics();
+    return () => { active = false; };
+  }, []);
 
   const orders = useMemo(
     () => market === "Global" ? state.orders : state.orders.filter(item => item.market === market),
@@ -24,18 +71,30 @@ export default function AnalyticsPage() {
     [state.campaigns, market]
   );
   const finance = useMemo(
-    () => state.finance.filter(item => {
-      if (market === "Global") return true;
-      // Os registos financeiros atuais não guardam mercado; não atribuir um mercado por suposição.
-      return false;
-    }),
+    () => state.finance.filter(item => market === "Global"),
     [state.finance, market]
   );
+  const visibleAdMetrics = useMemo(() => {
+    if (market === "Global") return adMetrics;
+    const campaignIds = new Set(campaigns.map(item => item.id));
+    return adMetrics.filter(item => campaignIds.has(item.campaign_id));
+  }, [adMetrics, campaigns, market]);
+
   const revenue = finance.filter(item => item.type === "revenue").reduce((sum, item) => sum + item.amount, 0);
   const costs = finance.filter(item => item.type !== "revenue").reduce((sum, item) => sum + item.amount, 0);
-  const adSpend = finance.filter(item => item.type === "ad_cost").reduce((sum, item) => sum + item.amount, 0);
-  const roas = adSpend > 0 ? revenue / adSpend : 0;
   const orderValue = orders.reduce((sum, item) => sum + item.amount, 0);
+
+  const adTotals = visibleAdMetrics.reduce((totals, item) => ({
+    impressions: totals.impressions + item.impressions,
+    clicks: totals.clicks + item.clicks,
+    spend: totals.spend + amount(item.spend),
+    conversions: totals.conversions + item.conversions,
+    attributedRevenue: totals.attributedRevenue + amount(item.attributed_revenue),
+  }), { impressions: 0, clicks: 0, spend: 0, conversions: 0, attributedRevenue: 0 });
+  const ctr = adTotals.impressions > 0 ? (adTotals.clicks / adTotals.impressions) * 100 : 0;
+  const roas = adTotals.spend > 0 ? adTotals.attributedRevenue / adTotals.spend : 0;
+  const cpc = adTotals.clicks > 0 ? adTotals.spend / adTotals.clicks : 0;
+  const cpa = adTotals.conversions > 0 ? adTotals.spend / adTotals.conversions : 0;
 
   return (
     <main className="page">
@@ -50,8 +109,8 @@ export default function AnalyticsPage() {
         </header>
 
         <section className="notice">
-          <strong>Dados reais podem ser registados durante os testes.</strong>
-          <p>Esta página já não apresenta impressões, cliques ou vendas inventadas. Os valores abaixo são os registos atualmente guardados. Como o sistema não está ligado às plataformas de anúncios, não existem métricas reais de impressões ou cliques.</p>
+          <strong>Métricas ligadas à base de dados.</strong>
+          <p>O painel lê impressões, cliques, gastos, conversões e receita atribuída da tabela ad_metrics_daily. Neste momento, só são aceites registos marcados como simulação. Não existe ligação ativa ao Meta Ads ou Google Ads e nenhum valor é inventado.</p>
         </section>
 
         <section className="panel">
@@ -69,7 +128,41 @@ export default function AnalyticsPage() {
           <article className="card"><span>Receita financeira guardada</span><strong>{money(revenue)}</strong></article>
           <article className="card"><span>Custos financeiros guardados</span><strong>{money(costs)}</strong></article>
           <article className="card"><span>Resultado financeiro</span><strong>{money(revenue - costs)}</strong></article>
-          <article className="card"><span>ROAS dos registos</span><strong>{roas.toFixed(2)}x</strong><small>Sem gasto de anúncios registado: 0x</small></article>
+        </section>
+
+        <section className="panel">
+          <h2>Métricas de campanhas (simulação)</h2>
+          {metricsLoading ? <p className="empty">A carregar métricas guardadas...</p> : metricsError ? <p className="error">{metricsError}</p> : visibleAdMetrics.length === 0 ? (
+            <p className="empty">Ainda não existem métricas registadas para este filtro. Impressões, cliques, CTR, gastos e conversões permanecem a zero até existirem registos.</p>
+          ) : (
+            <>
+              <div className="cards metricCards">
+                <article className="card"><span>Impressões</span><strong>{number(adTotals.impressions)}</strong></article>
+                <article className="card"><span>Cliques</span><strong>{number(adTotals.clicks)}</strong></article>
+                <article className="card"><span>CTR</span><strong>{ctr.toFixed(2)}%</strong></article>
+                <article className="card"><span>Gasto registado</span><strong>{money(adTotals.spend)}</strong></article>
+                <article className="card"><span>Conversões</span><strong>{number(adTotals.conversions)}</strong></article>
+                <article className="card"><span>Receita atribuída</span><strong>{money(adTotals.attributedRevenue)}</strong></article>
+                <article className="card"><span>ROAS</span><strong>{roas.toFixed(2)}x</strong></article>
+                <article className="card"><span>Custo por clique</span><strong>{money(cpc)}</strong></article>
+                <article className="card"><span>Custo por conversão</span><strong>{money(cpa)}</strong></article>
+              </div>
+              <div className="tableWrap"><table><thead><tr><th>Data</th><th>Campanha</th><th>Impressões</th><th>Cliques</th><th>Gasto</th><th>Conversões</th><th>Receita atribuída</th></tr></thead><tbody>
+                {visibleAdMetrics.map(item => (
+                  <tr key={item.id}>
+                    <td>{item.metric_date}</td>
+                    <td>{state.campaigns.find(campaign => campaign.id === item.campaign_id)?.id ?? item.campaign_id}</td>
+                    <td>{number(item.impressions)}</td>
+                    <td>{number(item.clicks)}</td>
+                    <td>{money(amount(item.spend), item.currency)}</td>
+                    <td>{number(item.conversions)}</td>
+                    <td>{money(amount(item.attributed_revenue), item.currency)}</td>
+                  </tr>
+                ))}
+              </tbody></table></div>
+            </>
+          )}
+          <p className="footnote">CTR = cliques ÷ impressões. ROAS = receita atribuída ÷ gasto. CPC e custo por conversão são calculados apenas quando existe denominador maior que zero.</p>
         </section>
 
         <section className="panel">
@@ -95,12 +188,12 @@ export default function AnalyticsPage() {
 
         <section className="notice warning">
           <strong>Limitações atuais</strong>
-          <p>Impressões, cliques, CTR e conversões não são apresentados porque não há integração de leitura com Meta Ads, Google Ads ou outras plataformas. Os registos financeiros não têm campo de mercado; por isso, só são apresentados no filtro Global, evitando atribuições incorretas.</p>
+          <p>As métricas desta secção são exclusivamente de simulação. Para métricas reais será necessária uma integração autorizada com Meta Ads, Google Ads ou outra plataforma. Os registos financeiros não têm campo de mercado; por isso, só são apresentados no filtro Global, evitando atribuições incorretas.</p>
           <p>Compras, pagamentos, anúncios pagos e contactos automáticos continuam desativados.</p>
         </section>
       </div>
       <style jsx>{`
-        *{box-sizing:border-box}.page{min-height:100vh;background:#f4f7fb;color:#172033;padding:22px 14px 45px}.container{max-width:1150px;margin:auto}.header,.panel,.card,.notice{background:#fff;border:1px solid #e5eaf2;border-radius:16px;padding:20px;margin-bottom:16px}.header{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}.eyebrow{font-size:12px;color:#64748b;font-weight:800;letter-spacing:1px}h1{font-size:32px;margin:8px 0}h2{font-size:20px;margin:0 0 14px}.header p,.notice p{color:#64748b;line-height:1.55}.badge{align-self:flex-start;border-radius:20px;background:#fff7e6;color:#925b00;padding:8px 12px;font-size:12px;font-weight:800}.notice{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}.notice p{margin-bottom:0;color:#334e7d}.warning{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.warning p{color:#7c3f15}label{display:block;font-weight:700;margin-bottom:8px}select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:white}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}.card{margin:0}.card span,.card small{display:block;color:#64748b;font-size:13px}.card strong{display:block;font-size:23px;margin:9px 0;overflow-wrap:anywhere}.tableWrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:12px;border-bottom:1px solid #e5eaf2;font-size:14px}th{color:#64748b}.empty{padding:16px;background:#f8fafc;border-radius:10px;color:#64748b}@media(max-width:600px){h1{font-size:27px}.header,.panel,.notice{padding:16px}}
+        *{box-sizing:border-box}.page{min-height:100vh;background:#f4f7fb;color:#172033;padding:22px 14px 45px}.container{max-width:1150px;margin:auto}.header,.panel,.card,.notice{background:#fff;border:1px solid #e5eaf2;border-radius:16px;padding:20px;margin-bottom:16px}.header{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}.eyebrow{font-size:12px;color:#64748b;font-weight:800;letter-spacing:1px}h1{font-size:32px;margin:8px 0}h2{font-size:20px;margin:0 0 14px}.header p,.notice p{color:#64748b;line-height:1.55}.badge{align-self:flex-start;border-radius:20px;background:#fff7e6;color:#925b00;padding:8px 12px;font-size:12px;font-weight:800}.notice{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}.notice p{margin-bottom:0;color:#334e7d}.warning{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.warning p{color:#7c3f15}label{display:block;font-weight:700;margin-bottom:8px}select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:white}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}.card{margin:0}.card span,.card small{display:block;color:#64748b;font-size:13px}.card strong{display:block;font-size:23px;margin:9px 0;overflow-wrap:anywhere}.tableWrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:12px;border-bottom:1px solid #e5eaf2;font-size:14px}th{color:#64748b}.empty{padding:16px;background:#f8fafc;border-radius:10px;color:#64748b}.error{padding:16px;background:#fff1f2;border-radius:10px;color:#9f1239}.footnote{margin:14px 0 0;color:#64748b;font-size:12px;line-height:1.5}.metricCards{margin-top:14px}.metricCards .card{padding:15px}@media(max-width:600px){h1{font-size:27px}.header,.panel,.notice{padding:16px}}
       `}</style>
     </main>
   );
