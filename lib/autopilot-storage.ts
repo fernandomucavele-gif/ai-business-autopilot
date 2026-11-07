@@ -1,4 +1,3 @@
-
 import { supabase } from "./supabase";
 import type { AutopilotState } from "./autopilot";
 
@@ -43,6 +42,25 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
         is_simulation: true,
       })),
       { onConflict: "id,user_id" }
+    );
+    if (error) throw error;
+  }
+
+  if (state.creatives.length) {
+    const { error } = await supabase.from("ad_creatives").upsert(
+      state.creatives.map((creative) => ({
+        user_id: userId,
+        campaign_id: creative.campaignId,
+        name: creative.name,
+        format: creative.format,
+        headline: creative.headline,
+        primary_text: [creative.primaryText, creative.script].filter(Boolean).join("\\n\\n"),
+        call_to_action: creative.callToAction,
+        status: "draft",
+        is_simulation: true,
+        source_record_id: creative.id,
+      })),
+      { onConflict: "user_id,source_record_id" }
     );
     if (error) throw error;
   }
