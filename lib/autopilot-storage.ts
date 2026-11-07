@@ -4,6 +4,72 @@ import type { AutopilotState } from "./autopilot";
 
 const STATE_KEY = "main";
 
+/**
+ * Mirrors core records into normalized tables while keeping the JSON state
+ * for backwards compatibility during the module migration.
+ */
+async function syncOperationalTables(state: AutopilotState, userId: string): Promise<void> {
+  if (state.products.length) {
+    const { error } = await supabase.from("autopilot_products").upsert(
+      state.products.map((product) => ({
+        id: product.id,
+        user_id: userId,
+        name: product.name,
+        market: product.market,
+        sale_price: product.price,
+        estimated_unit_cost: product.estimatedUnitCost ?? null,
+        supplier_name: product.supplier ?? null,
+        supplier_country: product.supplierCountry ?? null,
+        score: product.score,
+        status: product.status,
+        source: "manual",
+      })),
+      { onConflict: "id,user_id" }
+    );
+    if (error) throw error;
+  }
+
+  if (state.campaigns.length) {
+    const { error } = await supabase.from("ad_campaigns").upsert(
+      state.campaigns.map((campaign) => ({
+        id: campaign.id,
+        user_id: userId,
+        product_id: campaign.productId,
+        market: campaign.market,
+        objective: campaign.objective,
+        daily_budget: campaign.dailyBudget,
+        currency: "MZN",
+        status: "simulation",
+        is_simulation: true,
+      })),
+      { onConflict: "id,user_id" }
+    );
+    if (error) throw error;
+  }
+
+  if (state.orders.length) {
+    const { error } = await supabase.from("autopilot_orders").upsert(
+      state.orders.map((order) => ({
+        id: order.id,
+        user_id: userId,
+        product_id: order.productId,
+        customer_name: order.customerName,
+        market: order.market,
+        amount: order.amount,
+        currency: "MZN",
+        status: order.status,
+        estimated_delivery_at: order.estimatedDeliveryAt ?? null,
+        revised_delivery_at: order.revisedDeliveryAt ?? null,
+        delay_notice: order.delayNotice ?? null,
+        is_simulation: true,
+      })),
+      { onConflict: "id,user_id" }
+    );
+    if (error) throw error;
+  }
+}
+
+
 export async function loadAutopilotState(): Promise<AutopilotState | null> {
   const {
     data: { user },
@@ -59,6 +125,13 @@ export async function saveAutopilotState(
 
   if (error) {
     console.error("Erro ao guardar estado:", error.message);
+    return false;
+  }
+
+  try {
+    await syncOperationalTables(state, user.id);
+  } catch (syncError) {
+    console.error("Estado geral guardado, mas houve erro ao sincronizar tabelas operacionais:", syncError);
     return false;
   }
 
