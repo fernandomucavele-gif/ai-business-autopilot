@@ -14,6 +14,7 @@ import {
   initialAutopilotState,
   Product,
   Campaign,
+  CreativeRecord,
   Order,
   FinanceRecord,
   createProduct,
@@ -34,6 +35,7 @@ type AutopilotContextType = {
   state: AutopilotState;
   addProduct: (name: string, market: Product["market"], price: number, estimatedUnitCost?: number) => void;
   addCampaign: (productId: string, market: Campaign["market"], objective: Campaign["objective"], dailyBudget: number) => void;
+  addCreative: (creative: CreativeRecord) => void;
   addOrder: (productId: string, customerName: string, market: Order["market"], amount: number) => void;
   updateOrder: (id: string, status: Order["status"]) => void;
   addFinanceRecord: (record: FinanceRecord) => void;
@@ -49,6 +51,7 @@ function enforceSimulationSafety(saved: AutopilotState): AutopilotState {
     ...saved,
     products: Array.isArray(saved.products) ? saved.products : [],
     campaigns: Array.isArray(saved.campaigns) ? saved.campaigns : [],
+    creatives: Array.isArray(saved.creatives) ? saved.creatives : [],
     orders: Array.isArray(saved.orders) ? saved.orders : [],
     finance: Array.isArray(saved.finance) ? saved.finance : [],
     automation: {
@@ -115,6 +118,18 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     setState(current => ({ ...current, campaigns: [...current.campaigns, campaign] }));
   }
 
+  function addCreative(creative: CreativeRecord) {
+    if (!creative.id || !creative.name.trim() || !creative.headline.trim()) return;
+    if (!state.campaigns.some(campaign => campaign.id === creative.campaignId)) return;
+    if (!state.products.some(product => product.id === creative.productId)) return;
+    setState(current => ({
+      ...current,
+      creatives: current.creatives.some(item => item.id === creative.id)
+        ? current.creatives.map(item => item.id === creative.id ? { ...creative, status: "draft" } : item)
+        : [...current.creatives, { ...creative, status: "draft" }],
+    }));
+  }
+
   function addOrder(productId: string, customerName: string, market: Order["market"], amount: number) {
     if (!state.products.some(product => product.id === productId)) return;
     if (!customerName.trim() || !Number.isFinite(amount) || amount <= 0) return;
@@ -154,7 +169,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AutopilotContext.Provider value={{ state, addProduct, addCampaign, addOrder, updateOrder, addFinanceRecord, setAutomation, metrics }}>
+    <AutopilotContext.Provider value={{ state, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, setAutomation, metrics }}>
       {children}
     </AutopilotContext.Provider>
   );
