@@ -1,4 +1,3 @@
-
 export type Market =
   | "Moçambique"
   | "Brasil"
@@ -27,6 +26,21 @@ export type Campaign = {
   objective: "Vendas" | "Leads" | "Tráfego" | "Reconhecimento";
   dailyBudget: number;
   status: "simulation" | "ready" | "active";
+};
+
+export type CreativeRecord = {
+  id: string;
+  campaignId: string;
+  productId: string;
+  name: string;
+  format: "image" | "video" | "carousel" | "text";
+  headline: string;
+  primaryText: string;
+  callToAction: string;
+  hook: string;
+  script: string;
+  angle: string;
+  status: "draft" | "approved" | "rejected" | "simulation";
 };
 
 export type Order = {
@@ -58,6 +72,7 @@ export type FinanceRecord = {
 export type AutopilotState = {
   products: Product[];
   campaigns: Campaign[];
+  creatives: CreativeRecord[];
   orders: Order[];
   finance: FinanceRecord[];
   automation: {
@@ -71,6 +86,7 @@ export type AutopilotState = {
 export const initialAutopilotState: AutopilotState = {
   products: [],
   campaigns: [],
+  creatives: [],
   orders: [],
   finance: [],
   automation: {
@@ -167,6 +183,7 @@ export function getSystemStatus(state: AutopilotState) {
     automaticPaymentsEnabled: state.automation.automaticPaymentsEnabled,
     products: state.products.length,
     campaigns: state.campaigns.length,
+    creatives: state.creatives.length,
     orders: state.orders.length,
     revenue: calculateRevenue(state.finance),
     costs: calculateCosts(state.finance),
