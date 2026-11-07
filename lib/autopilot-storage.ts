@@ -47,12 +47,33 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
     if (error) throw error;
   }
 
+  const customerNames = Array.from(new Set(state.orders.map((order) => order.customerName.trim()).filter(Boolean)));
+  const customerIds = new Map<string, string>();
+
+  if (customerNames.length) {
+    const { data: customers, error } = await supabase
+      .from("autopilot_customers")
+      .upsert(
+        customerNames.map((fullName) => ({
+          user_id: userId,
+          full_name: fullName,
+          source: "manual",
+          source_record_id: `name:${fullName.toLocaleLowerCase()}`,
+        })),
+        { onConflict: "user_id,source_record_id" }
+      )
+      .select("id, full_name");
+    if (error) throw error;
+    for (const customer of customers ?? []) customerIds.set(customer.full_name.toLocaleLowerCase(), customer.id);
+  }
+
   if (state.orders.length) {
     const { error } = await supabase.from("autopilot_orders").upsert(
       state.orders.map((order) => ({
         id: order.id,
         user_id: userId,
         product_id: order.productId,
+        customer_id: customerIds.get(order.customerName.trim().toLocaleLowerCase()) ?? null,
         customer_name: order.customerName,
         market: order.market,
         amount: order.amount,
@@ -64,6 +85,38 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
         is_simulation: true,
       })),
       { onConflict: "id,user_id" }
+    );
+    if (error) throw error;
+
+    const productById = new Map(state.products.map((product) => [product.id, product]));
+    const { error: itemError } = await supabase.from("autopilot_order_items").upsert(
+      state.orders.map((order) => ({
+        user_id: userId,
+        order_id: order.id,
+        product_id: order.productId,
+        product_name: productById.get(order.productId)?.name ?? "Produto",
+        quantity: 1,
+        unit_price: order.amount,
+        line_total: order.amount,
+        source_record_id: order.id,
+      })),
+      { onConflict: "user_id,source_record_id" }
+    );
+    if (itemError) throw itemError;
+  }
+
+  if (state.finance.length) {
+    const { error } = await supabase.from("finance_transactions").upsert(
+      state.finance.map((record) => ({
+        user_id: userId,
+        transaction_type: record.type,
+        amount: record.amount,
+        currency: record.currency || "MZN",
+        description: record.description,
+        is_simulation: true,
+        source_record_id: record.id,
+      })),
+      { onConflict: "user_id,source_record_id" }
     );
     if (error) throw error;
   }
