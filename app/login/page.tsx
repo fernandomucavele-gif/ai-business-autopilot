@@ -66,7 +66,7 @@ export default function LoginPage() {
         }
       } else if (mode === "recovery") {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-          redirectTo: window.location.origin + "/login?mode=recovery",
+          redirectTo: window.location.origin + "/shop/reset-password",
         });
         if (authError) throw authError;
         setMessage("Se existir uma conta com este e-mail, receberás uma mensagem com instruções para criar uma nova palavra-passe.");
