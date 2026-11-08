@@ -1,49 +1,102 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
+type Mode = "signin" | "signup" | "recovery" | "update";
+
+function friendlyAuthError(message: string) {
+  const value = message.toLowerCase();
+  if (value.includes("invalid login credentials")) return "E-mail ou palavra-passe incorretos. Confirma os dados ou recupera a palavra-passe.";
+  if (value.includes("email not confirmed")) return "Ainda falta confirmar o teu e-mail. Abre a mensagem de confirmação que recebeste.";
+  if (value.includes("already registered") || value.includes("user already registered")) return "Este e-mail já tem uma conta. Escolhe «Iniciar sessão» ou recupera a palavra-passe.";
+  if (value.includes("password should be at least")) return "A palavra-passe deve ter pelo menos 6 caracteres.";
+  if (value.includes("rate limit")) return "Foram feitos muitos pedidos. Aguarda alguns minutos e tenta novamente.";
+  return message;
+}
+
 export default function LoginPage() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (searchParams.get("mode") === "recovery") {
+      setMode("update");
+      setMessage("Verificação concluída. Define uma nova palavra-passe para a tua conta.");
+    }
+  }, [searchParams]);
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setMessage("");
+    setError("");
+    setPassword("");
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setMessage("");
     setError("");
-
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       if (mode === "signup") {
         const { data, error: authError } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
           options: { emailRedirectTo: window.location.origin + "/" },
         });
         if (authError) throw authError;
-        if (!data.session) {
-          setMessage("Conta criada. Verifica o teu e-mail e confirma o endereço antes de iniciar sessão.");
+        if (data.user && data.user.identities?.length === 0) {
+          setMessage("Este e-mail já está registado. Escolhe «Iniciar sessão» ou «Esqueci-me da palavra-passe».");
+        } else if (!data.session) {
+          setMessage("Conta criada. Confirma o e-mail recebido. Depois volta aqui e escolhe «Iniciar sessão» com a mesma palavra-passe.");
+          setMode("signin");
+          setPassword("");
         } else {
           setMessage("Conta criada com sucesso. A abrir o Autopilot...");
+          router.replace("/");
         }
+      } else if (mode === "recovery") {
+        const { error: authError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+          redirectTo: window.location.origin + "/login?mode=recovery",
+        });
+        if (authError) throw authError;
+        setMessage("Se existir uma conta com este e-mail, receberás uma mensagem com instruções para criar uma nova palavra-passe.");
+      } else if (mode === "update") {
+        const { error: authError } = await supabase.auth.updateUser({ password });
+        if (authError) throw authError;
+        setMessage("Palavra-passe atualizada. Já podes iniciar sessão com a nova palavra-passe.");
+        setMode("signin");
+        setPassword("");
+        router.replace("/login");
       } else {
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
           password,
         });
         if (authError) throw authError;
+        if (!data.session) throw new Error("O início de sessão não foi concluído. Tenta novamente.");
         setMessage("Sessão iniciada. A abrir o Autopilot...");
+        router.replace("/");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível concluir a autenticação.");
+      setError(friendlyAuthError(err instanceof Error ? err.message : "Não foi possível concluir a autenticação."));
     } finally {
       setBusy(false);
     }
   }
+
+  const isRecovery = mode === "recovery";
+  const isUpdate = mode === "update";
+  const isSignup = mode === "signup";
 
   return (
     <main className="auth-page">
@@ -51,27 +104,28 @@ export default function LoginPage() {
         <div className="logo">AI</div>
         <span className="eyebrow">ACESSO SEGURO</span>
         <h1>AI Business Autopilot</h1>
-        <p className="intro">Entra na tua conta para aceder ao teu centro de controlo.</p>
-
-        <div className="tabs">
-          <button type="button" className={mode === "signin" ? "selected" : ""} onClick={() => { setMode("signin"); setMessage(""); setError(""); }}>Iniciar sessão</button>
-          <button type="button" className={mode === "signup" ? "selected" : ""} onClick={() => { setMode("signup"); setMessage(""); setError(""); }}>Criar conta</button>
-        </div>
-
+        <p className="intro">{isRecovery ? "Recebe um link seguro para recuperar o acesso." : isUpdate ? "Define uma nova palavra-passe para a tua conta." : "Entra na tua conta para aceder ao teu centro de controlo."}</p>
+        {!isRecovery && !isUpdate && (
+          <div className="tabs">
+            <button type="button" className={mode === "signin" ? "selected" : ""} onClick={() => switchMode("signin")}>Iniciar sessão</button>
+            <button type="button" className={mode === "signup" ? "selected" : ""} onClick={() => switchMode("signup")}>Criar conta</button>
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <label htmlFor="email">E-mail</label>
           <input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="teuemail@exemplo.com" />
-          <label htmlFor="password">Palavra-passe</label>
-          <input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={6} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" />
-          <button className="submit" type="submit" disabled={busy}>{busy ? "A processar..." : mode === "signin" ? "Entrar no sistema" : "Criar conta"}</button>
+          {!isRecovery && <>
+            <label htmlFor="password">{isUpdate ? "Nova palavra-passe" : "Palavra-passe"}</label>
+            <input id="password" type="password" autoComplete={isUpdate ? "new-password" : mode === "signin" ? "current-password" : "new-password"} minLength={6} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" />
+          </>}
+          <button className="submit" type="submit" disabled={busy}>{busy ? "A processar..." : isRecovery ? "Enviar link de recuperação" : isUpdate ? "Guardar nova palavra-passe" : isSignup ? "Criar conta" : "Entrar no sistema"}</button>
         </form>
-
+        {mode === "signin" && <button type="button" className="text-link" onClick={() => switchMode("recovery")}>Esqueci-me da palavra-passe</button>}
+        {(isRecovery || isUpdate) && <button type="button" className="text-link" onClick={() => switchMode("signin")}>Voltar a iniciar sessão</button>}
         {message && <p className="message" role="status">{message}</p>}
         {error && <p className="error" role="alert">{error}</p>}
-
         <div className="safe-note">🛡️ Ambiente de simulação. Compras, anúncios e pagamentos reais permanecem bloqueados.</div>
       </section>
-
       <style jsx>{`
         * { box-sizing: border-box; }
         .auth-page { min-height: 100vh; display: grid; place-items: center; padding: 22px; background: radial-gradient(ellipse at 50% 0%, rgba(30,64,175,.22), transparent 48%), #080d19; color: #f8fafc; font-family: Arial, sans-serif; }
@@ -88,6 +142,7 @@ export default function LoginPage() {
         input:focus { border-color: #67e8f9; }
         .submit { width: 100%; margin-top: 22px; padding: 13px; border: 0; border-radius: 9px; background: linear-gradient(100deg,#22d3ee,#818cf8); color: #07111f; font-size: 13px; font-weight: 800; cursor: pointer; }
         .submit:disabled { opacity: .6; cursor: wait; }
+        .text-link { display: block; margin: 14px auto 0; border: 0; background: transparent; color: #67e8f9; font-size: 12px; cursor: pointer; text-decoration: underline; }
         .message, .error { margin: 15px 0 0; padding: 11px; border-radius: 9px; font-size: 12px; line-height: 1.5; }
         .message { background: rgba(34,197,94,.09); color: #86efac; }
         .error { background: rgba(248,113,113,.09); color: #fca5a5; }
