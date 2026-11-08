@@ -36,37 +36,29 @@ export default function PublicPasswordResetPage() {
       const url = new URL(window.location.href);
       const code = url.searchParams.get("code");
 
-      // PKCE recovery links return a one-time code that must be exchanged
-      // in the same browser where the recovery request was started.
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+      // Supabase automatically processes PKCE codes and recovery tokens from
+      // the URL during client initialization (detectSessionInUrl is enabled by default).
+      // Wait for that initialization through getSession instead of exchanging the
+      // same one-time code a second time.
+      const isRecoveryCallback = Boolean(code) || url.hash.includes("type=recovery");
+      if (!isRecoveryCallback) {
         if (!mounted) return;
-        if (exchangeError) {
-          setError("Este link de recuperação é inválido ou expirou. Solicita um novo link.");
-          setChecking(false);
-          return;
-        }
-        allowPasswordUpdate();
-        window.history.replaceState({}, document.title, url.pathname);
+        setError("Abre esta página através do link de recuperação enviado para o teu e-mail.");
+        setChecking(false);
         return;
       }
 
-      // Implicit-flow recovery links return the recovery type in the URL hash.
-      if (url.hash.includes("type=recovery")) {
-        const { data, error: sessionError } = await supabase.auth.getSession();
-        if (!mounted) return;
-        if (!sessionError && data.session) {
-          allowPasswordUpdate();
-        } else {
-          setError("Não foi possível validar este link. Solicita um novo link de recuperação.");
-          setChecking(false);
-        }
-        return;
-      }
-
+      const { data, error: sessionError } = await supabase.auth.getSession();
       if (!mounted) return;
-      setError("Abre esta página através do link de recuperação enviado para o teu e-mail.");
-      setChecking(false);
+
+      if (!sessionError && data.session) {
+        allowPasswordUpdate();
+        // Remove callback credentials from the address bar after validation.
+        window.history.replaceState({}, document.title, url.pathname);
+      } else {
+        setError("Este link de recuperação é inválido ou expirou. Solicita um novo link.");
+        setChecking(false);
+      }
     }
 
     void verifyRecoveryLink();
