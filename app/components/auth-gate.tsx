@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [checking, setChecking] = useState(true);
 
-  const isRecoveryLogin = pathname === "/login" && searchParams.get("mode") === "recovery";
   const isPublicRoute =
     pathname === "/login" ||
     pathname === "/shop" ||
@@ -18,18 +16,24 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+
     const redirectForSession = (hasSession: boolean) => {
       if (!mounted) return;
       setChecking(false);
 
-      // A recovery link must remain on its recovery form, even though
-      // Supabase has created a temporary authenticated recovery session.
+      // Read the query string in the browser without useSearchParams,
+      // so static pages such as /404 do not require a Suspense boundary.
+      const isRecoveryLogin =
+        pathname === "/login" &&
+        new URLSearchParams(window.location.search).get("mode") === "recovery";
+
+      // Keep password recovery on its own form, never the admin dashboard.
       if (hasSession && pathname === "/login" && !isRecoveryLogin) {
         router.replace("/");
       }
 
-      // Public shop and password recovery pages must never be sent
-      // to the private administrator dashboard.
+      // Public marketplace and password reset routes are available
+      // without an authenticated session.
       if (!hasSession && !isPublicRoute) {
         router.replace("/login");
       }
@@ -40,7 +44,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
       redirectForSession(Boolean(data.session));
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (
         event === "SIGNED_IN" ||
@@ -57,10 +63,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [pathname, router, isRecoveryLogin, isPublicRoute]);
+  }, [pathname, router, isPublicRoute]);
 
   if (checking) {
-    return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#080d19", color: "#e2e8f0", fontFamily: "Arial, sans-serif" }}>A verificar a sessão segura...</main>;
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: "#080d19",
+          color: "#e2e8f0",
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
+        A verificar a sessão segura...
+      </main>
+    );
   }
 
   return <>{children}</>;
