@@ -12,21 +12,24 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    const redirectForSession = (hasSession: boolean) => {
+      if (!mounted) return;
+      setChecking(false);
+      if (hasSession && pathname === "/login") router.replace("/");
+      if (!hasSession && pathname !== "/login") router.replace("/login");
+    };
+
+    // Confirm the persisted session on initial load; the auth event remains
+    // subscribed for sign-in, sign-out and token refresh changes.
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (error) console.error("Falha ao verificar a sessão:", error);
+      redirectForSession(Boolean(data.session));
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-
-      if (session) {
-        setChecking(false);
-        if (pathname === "/login" && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-          router.replace("/");
-        }
-        return;
-      }
-
-      if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
-        setChecking(false);
-        if (pathname !== "/login") router.replace("/login");
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "SIGNED_OUT" || event === "INITIAL_SESSION") {
+        redirectForSession(Boolean(session));
       }
     });
 
@@ -37,13 +40,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }, [pathname, router]);
 
   if (checking) {
-    return (
-      <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#080d19", color: "#e2e8f0", fontFamily: "Arial, sans-serif" }}>
-        A verificar a sessão segura...
-      </main>
-    );
+    return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#080d19", color: "#e2e8f0", fontFamily: "Arial, sans-serif" }}>A verificar a sessão segura...</main>;
   }
-
   if (!isLoginPage && checking) return null;
   return <>{children}</>;
 }
