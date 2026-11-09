@@ -47,7 +47,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
       // Keep password recovery on its own form, never the admin dashboard.
       if (hasSession && pathname === "/login" && !isRecoveryLogin) {
-        router.replace("/");
+        router.replace("/shop");
       }
 
       // Public marketplace and password reset routes are available
