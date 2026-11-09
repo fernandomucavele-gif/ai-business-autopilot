@@ -102,8 +102,6 @@ export default function LoginPage() {
         if (factorsError) throw factorsError;
         const verifiedTotp = factors.totp.find((factor) => factor.status === "verified");
         if (verifiedTotp) {
-          const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedTotp.id });
-          if (challengeError) throw challengeError;
           setMessage("A tua conta tem autenticação em dois passos ativa. A abrir a verificação segura...");
           router.replace("/login/mfa");
         } else {
