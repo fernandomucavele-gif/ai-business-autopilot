@@ -22,6 +22,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     // dashboard is rendered and preserve the callback URL for the reset page.
     const currentUrl = new URL(window.location.href);
     const isPasswordRecoveryCallback =
+      currentUrl.searchParams.has("code") ||
       currentUrl.searchParams.get("type") === "recovery" ||
       currentUrl.hash.includes("type=recovery");
 
