@@ -17,6 +17,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // Recovery emails can occasionally return to Site URL instead of the
+    // requested redirectTo. Detect Supabase's recovery marker before the
+    // dashboard is rendered and preserve the callback URL for the reset page.
+    const currentUrl = new URL(window.location.href);
+    const isPasswordRecoveryCallback =
+      currentUrl.searchParams.get("type") === "recovery" ||
+      currentUrl.hash.includes("type=recovery");
+
+    if (isPasswordRecoveryCallback && pathname !== "/shop/reset-password") {
+      const callbackUrl =
+        "/shop/reset-password" + currentUrl.search + currentUrl.hash;
+      router.replace(callbackUrl);
+      return () => {
+        mounted = false;
+      };
+    }
+
     const redirectForSession = (hasSession: boolean) => {
       if (!mounted) return;
       setChecking(false);
