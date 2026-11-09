@@ -12,7 +12,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const isPublicRoute =
     pathname === "/login" ||
     pathname === "/shop" ||
-    pathname === "/shop/reset-password";
+    pathname === "/shop/reset-password" ||\n    pathname === "/shop/security";
 
   useEffect(() => {
     let mounted = true;
@@ -46,7 +46,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         new URLSearchParams(window.location.search).get("mode") === "recovery";
 
       // Keep password recovery on its own form, never the admin dashboard.
-      if (hasSession && pathname === "/login" && !isRecoveryLogin) {
+      if (hasSession && pathname === "/login" && !isAuthStep) {
         router.replace("/shop");
       }
 
