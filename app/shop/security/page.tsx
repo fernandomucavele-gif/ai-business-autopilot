@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
-type Factor = { id: string; friendly_name: string; status: string };
+type Factor = { id: string; friendly_name?: string; status: string };
 
 export default function CustomerSecurityPage() {
   const router = useRouter();
