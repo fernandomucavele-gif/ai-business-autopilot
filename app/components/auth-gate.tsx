@@ -41,9 +41,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
       // Read the query string in the browser without useSearchParams,
       // so static pages such as /404 do not require a Suspense boundary.
-      const isRecoveryLogin =
+      const loginMode = new URLSearchParams(window.location.search).get("mode");
+      const isAuthStep =
         pathname === "/login" &&
-        new URLSearchParams(window.location.search).get("mode") === "recovery";
+        (loginMode === "recovery" || loginMode === "mfa");
 
       // Keep password recovery on its own form, never the admin dashboard.
       if (hasSession && pathname === "/login" && !isAuthStep) {
