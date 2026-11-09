@@ -11,6 +11,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   const isPublicRoute =
     pathname === "/login" ||
+    pathname === "/login/mfa" ||
     pathname === "/shop" ||
     pathname === "/shop/reset-password" ||
     pathname === "/shop/security";
@@ -36,24 +37,33 @@ export function AuthGate({ children }: { children: ReactNode }) {
       };
     }
 
-    const redirectForSession = (hasSession: boolean) => {
+    const redirectForSession = async (hasSession: boolean) => {
+      if (!mounted) return;
+
+      // Accounts that enrolled a second factor must complete MFA before
+      // entering any private application route.
+      if (hasSession && !isPublicRoute) {
+        const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const hasVerifiedTotp = factors?.totp.some((factor) => factor.status === "verified") ?? false;
+        if (hasVerifiedTotp && assurance?.currentLevel !== "aal2") {
+          router.replace("/login/mfa");
+          return;
+        }
+      }
+
       if (!mounted) return;
       setChecking(false);
 
-      // Read the query string in the browser without useSearchParams,
-      // so static pages such as /404 do not require a Suspense boundary.
       const loginMode = new URLSearchParams(window.location.search).get("mode");
       const isAuthStep =
         pathname === "/login" &&
         (loginMode === "recovery" || loginMode === "mfa");
 
-      // Keep password recovery on its own form, never the admin dashboard.
       if (hasSession && pathname === "/login" && !isAuthStep) {
         router.replace("/shop");
       }
 
-      // Public marketplace and password reset routes are available
-      // without an authenticated session.
       if (!hasSession && !isPublicRoute) {
         router.replace("/login");
       }
