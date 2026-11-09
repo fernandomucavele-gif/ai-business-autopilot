@@ -40,7 +40,10 @@ export default function PublicPasswordResetPage() {
       // the URL during client initialization (detectSessionInUrl is enabled by default).
       // Wait for that initialization through getSession instead of exchanging the
       // same one-time code a second time.
-      const isRecoveryCallback = Boolean(code) || url.hash.includes("type=recovery");
+      const isRecoveryCallback =
+        Boolean(code) ||
+        url.searchParams.get("type") === "recovery" ||
+        url.hash.includes("type=recovery");
       if (!isRecoveryCallback) {
         if (!mounted) return;
         setError("Abre esta página através do link de recuperação enviado para o teu e-mail.");
