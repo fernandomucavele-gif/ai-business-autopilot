@@ -12,7 +12,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const isPublicRoute =
     pathname === "/login" ||
     pathname === "/shop" ||
-    pathname === "/shop/reset-password" ||\n    pathname === "/shop/security";
+    pathname === "/shop/reset-password" ||
+    pathname === "/shop/security";
 
   useEffect(() => {
     let mounted = true;
