@@ -104,10 +104,8 @@ export default function LoginPage() {
         if (verifiedTotp) {
           const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedTotp.id });
           if (challengeError) throw challengeError;
-          setFactorId(verifiedTotp.id);
-          setChallengeId(challenge.id);
-          setMode("mfa");
-          setMessage("A tua conta tem autenticação em dois passos ativa. Introduz o código da tua aplicação autenticadora.");
+          setMessage("A tua conta tem autenticação em dois passos ativa. A abrir a verificação segura...");
+          router.replace("/login/mfa");
         } else {
           setMessage("Sessão iniciada. A abrir a loja...");
           router.replace("/shop");
