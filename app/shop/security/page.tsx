@@ -29,6 +29,13 @@ export default function CustomerSecurityPage() {
     const { data, error: listError } = await supabase.auth.mfa.listFactors();
     if (listError) throw listError;
     const verified = data.totp.find((item) => item.status === "verified");
+    if (verified) {
+      const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (assurance?.currentLevel !== "aal2") {
+        router.replace("/login/mfa");
+        return;
+      }
+    }
     setFactor(verified ? { id: verified.id, friendly_name: verified.friendly_name, status: verified.status } : null);
   }
 
