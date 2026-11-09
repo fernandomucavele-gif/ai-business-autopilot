@@ -61,8 +61,8 @@ export default function LoginPage() {
           setMode("signin");
           setPassword("");
         } else {
-          setMessage("Conta criada com sucesso. A abrir o Autopilot...");
-          router.replace("/");
+          setMessage("Conta criada com sucesso. A abrir a loja...");
+          router.replace("/shop");
         }
       } else if (mode === "recovery") {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
@@ -84,8 +84,8 @@ export default function LoginPage() {
         });
         if (authError) throw authError;
         if (!data.session) throw new Error("O início de sessão não foi concluído. Tenta novamente.");
-        setMessage("Sessão iniciada. A abrir o Autopilot...");
-        router.replace("/");
+        setMessage("Sessão iniciada. A abrir a loja...");
+        router.replace("/shop");
       }
     } catch (err) {
       setError(friendlyAuthError(err instanceof Error ? err.message : "Não foi possível concluir a autenticação."));
