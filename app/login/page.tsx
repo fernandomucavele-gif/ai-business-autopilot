@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-type Mode = "signin" | "signup" | "recovery" | "update";
+type Mode = "signin" | "signup" | "recovery" | "update" | "mfa";
 
 function friendlyAuthError(message: string) {
   const value = message.toLowerCase();
@@ -22,6 +22,9 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [factorId, setFactorId] = useState("");
+  const [challengeId, setChallengeId] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -38,6 +41,7 @@ export default function LoginPage() {
     setMessage("");
     setError("");
     setPassword("");
+    setOtp("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -51,7 +55,7 @@ export default function LoginPage() {
         const { data, error: authError } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
-          options: { emailRedirectTo: window.location.origin + "/" },
+          options: { emailRedirectTo: window.location.origin + "/shop" },
         });
         if (authError) throw authError;
         if (data.user && data.user.identities?.length === 0) {
@@ -77,6 +81,15 @@ export default function LoginPage() {
         setMode("signin");
         setPassword("");
         router.replace("/login");
+      } else if (mode === "mfa") {
+        const { error: verifyError } = await supabase.auth.mfa.verify({
+          factorId,
+          challengeId,
+          code: otp.trim(),
+        });
+        if (verifyError) throw verifyError;
+        setMessage("Identidade confirmada. A abrir a loja...");
+        router.replace("/shop");
       } else {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
@@ -84,8 +97,21 @@ export default function LoginPage() {
         });
         if (authError) throw authError;
         if (!data.session) throw new Error("O início de sessão não foi concluído. Tenta novamente.");
-        setMessage("Sessão iniciada. A abrir a loja...");
-        router.replace("/shop");
+
+        const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+        if (factorsError) throw factorsError;
+        const verifiedTotp = factors.totp.find((factor) => factor.status === "verified");
+        if (verifiedTotp) {
+          const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedTotp.id });
+          if (challengeError) throw challengeError;
+          setFactorId(verifiedTotp.id);
+          setChallengeId(challenge.id);
+          setMode("mfa");
+          setMessage("A tua conta tem autenticação em dois passos ativa. Introduz o código da tua aplicação autenticadora.");
+        } else {
+          setMessage("Sessão iniciada. A abrir a loja...");
+          router.replace("/shop");
+        }
       }
     } catch (err) {
       setError(friendlyAuthError(err instanceof Error ? err.message : "Não foi possível concluir a autenticação."));
@@ -97,6 +123,7 @@ export default function LoginPage() {
   const isRecovery = mode === "recovery";
   const isUpdate = mode === "update";
   const isSignup = mode === "signup";
+  const isMfa = mode === "mfa";
 
   return (
     <main className="auth-page">
@@ -104,27 +131,32 @@ export default function LoginPage() {
         <div className="logo">AI</div>
         <span className="eyebrow">ACESSO SEGURO</span>
         <h1>AI Business Autopilot</h1>
-        <p className="intro">{isRecovery ? "Recebe um link seguro para recuperar o acesso." : isUpdate ? "Define uma nova palavra-passe para a tua conta." : "Entra na tua conta para aceder ao teu centro de controlo."}</p>
-        {!isRecovery && !isUpdate && (
+        <p className="intro">{isMfa ? "Confirma a tua identidade com o código temporário da aplicação autenticadora." : isRecovery ? "Recebe um link seguro para recuperar o acesso." : isUpdate ? "Define uma nova palavra-passe para a tua conta." : "Entra na tua conta para aceder à loja."}</p>
+        {!isRecovery && !isUpdate && !isMfa && (
           <div className="tabs">
             <button type="button" className={mode === "signin" ? "selected" : ""} onClick={() => switchMode("signin")}>Iniciar sessão</button>
             <button type="button" className={mode === "signup" ? "selected" : ""} onClick={() => switchMode("signup")}>Criar conta</button>
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <label htmlFor="email">E-mail</label>
-          <input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="teuemail@exemplo.com" />
-          {!isRecovery && <>
+          {!isMfa && <>
+            <label htmlFor="email">E-mail</label>
+            <input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="teuemail@exemplo.com" />
+          </>}
+          {isMfa ? <>
+            <label htmlFor="otp">Código de 6 dígitos</label>
+            <input id="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" />
+          </> : !isRecovery && <>
             <label htmlFor="password">{isUpdate ? "Nova palavra-passe" : "Palavra-passe"}</label>
             <input id="password" type="password" autoComplete={isUpdate ? "new-password" : mode === "signin" ? "current-password" : "new-password"} minLength={6} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" />
           </>}
-          <button className="submit" type="submit" disabled={busy}>{busy ? "A processar..." : isRecovery ? "Enviar link de recuperação" : isUpdate ? "Guardar nova palavra-passe" : isSignup ? "Criar conta" : "Entrar no sistema"}</button>
+          <button className="submit" type="submit" disabled={busy}>{busy ? "A processar..." : isMfa ? "Confirmar código" : isRecovery ? "Enviar link de recuperação" : isUpdate ? "Guardar nova palavra-passe" : isSignup ? "Criar conta" : "Entrar na loja"}</button>
         </form>
         {mode === "signin" && <button type="button" className="text-link" onClick={() => switchMode("recovery")}>Esqueci-me da palavra-passe</button>}
-        {(isRecovery || isUpdate) && <button type="button" className="text-link" onClick={() => switchMode("signin")}>Voltar a iniciar sessão</button>}
+        {(isRecovery || isUpdate || isMfa) && <button type="button" className="text-link" onClick={() => { switchMode("signin"); if (isMfa) void supabase.auth.signOut(); }}>Voltar ao início de sessão</button>}
         {message && <p className="message" role="status">{message}</p>}
         {error && <p className="error" role="alert">{error}</p>}
-        <div className="safe-note">🛡️ Ambiente de simulação. Compras, anúncios e pagamentos reais permanecem bloqueados.</div>
+        <div className="safe-note">🛡️ Proteção de conta com MFA opcional. Compras, anúncios e pagamentos reais permanecem bloqueados.</div>
       </section>
       <style jsx>{`
         * { box-sizing: border-box; }
