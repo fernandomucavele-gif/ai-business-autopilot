@@ -64,7 +64,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       const loginMode = new URLSearchParams(window.location.search).get("mode");
       const isAuthStep =
         pathname === "/login" &&
-        (loginMode === "recovery" || loginMode === "mfa" || loginMode === "verify");
+        (loginMode === "recovery" || loginMode === "mfa" || loginMode === "verify" || loginMode === "signup");
 
       if (hasSession && pathname === "/login" && !isAuthStep) {
         router.replace("/shop");
