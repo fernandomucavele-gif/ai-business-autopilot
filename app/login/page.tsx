@@ -4,12 +4,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-type Mode = "signin" | "signup" | "recovery" | "update" | "mfa";
+type Mode = "signin" | "signup" | "verify-email" | "recovery" | "update" | "mfa";
 
 function friendlyAuthError(message: string) {
   const value = message.toLowerCase();
   if (value.includes("invalid login credentials")) return "E-mail ou palavra-passe incorretos. Confirma os dados ou recupera a palavra-passe.";
-  if (value.includes("email not confirmed")) return "Ainda falta confirmar o teu e-mail. Abre a mensagem de confirmação que recebeste.";
+  if (value.includes("email not confirmed")) return "Ainda falta confirmar o teu e-mail. Introduz o código de 6 dígitos enviado para a tua caixa de entrada.";
   if (value.includes("already registered") || value.includes("user already registered")) return "Este e-mail já tem uma conta. Escolhe «Iniciar sessão» ou recupera a palavra-passe.";
   if (value.includes("password should be at least")) return "A palavra-passe deve ter pelo menos 6 caracteres.";
   if (value.includes("rate limit")) return "Foram feitos muitos pedidos. Aguarda alguns minutos e tenta novamente.";
@@ -23,6 +23,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [resending, setResending] = useState(false);
+  const [resendCount, setResendCount] = useState(0);
   const [factorId, setFactorId] = useState("");
   const [challengeId, setChallengeId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,7 +32,14 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (searchParams.get("mode") === "recovery") {
+    const requestedMode = searchParams.get("mode");
+    const requestedEmail = searchParams.get("email");
+    if (requestedEmail) setEmail(requestedEmail);
+    if (requestedMode === "verify") {
+      setMode("verify-email");
+      setMessage("Introduz o código de 6 dígitos enviado para o teu e-mail. O código expira em 10 minutos.");
+    }
+    if (requestedMode === "recovery") {
       setMode("update");
       setMessage("Verificação concluída. Define uma nova palavra-passe para a tua conta.");
     }
@@ -60,14 +69,21 @@ export default function LoginPage() {
         if (authError) throw authError;
         if (data.user && data.user.identities?.length === 0) {
           setMessage("Este e-mail já está registado. Escolhe «Iniciar sessão» ou «Esqueci-me da palavra-passe».");
-        } else if (!data.session) {
-          setMessage("Conta criada. Confirma o e-mail recebido. Depois volta aqui e escolhe «Iniciar sessão» com a mesma palavra-passe.");
-          setMode("signin");
-          setPassword("");
         } else {
-          setMessage("Conta criada com sucesso. A abrir a loja...");
-          router.replace("/shop");
+          // A new account must prove ownership of its email before using private features.
+          // If confirmation is disabled in Supabase, discard the temporary session;
+          // the dashboard must have Confirm email enabled for this flow to work.
+          if (data.session) await supabase.auth.signOut();
+          setMode("verify-email");
+          setPassword("");
+          setOtp("");
+          setMessage("Enviámos um código de confirmação para o teu e-mail. Introduz os 6 dígitos abaixo. O código é válido durante 10 minutos.");
         }
+      } else if (mode === "verify-email") {
+        const { error: verifyError } = await supabase.auth.verifyOtp({ email: normalizedEmail, token: otp.trim(), type: "signup" });
+        if (verifyError) throw verifyError;
+        setMessage("E-mail confirmado com sucesso. A abrir a loja...");
+        router.replace("/shop");
       } else if (mode === "recovery") {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
           redirectTo: window.location.origin + "/shop/reset-password",
@@ -117,6 +133,7 @@ export default function LoginPage() {
   }
 
   const isRecovery = mode === "recovery";
+  const isEmailVerification = mode === "verify-email";
   const isUpdate = mode === "update";
   const isSignup = mode === "signup";
   const isMfa = mode === "mfa";
@@ -127,8 +144,8 @@ export default function LoginPage() {
         <div className="logo">AI</div>
         <span className="eyebrow">ACESSO SEGURO</span>
         <h1>AI Business Autopilot</h1>
-        <p className="intro">{isMfa ? "Confirma a tua identidade com o código temporário da aplicação autenticadora." : isRecovery ? "Recebe um link seguro para recuperar o acesso." : isUpdate ? "Define uma nova palavra-passe para a tua conta." : "Entra na tua conta para aceder à loja."}</p>
-        {!isRecovery && !isUpdate && !isMfa && (
+        <p className="intro">{isMfa ? "Confirma a tua identidade com o código temporário da aplicação autenticadora." : isEmailVerification ? "Confirma que tens acesso ao endereço de e-mail usado no registo." : isRecovery ? "Recebe um link seguro para recuperar o acesso." : isUpdate ? "Define uma nova palavra-passe para a tua conta." : "Entra na tua conta para aceder à loja."}</p>
+        {!isRecovery && !isUpdate && !isMfa && !isEmailVerification && (
           <div className="tabs">
             <button type="button" className={mode === "signin" ? "selected" : ""} onClick={() => switchMode("signin")}>Iniciar sessão</button>
             <button type="button" className={mode === "signup" ? "selected" : ""} onClick={() => switchMode("signup")}>Criar conta</button>
@@ -139,17 +156,24 @@ export default function LoginPage() {
             <label htmlFor="email">E-mail</label>
             <input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="teuemail@exemplo.com" />
           </>}
-          {isMfa ? <>
-            <label htmlFor="otp">Código de 6 dígitos</label>
+          {(isMfa || isEmailVerification) ? <>
+            <label htmlFor="otp">{isMfa ? "Código da aplicação autenticadora" : "Código de confirmação do e-mail"}</label>
             <input id="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" />
           </> : !isRecovery && <>
             <label htmlFor="password">{isUpdate ? "Nova palavra-passe" : "Palavra-passe"}</label>
             <input id="password" type="password" autoComplete={isUpdate ? "new-password" : mode === "signin" ? "current-password" : "new-password"} minLength={6} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" />
           </>}
-          <button className="submit" type="submit" disabled={busy}>{busy ? "A processar..." : isMfa ? "Confirmar código" : isRecovery ? "Enviar link de recuperação" : isUpdate ? "Guardar nova palavra-passe" : isSignup ? "Criar conta" : "Entrar na loja"}</button>
+          <button className="submit" type="submit" disabled={busy}>{busy ? "A processar..." : isMfa ? "Confirmar código" : isEmailVerification ? "Verificar e-mail" : isRecovery ? "Enviar link de recuperação" : isUpdate ? "Guardar nova palavra-passe" : isSignup ? "Criar conta" : "Entrar na loja"}</button>
         </form>
         {mode === "signin" && <button type="button" className="text-link" onClick={() => switchMode("recovery")}>Esqueci-me da palavra-passe</button>}
-        {(isRecovery || isUpdate || isMfa) && <button type="button" className="text-link" onClick={() => { switchMode("signin"); if (isMfa) void supabase.auth.signOut(); }}>Voltar ao início de sessão</button>}
+        {isEmailVerification && <button type="button" className="text-link" disabled={resending || resendCount >= 3} onClick={async () => {
+          setResending(true); setError(""); setMessage("");
+          const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim().toLowerCase() });
+          setResending(false);
+          if (resendError) setError(friendlyAuthError(resendError.message));
+          else { setResendCount((count) => count + 1); setMessage("Se o endereço estiver registado e puder receber confirmação, enviaremos um novo código. Verifica também a pasta de spam."); }
+        }}>{resending ? "A reenviar..." : resendCount >= 3 ? "Limite de reenvios desta sessão atingido" : "Reenviar código"}</button>}
+        {(isRecovery || isUpdate || isMfa || isEmailVerification) && <button type="button" className="text-link" onClick={() => { switchMode("signin"); if (isMfa) void supabase.auth.signOut(); }}>Voltar ao início de sessão</button>}
         {message && <p className="message" role="status">{message}</p>}
         {error && <p className="error" role="alert">{error}</p>}
         <div className="safe-note">🛡️ Proteção de conta com MFA opcional. Compras, anúncios e pagamentos reais permanecem bloqueados.</div>
