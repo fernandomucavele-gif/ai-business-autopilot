@@ -26,6 +26,14 @@ export default function CustomerSecurityPage() {
       router.replace("/login");
       return;
     }
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user?.email_confirmed_at) {
+      const pendingEmail = userData.user?.email ?? "";
+      await supabase.auth.signOut();
+      router.replace("/login?mode=verify&email=" + encodeURIComponent(pendingEmail));
+      return;
+    }
     const { data, error: listError } = await supabase.auth.mfa.listFactors();
     if (listError) throw listError;
     const verified = data.totp.find((item) => item.status === "verified");
