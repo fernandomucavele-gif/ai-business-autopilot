@@ -43,6 +43,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
       // Accounts that enrolled a second factor must complete MFA before
       // entering any private application route.
       if (hasSession && !isPublicRoute) {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (!userError && userData.user && !userData.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          router.replace("/login?mode=verify&email=" + encodeURIComponent(userData.user.email ?? ""));
+          return;
+        }
         const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         const { data: factors } = await supabase.auth.mfa.listFactors();
         const hasVerifiedTotp = factors?.totp.some((factor) => factor.status === "verified") ?? false;
@@ -58,7 +64,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       const loginMode = new URLSearchParams(window.location.search).get("mode");
       const isAuthStep =
         pathname === "/login" &&
-        (loginMode === "recovery" || loginMode === "mfa");
+        (loginMode === "recovery" || loginMode === "mfa" || loginMode === "verify");
 
       if (hasSession && pathname === "/login" && !isAuthStep) {
         router.replace("/shop");
