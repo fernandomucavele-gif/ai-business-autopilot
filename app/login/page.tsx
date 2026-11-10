@@ -37,7 +37,7 @@ export default function LoginPage() {
     if (requestedEmail) setEmail(requestedEmail);
     if (requestedMode === "verify") {
       setMode("verify-email");
-      setMessage("Introduz o código de 6 dígitos enviado para o teu e-mail. O código expira em 10 minutos.");
+      setMessage("Introduz o código de 6 dígitos enviado para o teu e-mail.");
     }
     if (requestedMode === "recovery") {
       setMode("update");
@@ -77,7 +77,7 @@ export default function LoginPage() {
           setMode("verify-email");
           setPassword("");
           setOtp("");
-          setMessage("Enviámos um código de confirmação para o teu e-mail. Introduz os 6 dígitos abaixo. O código é válido durante 10 minutos.");
+          setMessage("Enviámos um código de confirmação para o teu e-mail. Introduz os 6 dígitos abaixo. O prazo de validade será definido nas configurações de segurança do serviço.");
         }
       } else if (mode === "verify-email") {
         const { error: verifyError } = await supabase.auth.verifyOtp({ email: normalizedEmail, token: otp.trim(), type: "signup" });
