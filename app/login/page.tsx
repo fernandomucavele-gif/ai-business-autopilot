@@ -35,6 +35,10 @@ export default function LoginPage() {
     const requestedMode = searchParams.get("mode");
     const requestedEmail = searchParams.get("email");
     if (requestedEmail) setEmail(requestedEmail);
+    if (requestedMode === "signup") {
+      setMode("signup");
+      setMessage("");
+    }
     if (requestedMode === "verify") {
       setMode("verify-email");
       setMessage("Introduz o código de 6 dígitos enviado para o teu e-mail.");
