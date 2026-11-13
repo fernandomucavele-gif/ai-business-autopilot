@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -31,8 +32,11 @@ import {
   saveAutopilotState,
 } from "../../lib/autopilot-storage";
 
+type SaveStatus = "loading" | "idle" | "saving" | "saved" | "error";
+
 type AutopilotContextType = {
   state: AutopilotState;
+  saveStatus: SaveStatus;
   addProduct: (name: string, market: Product["market"], price: number, estimatedUnitCost?: number) => void;
   addCampaign: (productId: string, market: Campaign["market"], objective: Campaign["objective"], dailyBudget: number) => void;
   addCreative: (creative: CreativeRecord) => void;
@@ -66,6 +70,9 @@ function enforceSimulationSafety(saved: AutopilotState): AutopilotState {
 export function AutopilotProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AutopilotState>(initialAutopilotState);
   const [loaded, setLoaded] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("loading");
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const saveAttemptRef = useRef(0);
 
   useEffect(() => {
     let mounted = true;
@@ -75,11 +82,13 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
       if (event === "SIGNED_OUT" || !session) {
         setLoaded(false);
         setState(initialAutopilotState);
+        setSaveStatus("idle");
         return;
       }
 
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         setLoaded(false);
+        setSaveStatus("loading");
         Promise.resolve().then(async () => {
           try {
             const savedState = await loadAutopilotState();
@@ -101,7 +110,24 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loaded) return;
-    void saveAutopilotState(enforceSimulationSafety(state));
+
+    const attempt = ++saveAttemptRef.current;
+    const snapshot = enforceSimulationSafety(state);
+    setSaveStatus("saving");
+
+    // Serializa as gravações para impedir que uma atualização antiga termine
+    // depois de uma mais recente e sobrescreva os dados novos.
+    saveQueueRef.current = saveQueueRef.current
+      .then(async () => {
+        const saved = await saveAutopilotState(snapshot);
+        if (attempt === saveAttemptRef.current) {
+          setSaveStatus(saved ? "saved" : "error");
+        }
+      })
+      .catch((error) => {
+        console.error("Erro inesperado ao guardar o Autopilot:", error);
+        if (attempt === saveAttemptRef.current) setSaveStatus("error");
+      });
   }, [state, loaded]);
 
   function addProduct(name: string, market: Product["market"], price: number, estimatedUnitCost?: number) {
@@ -168,8 +194,34 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     roas: calculateROAS(state.finance),
   };
 
+  const saveMessage = {
+    loading: "A carregar dados do Autopilot…",
+    idle: "Sessão não iniciada. Os dados não estão a ser sincronizados.",
+    saving: "A guardar dados no Supabase…",
+    saved: "Dados guardados e sincronizados com sucesso.",
+    error: "Não foi possível confirmar a gravação completa. Verifica a ligação e tenta novamente.",
+  }[saveStatus];
+
   return (
-    <AutopilotContext.Provider value={{ state, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, setAutomation, metrics }}>
+    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, setAutomation, metrics }}>
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          padding: "7px 14px",
+          textAlign: "center",
+          fontSize: "12px",
+          fontWeight: 600,
+          background: saveStatus === "saved" ? "#ecfdf3" : saveStatus === "error" ? "#fef3f2" : saveStatus === "idle" ? "#f2f4f7" : "#fffaeb",
+          color: saveStatus === "saved" ? "#027a48" : saveStatus === "error" ? "#b42318" : saveStatus === "idle" ? "#475467" : "#93370d",
+          borderBottom: "1px solid #e4e7ec",
+        }}
+      >
+        {saveMessage}
+      </div>
       {children}
     </AutopilotContext.Provider>
   );
