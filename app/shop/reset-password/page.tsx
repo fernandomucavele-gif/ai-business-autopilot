@@ -16,6 +16,12 @@ export default function PublicPasswordResetPage() {
   useEffect(() => {
     let mounted = true;
     let recoveryDetected = false;
+    const callbackUrl = new URL(window.location.href);
+    const hasRecoveryProof =
+      callbackUrl.searchParams.has("code") ||
+      (callbackUrl.searchParams.get("token_hash") !== null && callbackUrl.searchParams.get("type") === "recovery") ||
+      callbackUrl.searchParams.get("type") === "recovery" ||
+      callbackUrl.hash.includes("type=recovery");
 
     const finishValidation = () => {
       if (!mounted || recoveryDetected) return;
@@ -29,7 +35,7 @@ export default function PublicPasswordResetPage() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        if (session && (event === "PASSWORD_RECOVERY" || hasRecoveryProof)) {
           finishValidation();
         }
       }
@@ -74,10 +80,18 @@ export default function PublicPasswordResetPage() {
       }
     }
 
+    const validationTimeout = window.setTimeout(() => {
+      if (mounted && !recoveryDetected && checking) {
+        setError("A validação demorou demasiado. Solicita um novo link de recuperação e abre-o novamente.");
+        setChecking(false);
+      }
+    }, 15000);
+
     void validateRecoveryLink();
 
     return () => {
       mounted = false;
+      window.clearTimeout(validationTimeout);
       subscription.unsubscribe();
     };
   }, []);
