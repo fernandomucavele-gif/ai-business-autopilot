@@ -65,8 +65,8 @@ export default function Home() {
             <h1>AI Business Autopilot</h1>
             <p>Centro de controlo do teu sistema de automação.</p>
           </div>
-          <div className="online">
-            <span /> Sistema online
+          <div className="online unverified">
+            <span /> Estado não verificado
           </div>
         </header>
 
@@ -375,6 +375,12 @@ export default function Home() {
         }
 
         .online span { margin: 0; }
+        .online.unverified {
+          border-color: rgba(250, 204, 21, .22);
+          background: rgba(250, 204, 21, .07);
+          color: #fde68a;
+        }
+        .online.unverified span { background: #fbbf24; }
 
         .banner {
           display: flex;
