@@ -70,6 +70,7 @@ function enforceSimulationSafety(saved: AutopilotState): AutopilotState {
 export function AutopilotProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AutopilotState>(initialAutopilotState);
   const [loaded, setLoaded] = useState(false);
+  const [canSave, setCanSave] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("loading");
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveAttemptRef = useRef(0);
@@ -81,6 +82,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
 
       if (event === "SIGNED_OUT" || !session) {
         setLoaded(false);
+        setCanSave(false);
         setState(initialAutopilotState);
         setSaveStatus("idle");
         return;
@@ -88,13 +90,17 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
 
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         setLoaded(false);
+        setCanSave(false);
         setSaveStatus("loading");
         Promise.resolve().then(async () => {
           try {
             const savedState = await loadAutopilotState();
-            if (mounted && savedState) setState(enforceSimulationSafety(savedState));
+            if (!mounted) return;
+            setState(savedState ? enforceSimulationSafety(savedState) : initialAutopilotState);
+            setCanSave(true);
           } catch (error) {
             console.error("Não foi possível carregar os dados do Autopilot:", error);
+            if (mounted) setSaveStatus("error");
           } finally {
             if (mounted) setLoaded(true);
           }
@@ -109,13 +115,13 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !canSave) return;
 
     const attempt = ++saveAttemptRef.current;
     const snapshot = enforceSimulationSafety(state);
     setSaveStatus("saving");
 
-    // Serializa as gravações para impedir que uma atualização antiga termine
+    // Serializa as gravações e impede que uma atualização antiga termine
     // depois de uma mais recente e sobrescreva os dados novos.
     saveQueueRef.current = saveQueueRef.current
       .then(async () => {
@@ -128,7 +134,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
         console.error("Erro inesperado ao guardar o Autopilot:", error);
         if (attempt === saveAttemptRef.current) setSaveStatus("error");
       });
-  }, [state, loaded]);
+  }, [state, loaded, canSave]);
 
   function addProduct(name: string, market: Product["market"], price: number, estimatedUnitCost?: number) {
     if (!name.trim() || !Number.isFinite(price) || price <= 0) return;
@@ -199,7 +205,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     idle: "Sessão não iniciada. Os dados não estão a ser sincronizados.",
     saving: "A guardar dados no Supabase…",
     saved: "Dados guardados e sincronizados com sucesso.",
-    error: "Não foi possível confirmar a gravação completa. Verifica a ligação e tenta novamente.",
+    error: "Não foi possível confirmar a gravação. Os dados não serão sobrescritos automaticamente; verifica a ligação e tenta novamente.",
   }[saveStatus];
 
   return (
