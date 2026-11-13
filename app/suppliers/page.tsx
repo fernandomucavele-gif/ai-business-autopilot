@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
+import { useAutopilot } from "../context/autopilot-context";
 import {
   Search,
   Globe,
@@ -13,19 +14,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 
-type SupplierQuote = {
-  id: string;
-  company: string;
-  country: string;
-  platform: string;
-  product: string;
-  currency: string;
-  unitPrice: number;
-  minimumOrder: number;
-  shipping: number;
-  taxes: number;
-  notes: string;
-};
+
 
 const emptyQuote = {
   company: "",
@@ -51,7 +40,8 @@ export default function SuppliersPage() {
   const [product, setProduct] = useState("");
   const [country, setCountry] = useState("Qualquer país");
   const [market, setMarket] = useState("Moçambique");
-  const [quotes, setQuotes] = useState<SupplierQuote[]>([]);
+  const { state, addSupplierQuote, removeSupplierQuote } = useAutopilot();
+  const quotes = state.supplierQuotes;
   const [form, setForm] = useState(emptyQuote);
 
   const ready = product.trim().length > 0;
@@ -103,9 +93,7 @@ export default function SuppliersPage() {
         !Number.isFinite(shipping) || shipping < 0 ||
         !Number.isFinite(taxes) || taxes < 0) return;
 
-    setQuotes((current) => [
-      ...current,
-      {
+    addSupplierQuote({
         id: `quote-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         company: form.company.trim(),
         country: form.country,
@@ -117,8 +105,7 @@ export default function SuppliersPage() {
         shipping,
         taxes,
         notes: form.notes.trim(),
-      },
-    ]);
+    });
     setForm(emptyQuote);
   }
 
@@ -295,7 +282,7 @@ export default function SuppliersPage() {
                     <h3 className="mt-1 text-lg font-semibold">{quote.company}</h3>
                     <p className="text-sm text-slate-400">{quote.product} · {quote.country} · {quote.platform}</p>
                   </div>
-                  <button type="button" onClick={() => setQuotes((current) => current.filter((item) => item.id !== quote.id))}
+                  <button type="button" onClick={() => removeSupplierQuote(quote.id)}
                     aria-label="Remover proposta" className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-red-300">
                     <Trash2 size={18} />
                   </button>
@@ -331,7 +318,7 @@ export default function SuppliersPage() {
 
         <p className="flex items-start gap-2 text-xs text-slate-500">
           <Info size={16} className="shrink-0" />
-          As pesquisas abrem plataformas externas. As propostas adicionadas ficam apenas nesta página enquanto a sessão estiver aberta; ainda não são guardadas no Supabase. O módulo não verifica empresas, não envia mensagens, não faz encomendas nem pagamentos.
+          As pesquisas abrem plataformas externas. As propostas são guardadas no estado do Autopilot e sincronizadas com Supabase quando a sessão está ativa. O módulo não verifica empresas, não envia mensagens, não faz encomendas nem pagamentos.
         </p>
       </div>
     </main>
