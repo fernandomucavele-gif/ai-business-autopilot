@@ -172,10 +172,16 @@ export default function LoginPage() {
         {mode === "signin" && <button type="button" className="text-link" onClick={() => switchMode("recovery")}>Esqueci-me da palavra-passe</button>}
         {isEmailVerification && <button type="button" className="text-link" disabled={resending || resendCount >= 3} onClick={async () => {
           setResending(true); setError(""); setMessage("");
-          const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim().toLowerCase() });
-          setResending(false);
-          if (resendError) setError(friendlyAuthError(resendError.message));
-          else { setResendCount((count) => count + 1); setMessage("Se o endereço estiver registado e puder receber confirmação, enviaremos um novo código. Verifica também a pasta de spam."); }
+          try {
+            const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim().toLowerCase() });
+            if (resendError) throw resendError;
+            setResendCount((count) => count + 1);
+            setMessage("Se o endereço estiver registado e puder receber confirmação, enviaremos um novo código. Verifica também a pasta de spam.");
+          } catch (err) {
+            setError(friendlyAuthError(err instanceof Error ? err.message : "Não foi possível reenviar o código."));
+          } finally {
+            setResending(false);
+          }
         }}>{resending ? "A reenviar..." : resendCount >= 3 ? "Limite de reenvios desta sessão atingido" : "Reenviar código"}</button>}
         {(isRecovery || isUpdate || isMfa || isEmailVerification) && <button type="button" className="text-link" onClick={() => { switchMode("signin"); if (isMfa) void supabase.auth.signOut(); }}>Voltar ao início de sessão</button>}
         {message && <p className="message" role="status">{message}</p>}
@@ -184,26 +190,29 @@ export default function LoginPage() {
       </section>
       <style jsx>{`
         * { box-sizing: border-box; }
-        .auth-page { min-height: 100vh; display: grid; place-items: center; padding: 22px; background: radial-gradient(ellipse at 50% 0%, rgba(30,64,175,.22), transparent 48%), #080d19; color: #f8fafc; font-family: Arial, sans-serif; }
-        .auth-card { width: 100%; max-width: 430px; padding: 30px; border: 1px solid rgba(148,163,184,.18); border-radius: 20px; background: #101a2c; box-shadow: 0 24px 70px rgba(0,0,0,.28); }
-        .logo { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 22px; border-radius: 14px; background: linear-gradient(135deg,#22d3ee,#6366f1); color: #07111f; font-weight: 900; }
-        .eyebrow { color: #67e8f9; font-size: 10px; font-weight: 700; letter-spacing: 2px; }
-        h1 { margin: 10px 0; font-size: 27px; line-height: 1.2; }
-        .intro { margin: 0 0 22px; color: #94a3b8; font-size: 13px; line-height: 1.6; }
-        .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 20px; padding: 5px; border-radius: 11px; background: #080d19; }
-        .tabs button { padding: 11px 7px; border: 0; border-radius: 8px; background: transparent; color: #94a3b8; font-size: 12px; cursor: pointer; }
-        .tabs button.selected { background: #1e293b; color: #67e8f9; }
-        label { display: block; margin: 14px 0 7px; color: #cbd5e1; font-size: 12px; }
-        input { width: 100%; padding: 13px; border: 1px solid rgba(148,163,184,.22); border-radius: 9px; outline: none; background: #080d19; color: white; font-size: 14px; }
-        input:focus { border-color: #67e8f9; }
-        .submit { width: 100%; margin-top: 22px; padding: 13px; border: 0; border-radius: 9px; background: linear-gradient(100deg,#22d3ee,#818cf8); color: #07111f; font-size: 13px; font-weight: 800; cursor: pointer; }
-        .submit:disabled { opacity: .6; cursor: wait; }
-        .text-link { display: block; margin: 14px auto 0; border: 0; background: transparent; color: #67e8f9; font-size: 12px; cursor: pointer; text-decoration: underline; }
-        .message, .error { margin: 15px 0 0; padding: 11px; border-radius: 9px; font-size: 12px; line-height: 1.5; }
-        .message { background: rgba(34,197,94,.09); color: #86efac; }
-        .error { background: rgba(248,113,113,.09); color: #fca5a5; }
-        .safe-note { margin-top: 22px; padding-top: 16px; border-top: 1px solid rgba(148,163,184,.12); color: #94a3b8; font-size: 11px; line-height: 1.6; }
-        @media (max-width: 420px) { .auth-card { padding: 22px; } h1 { font-size: 24px; } }
+        .auth-page { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 24px 18px; overflow: hidden; background: radial-gradient(ellipse at 50% -10%, rgba(34,211,238,.16), transparent 42%), radial-gradient(ellipse at 100% 100%, rgba(99,102,241,.12), transparent 38%), #070b16; color: #f8fafc; font-family: Arial, sans-serif; }
+        .auth-card { position: relative; width: 100%; max-width: 450px; padding: 34px; border: 1px solid rgba(148,163,184,.16); border-radius: 25px; background: linear-gradient(155deg, rgba(19,31,52,.98), rgba(10,17,31,.98)); box-shadow: 0 28px 90px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.035); }
+        .logo { width: 54px; height: 54px; display: grid; place-items: center; margin-bottom: 24px; border: 1px solid rgba(255,255,255,.22); border-radius: 17px; background: linear-gradient(135deg,#67e8f9,#818cf8); color: #07111f; font-size: 17px; font-weight: 900; box-shadow: 0 10px 30px rgba(34,211,238,.15); }
+        .eyebrow { color: #67e8f9; font-size: 10px; font-weight: 800; letter-spacing: 2.4px; }
+        h1 { margin: 11px 0 10px; font-size: 28px; line-height: 1.2; letter-spacing: -.5px; }
+        .intro { margin: 0 0 24px; color: #9aa9bf; font-size: 13px; line-height: 1.7; }
+        .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 21px; padding: 5px; border: 1px solid rgba(148,163,184,.08); border-radius: 13px; background: rgba(3,8,20,.7); }
+        .tabs button { padding: 12px 8px; border: 0; border-radius: 9px; background: transparent; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; transition: .2s ease; }
+        .tabs button.selected { background: #1e3048; color: #8be9f7; box-shadow: inset 0 0 0 1px rgba(103,232,249,.13); }
+        label { display: block; margin: 15px 0 8px; color: #d5deeb; font-size: 12px; font-weight: 700; }
+        input { width: 100%; padding: 14px 15px; border: 1px solid rgba(148,163,184,.2); border-radius: 11px; outline: none; background: rgba(4,10,22,.82); color: white; font-size: 14px; transition: border-color .2s, box-shadow .2s; }
+        input::placeholder { color: #64748b; }
+        input:focus { border-color: #67e8f9; box-shadow: 0 0 0 3px rgba(103,232,249,.09); }
+        .submit { width: 100%; margin-top: 23px; padding: 14px; border: 0; border-radius: 11px; background: linear-gradient(100deg,#67e8f9,#a5b4fc); color: #07111f; font-size: 13px; font-weight: 900; letter-spacing: .15px; cursor: pointer; box-shadow: 0 10px 25px rgba(34,211,238,.12); transition: transform .2s, filter .2s; }
+        .submit:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+        .submit:disabled { opacity: .58; cursor: wait; }
+        .text-link { display: block; margin: 15px auto 0; border: 0; background: transparent; color: #7ddff0; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+        .text-link:disabled { opacity: .5; cursor: not-allowed; }
+        .message, .error { margin: 16px 0 0; padding: 12px 13px; border-radius: 11px; font-size: 12px; line-height: 1.6; }
+        .message { border: 1px solid rgba(74,222,128,.16); background: rgba(34,197,94,.08); color: #a7f3c0; }
+        .error { border: 1px solid rgba(248,113,113,.18); background: rgba(248,113,113,.08); color: #fecaca; }
+        .safe-note { margin-top: 25px; padding-top: 17px; border-top: 1px solid rgba(148,163,184,.12); color: #8292aa; font-size: 11px; line-height: 1.7; }
+        @media (max-width: 480px) { .auth-card { padding: 25px 21px; border-radius: 21px; } h1 { font-size: 25px; } }
       `}</style>
     </main>
   );
