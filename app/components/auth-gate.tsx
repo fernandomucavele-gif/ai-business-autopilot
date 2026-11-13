@@ -67,7 +67,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
         (loginMode === "recovery" || loginMode === "mfa" || loginMode === "verify" || loginMode === "signup");
 
       if (hasSession && pathname === "/login" && !isAuthStep) {
-        router.replace("/shop");
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        const isAdmin = !userError && userData.user?.app_metadata?.role === "admin";
+        router.replace(isAdmin ? "/" : "/shop");
       }
 
       if (!hasSession && !isPublicRoute) {
