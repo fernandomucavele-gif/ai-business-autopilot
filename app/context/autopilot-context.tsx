@@ -19,6 +19,7 @@ import {
   Order,
   FinanceRecord,
   SupplierQuote,
+  Customer,
   createProduct,
   createCampaign,
   createOrder,
@@ -44,6 +45,9 @@ type AutopilotContextType = {
   addOrder: (productId: string, customerName: string, market: Order["market"], amount: number) => void;
   updateOrder: (id: string, status: Order["status"]) => void;
   addFinanceRecord: (record: FinanceRecord) => void;
+  addCustomer: (customer: Customer) => void;
+  updateCustomer: (id: string, updates: Partial<Pick<Customer, "name" | "phone" | "email" | "market" | "notes">>) => void;
+  removeCustomer: (id: string) => void;
   addSupplierQuote: (quote: SupplierQuote) => void;
   removeSupplierQuote: (id: string) => void;
   setAutomation: (key: keyof AutopilotState["automation"], value: boolean) => void;
@@ -56,6 +60,7 @@ function enforceSimulationSafety(saved: AutopilotState): AutopilotState {
   return {
     ...initialAutopilotState,
     ...saved,
+    customers: Array.isArray(saved.customers) ? saved.customers : [],
     products: Array.isArray(saved.products) ? saved.products : [],
     campaigns: Array.isArray(saved.campaigns) ? saved.campaigns : [],
     creatives: Array.isArray(saved.creatives) ? saved.creatives : [],
@@ -185,6 +190,25 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     setState(current => ({ ...current, finance: [...current.finance, record] }));
   }
 
+  function addCustomer(customer: Customer) {
+    if (!customer.id || !customer.name.trim()) return;
+    setState(current => ({ ...current, customers: [...current.customers, { ...customer, name: customer.name.trim() }] }));
+  }
+
+  function updateCustomer(id: string, updates: Partial<Pick<Customer, "name" | "phone" | "email" | "market" | "notes">>) {
+    if (updates.name !== undefined && !updates.name.trim()) return;
+    setState(current => ({
+      ...current,
+      customers: current.customers.map(customer => customer.id === id
+        ? { ...customer, ...updates, ...(updates.name !== undefined ? { name: updates.name.trim() } : {}) }
+        : customer),
+    }));
+  }
+
+  function removeCustomer(id: string) {
+    setState(current => ({ ...current, customers: current.customers.filter(customer => customer.id !== id) }));
+  }
+
   function addSupplierQuote(quote: SupplierQuote) {
     if (!quote.id || !quote.company.trim() || !quote.product.trim()) return;
     setState(current => ({ ...current, supplierQuotes: [...current.supplierQuotes, quote] }));
@@ -222,7 +246,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   }[saveStatus];
 
   return (
-    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, addSupplierQuote, removeSupplierQuote, setAutomation, metrics }}>
+    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, addCustomer, updateCustomer, removeCustomer, addSupplierQuote, removeSupplierQuote, setAutomation, metrics }}>
       <div
         role="status"
         aria-live="polite"
