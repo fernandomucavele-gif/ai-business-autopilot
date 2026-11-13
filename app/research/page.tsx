@@ -107,7 +107,7 @@ export default function ResearchPage() {
     );
 
     setMessage(
-      `${name} foi adicionado ao Autopilot.`
+      `${name} foi adicionado ao ecrã do Autopilot. Aguarda a confirmação de gravação no indicador superior.`
     );
   }
 
@@ -333,7 +333,7 @@ export default function ResearchPage() {
             }}
           >
             <h2>
-              Produtos encontrados
+              Sugestões de produtos (exemplos)
             </h2>
 
             <div
