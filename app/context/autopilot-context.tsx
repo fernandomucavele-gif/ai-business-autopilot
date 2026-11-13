@@ -18,6 +18,7 @@ import {
   CreativeRecord,
   Order,
   FinanceRecord,
+  SupplierQuote,
   createProduct,
   createCampaign,
   createOrder,
@@ -43,6 +44,8 @@ type AutopilotContextType = {
   addOrder: (productId: string, customerName: string, market: Order["market"], amount: number) => void;
   updateOrder: (id: string, status: Order["status"]) => void;
   addFinanceRecord: (record: FinanceRecord) => void;
+  addSupplierQuote: (quote: SupplierQuote) => void;
+  removeSupplierQuote: (id: string) => void;
   setAutomation: (key: keyof AutopilotState["automation"], value: boolean) => void;
   metrics: { revenue: number; costs: number; profit: number; roas: number };
 };
@@ -58,6 +61,7 @@ function enforceSimulationSafety(saved: AutopilotState): AutopilotState {
     creatives: Array.isArray(saved.creatives) ? saved.creatives : [],
     orders: Array.isArray(saved.orders) ? saved.orders : [],
     finance: Array.isArray(saved.finance) ? saved.finance : [],
+    supplierQuotes: Array.isArray(saved.supplierQuotes) ? saved.supplierQuotes : [],
     automation: {
       simulationMode: true,
       realPurchasesEnabled: false,
@@ -181,6 +185,15 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     setState(current => ({ ...current, finance: [...current.finance, record] }));
   }
 
+  function addSupplierQuote(quote: SupplierQuote) {
+    if (!quote.id || !quote.company.trim() || !quote.product.trim()) return;
+    setState(current => ({ ...current, supplierQuotes: [...current.supplierQuotes, quote] }));
+  }
+
+  function removeSupplierQuote(id: string) {
+    setState(current => ({ ...current, supplierQuotes: current.supplierQuotes.filter(quote => quote.id !== id) }));
+  }
+
   function setAutomation(_key: keyof AutopilotState["automation"], _value: boolean) {
     setState(current => ({
       ...current,
@@ -209,7 +222,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   }[saveStatus];
 
   return (
-    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, setAutomation, metrics }}>
+    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, addSupplierQuote, removeSupplierQuote, setAutomation, metrics }}>
       <div
         role="status"
         aria-live="polite"
