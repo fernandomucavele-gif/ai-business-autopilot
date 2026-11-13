@@ -69,7 +69,22 @@ export type FinanceRecord = {
   description: string;
 };
 
+export type SupplierQuote = {
+  id: string;
+  company: string;
+  country: string;
+  platform: string;
+  product: string;
+  currency: string;
+  unitPrice: number;
+  minimumOrder: number;
+  shipping: number;
+  taxes: number;
+  notes: string;
+};
+
 export type AutopilotState = {
+  supplierQuotes: SupplierQuote[];
   products: Product[];
   campaigns: Campaign[];
   creatives: CreativeRecord[];
@@ -84,6 +99,7 @@ export type AutopilotState = {
 };
 
 export const initialAutopilotState: AutopilotState = {
+  supplierQuotes: [],
   products: [],
   campaigns: [],
   creatives: [],
