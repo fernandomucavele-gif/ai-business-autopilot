@@ -35,14 +35,14 @@ export default function PublicPasswordResetPage() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session && (event === "PASSWORD_RECOVERY" || hasRecoveryProof)) {
+        if (session && event === "PASSWORD_RECOVERY" && hasRecoveryProof) {
           finishValidation();
         }
       }
     );
 
     async function validateRecoveryLink() {
-      const url = new URL(window.location.href);
+      const url = callbackUrl;
       const code = url.searchParams.get("code");
       const tokenHash = url.searchParams.get("token_hash");
       const type = url.searchParams.get("type");
