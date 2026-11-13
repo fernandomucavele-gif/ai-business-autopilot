@@ -108,8 +108,11 @@ export default function LoginPage() {
           code: otp.trim(),
         });
         if (verifyError) throw verifyError;
-        setMessage("Identidade confirmada. A abrir a loja...");
-        router.replace("/shop");
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        const destination = userData.user?.app_metadata?.role === "admin" ? "/" : "/shop";
+        setMessage(destination === "/" ? "Identidade confirmada. A abrir o painel administrativo..." : "Identidade confirmada. A abrir a loja...");
+        router.replace(destination);
       } else {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
@@ -125,8 +128,11 @@ export default function LoginPage() {
           setMessage("A tua conta tem autenticação em dois passos ativa. A abrir a verificação segura...");
           router.replace("/login/mfa");
         } else {
-          setMessage("Sessão iniciada. A abrir a loja...");
-          router.replace("/shop");
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          if (userError) throw userError;
+          const destination = userData.user?.app_metadata?.role === "admin" ? "/" : "/shop";
+          setMessage(destination === "/" ? "Sessão iniciada. A abrir o painel administrativo..." : "Sessão iniciada. A abrir a loja...");
+          router.replace(destination);
         }
       }
     } catch (err) {
