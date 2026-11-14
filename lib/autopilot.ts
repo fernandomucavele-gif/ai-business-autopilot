@@ -59,6 +59,7 @@ export type Order = {
   estimatedDeliveryAt?: string;
   revisedDeliveryAt?: string;
   delayNotice?: string;
+  supplierName?: string;
 };
 
 export type FinanceRecord = {
