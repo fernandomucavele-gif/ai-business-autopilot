@@ -61,24 +61,40 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
     if (error) throw error;
   }
 
-  const customerNames = Array.from(new Set(state.orders.map((order) => order.customerName.trim()).filter(Boolean)));
-  const customerIds = new Map<string, string>();
+  const legacyOrderNames = Array.from(new Set(
+    state.orders.filter(order => !order.customerId)
+      .map(order => order.customerName.trim()).filter(Boolean)
+  ));
+  const customerRows = [
+    ...state.customers.map(customer => ({
+      user_id: userId,
+      full_name: customer.name,
+      source: "manual",
+      source_record_id: `customer:${customer.id}`,
+    })),
+    ...legacyOrderNames.map(fullName => ({
+      user_id: userId,
+      full_name: fullName,
+      source: "manual",
+      source_record_id: `name:${fullName.toLocaleLowerCase()}`,
+    })),
+  ];
+  const customerIdsById = new Map<string, string>();
+  const legacyCustomerIdsByName = new Map<string, string>();
 
-  if (customerNames.length) {
+  if (customerRows.length) {
     const { data: customers, error } = await supabase
       .from("autopilot_customers")
-      .upsert(
-        customerNames.map((fullName) => ({
-          user_id: userId,
-          full_name: fullName,
-          source: "manual",
-          source_record_id: `name:${fullName.toLocaleLowerCase()}`,
-        })),
-        { onConflict: "user_id,source_record_id" }
-      )
-      .select("id, full_name");
+      .upsert(customerRows, { onConflict: "user_id,source_record_id" })
+      .select("id, full_name, source_record_id");
     if (error) throw error;
-    for (const customer of customers ?? []) customerIds.set(customer.full_name.toLocaleLowerCase(), customer.id);
+    for (const customer of customers ?? []) {
+      if (customer.source_record_id.startsWith("customer:")) {
+        customerIdsById.set(customer.source_record_id.slice("customer:".length), customer.id);
+      } else if (customer.source_record_id.startsWith("name:")) {
+        legacyCustomerIdsByName.set(customer.full_name.toLocaleLowerCase(), customer.id);
+      }
+    }
   }
 
   if (state.orders.length) {
@@ -87,7 +103,9 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
         id: order.id,
         user_id: userId,
         product_id: order.productId,
-        customer_id: customerIds.get(order.customerName.trim().toLocaleLowerCase()) ?? null,
+        customer_id: order.customerId
+          ? customerIdsById.get(order.customerId) ?? null
+          : legacyCustomerIdsByName.get(order.customerName.trim().toLocaleLowerCase()) ?? null,
         customer_name: order.customerName,
         market: order.market,
         amount: order.amount,
