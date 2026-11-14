@@ -182,26 +182,28 @@ export function createOrder(
   };
 }
 
-export function calculateRevenue(finance: FinanceRecord[]): number {
+// Os indicadores agregados usam uma única moeda. Por omissão, MT.
+export function calculateRevenue(finance: FinanceRecord[], currency = "MT"): number {
   return finance
-    .filter((item) => item.type === "revenue")
+    .filter((item) => item.type === "revenue" && item.currency === currency)
     .reduce((total, item) => total + item.amount, 0);
 }
 
-export function calculateCosts(finance: FinanceRecord[]): number {
+export function calculateCosts(finance: FinanceRecord[], currency = "MT"): number {
   return finance
-    .filter((item) => item.type !== "revenue")
+    .filter((item) => item.type !== "revenue" && item.currency === currency)
     .reduce((total, item) => total + item.amount, 0);
 }
 
-export function calculateProfit(finance: FinanceRecord[]): number {
-  return calculateRevenue(finance) - calculateCosts(finance);
+export function calculateProfit(finance: FinanceRecord[], currency = "MT"): number {
+  return calculateRevenue(finance, currency) - calculateCosts(finance, currency);
 }
 
-export function calculateROAS(finance: FinanceRecord[]): number {
-  const revenue = calculateRevenue(finance);
+// Este é um rácio global indicativo, não ROAS atribuído a uma campanha.
+export function calculateROAS(finance: FinanceRecord[], currency = "MT"): number {
+  const revenue = calculateRevenue(finance, currency);
   const adCost = finance
-    .filter((item) => item.type === "ad_cost")
+    .filter((item) => item.type === "ad_cost" && item.currency === currency)
     .reduce((total, item) => total + item.amount, 0);
 
   return adCost === 0 ? 0 : revenue / adCost;
