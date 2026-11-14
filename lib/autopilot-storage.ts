@@ -165,6 +165,11 @@ export async function loadAutopilotState(expectedUserId?: string): Promise<Autop
     return null;
   }
 
+  if (expectedUserId && user.id !== expectedUserId) {
+    console.error("A sessão mudou antes de carregar os dados. Operação cancelada.");
+    return null;
+  }
+
   const { data, error } = await supabase
     .from("autopilot_state")
     .select("state_value")
@@ -188,6 +193,11 @@ export async function saveAutopilotState(state: AutopilotState, expectedUserId?:
 
   if (authError || !user) {
     console.error("É necessário iniciar sessão para guardar os dados.");
+    return false;
+  }
+
+  if (expectedUserId && user.id !== expectedUserId) {
+    console.error("A sessão mudou antes de guardar os dados. Operação cancelada.");
     return false;
   }
 
