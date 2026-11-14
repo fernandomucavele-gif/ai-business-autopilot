@@ -50,8 +50,8 @@ Não introduzas credenciais do projeto remoto nestes comandos.
 1. Arranque do Supabase local.
 2. Aplicação das duas migrações locais e das 23 tabelas.
 3. Existência das constraints, índices, políticas RLS e proteção automática para novas tabelas.
-4. Preparação para criar utilizadores exclusivamente locais através do Auth local.
-5. Testes de login, logout, isolamento entre duas contas e persistência no Postgres local.
+4. Verificação automática no CI de 23 tabelas, 48 políticas RLS, 78 índices, RLS ativo nas 23 tabelas e presença do event trigger de proteção.\n5. Preparação para criar utilizadores exclusivamente locais através do Auth local.
+6. Testes de login, logout, isolamento entre duas contas e persistência no Postgres local.
 
 Até os testes de Auth e persistência da aplicação estarem concluídos, não considerar a integração real validada. Os testes atuais com Supabase simulado continuam a validar apenas a lógica da aplicação.
 
