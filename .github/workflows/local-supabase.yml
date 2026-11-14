@@ -26,6 +26,11 @@ jobs:
       - name: Start isolated local Supabase
         run: supabase start
 
+      - name: Apply and validate local schema migrations
+        run: |
+          supabase db reset --local
+          supabase migration list --local
+
       - name: Verify local services
         run: supabase status
 
