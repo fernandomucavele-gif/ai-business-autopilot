@@ -630,6 +630,12 @@ GRANT DELETE, INSERT, SELECT, UPDATE ON TABLE public."order_fulfillments" TO aut
 GRANT DELETE, INSERT, SELECT, UPDATE ON TABLE public."product_research_runs" TO authenticated;
 REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
 
+-- Preserve operational delivery metadata as informational only.
+COMMENT ON COLUMN public.store_orders.estimated_delivery_at IS 'Estimated delivery date shown to the customer; informational only.';
+COMMENT ON COLUMN public.store_orders.revised_delivery_at IS 'Updated delivery estimate when a delay occurs; informational only.';
+COMMENT ON COLUMN public.store_orders.delay_notice IS 'Customer-facing explanation of a delivery delay; no automatic contact is sent.';
+COMMENT ON COLUMN public.store_orders.tracking_code IS 'Optional shipment tracking reference; does not initiate a shipment.';
+
 -- Recreate the project's custom DDL event guard.
 CREATE OR REPLACE FUNCTION public.rls_auto_enable()
  RETURNS event_trigger
