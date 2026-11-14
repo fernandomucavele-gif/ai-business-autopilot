@@ -129,6 +129,17 @@ describe("persistência simulada do Autopilot", () => {
     expect(mocks.from).not.toHaveBeenCalled();
   });
 
+  it("cancela leitura e gravação se a sessão pertence a outro utilizador", async () => {
+    mocks.getUser.mockResolvedValue({
+      data: { user: { id: "user-different" } },
+      error: null,
+    });
+
+    await expect(loadAutopilotState("user-expected")).resolves.toBeNull();
+    await expect(saveAutopilotState(sampleState(), "user-expected")).resolves.toBe(false);
+    expect(mocks.from).not.toHaveBeenCalled();
+  });
+
   it("carrega o estado apenas para o utilizador autenticado e para a chave main", async () => {
     configureAuthenticatedUser();
     const saved = sampleState();
@@ -181,6 +192,41 @@ describe("persistência simulada do Autopilot", () => {
       source_record_id: "FIN-1",
       is_simulation: true,
     });
+  });
+
+  it("liga encomendas ao ID correto do cliente mesmo quando os nomes são iguais", async () => {
+    configureAuthenticatedUser();
+    const state = sampleState();
+    state.customers.push({
+      id: "CUST-2",
+      name: "Cliente fictício",
+      phone: "111111111",
+      email: "cliente2@example.test",
+      market: "Moçambique",
+      notes: "Segundo cliente com nome igual",
+      createdAt: "2026-01-02T00:00:00.000Z",
+    });
+    state.orders.push({
+      id: "ORD-2",
+      productId: "PROD-1",
+      customerName: "Cliente fictício",
+      customerId: "CUST-2",
+      market: "Moçambique",
+      amount: 750,
+      status: "Novo",
+    });
+
+    await expect(saveAutopilotState(state, "user-test-123")).resolves.toBe(true);
+
+    const orders = mocks.calls.find((call) => call.table === "autopilot_orders")?.rows;
+    expect(orders).toHaveLength(2);
+    expect(orders[0].customer_id).toBe("db-customer-1");
+    expect(orders[1].customer_id).toBe("db-customer-2");
+    expect(orders.every((order: any) => order.user_id === "user-test-123")).toBe(true);
+
+    const items = mocks.calls.find((call) => call.table === "autopilot_order_items")?.rows;
+    expect(items).toHaveLength(2);
+    expect(items.map((item: any) => item.source_record_id)).toEqual(["ORD-1", "ORD-2"]);
   });
 
   it("interrompe a sincronização e devolve false quando uma tabela operacional falha", async () => {
