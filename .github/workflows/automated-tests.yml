@@ -20,7 +20,12 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --no-package-lock
+        run: npm install
+      - name: Report dependency vulnerabilities
+        shell: bash
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          node -e 'const a=require("./npm-audit-report.json"); for (const [name,v] of Object.entries(a.vulnerabilities || {})) { const via=(v.via || []).map(x => typeof x === "string" ? x : x.title).join("; "); console.log(JSON.stringify({name,severity:v.severity,range:v.range,via,fixAvailable:v.fixAvailable})); } console.log("TOTAL", JSON.stringify(a.metadata?.vulnerabilities || {}));'
       - name: Run isolated tests
         run: npm test
       - name: Check TypeScript
