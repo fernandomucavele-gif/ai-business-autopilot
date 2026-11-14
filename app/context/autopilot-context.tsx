@@ -205,12 +205,19 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
 
   function updateCustomer(id: string, updates: Partial<Pick<Customer, "name" | "phone" | "email" | "market" | "notes">>) {
     if (updates.name !== undefined && !updates.name.trim()) return;
-    setState(current => ({
-      ...current,
-      customers: current.customers.map(customer => customer.id === id
-        ? { ...customer, ...updates, ...(updates.name !== undefined ? { name: updates.name.trim() } : {}) }
-        : customer),
-    }));
+    setState(current => {
+      const existing = current.customers.find(customer => customer.id === id);
+      const nextName = updates.name?.trim();
+      const customers = current.customers.map(customer => customer.id === id
+        ? { ...customer, ...updates, ...(nextName !== undefined ? { name: nextName } : {}) }
+        : customer);
+      const orders = existing && nextName && nextName !== existing.name
+        ? current.orders.map(order => order.customerName.trim().toLowerCase() === existing.name.trim().toLowerCase()
+            ? { ...order, customerName: nextName }
+            : order)
+        : current.orders;
+      return { ...current, customers, orders };
+    });
   }
 
   function removeCustomer(id: string) {
