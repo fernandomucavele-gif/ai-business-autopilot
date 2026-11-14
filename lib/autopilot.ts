@@ -47,6 +47,7 @@ export type Order = {
   id: string;
   productId: string;
   customerName: string;
+  customerId?: string;
   market: Market;
   amount: number;
   status:
@@ -163,7 +164,8 @@ export function createOrder(
   productId: string,
   customerName: string,
   market: Market,
-  amount: number
+  amount: number,
+  customerId?: string
 ): Order {
   const estimatedDate = new Date();
   estimatedDate.setDate(estimatedDate.getDate() + 14);
@@ -172,6 +174,7 @@ export function createOrder(
     id: `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
     productId,
     customerName,
+    customerId,
     market,
     amount,
     status: "Novo",
