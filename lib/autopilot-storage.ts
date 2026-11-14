@@ -154,7 +154,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
   }
 }
 
-export async function loadAutopilotState(): Promise<AutopilotState | null> {
+export async function loadAutopilotState(expectedUserId?: string): Promise<AutopilotState | null> {
   const {
     data: { user },
     error: authError,
@@ -180,7 +180,7 @@ export async function loadAutopilotState(): Promise<AutopilotState | null> {
   return (data?.state_value as AutopilotState | null) ?? null;
 }
 
-export async function saveAutopilotState(state: AutopilotState): Promise<boolean> {
+export async function saveAutopilotState(state: AutopilotState, expectedUserId?: string): Promise<boolean> {
   const {
     data: { user },
     error: authError,
