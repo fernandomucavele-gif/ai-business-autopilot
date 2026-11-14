@@ -4,7 +4,9 @@ on:
   pull_request:
     paths:
       - "supabase/**"
+      - "scripts/test-local-supabase-auth.mjs"
       - ".github/workflows/local-supabase.yml"
+      - "package-lock.json"
   workflow_dispatch:
 
 permissions:
@@ -13,10 +15,19 @@ permissions:
 jobs:
   local-stack:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v1
@@ -43,6 +54,15 @@ jobs:
             THEN 'PASS' ELSE 'FAIL' END AS schema_check;")"
           echo "$schema_result"
           grep -q "PASS" <<< "$schema_result"
+
+      - name: Test two local accounts, login, logout, persistence and RLS isolation
+        shell: bash
+        run: |
+          eval "$(supabase status -o env)"
+          export LOCAL_SUPABASE_URL="$API_URL"
+          export LOCAL_SUPABASE_ANON_KEY="$ANON_KEY"
+          export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          node scripts/test-local-supabase-auth.mjs
 
       - name: Verify local services
         run: supabase status
