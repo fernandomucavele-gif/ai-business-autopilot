@@ -86,8 +86,8 @@ try {
 
   const { error: signOutError } = await clients[0].auth.signOut();
   if (signOutError) throw signOutError;
-  const { data: signedOut, error: sessionError } = await clients[0].auth.getUser();
-  assert(!sessionError && signedOut.user === null, "Logout did not clear the local session.");
+  const { data: signedOut, error: sessionError } = await clients[0].auth.getSession();
+  assert(!sessionError && signedOut.session === null, "Logout did not clear the local session.");
 
   const { error: reloginError } = await clients[0].auth.signInWithPassword({
     email: users[0].email,
