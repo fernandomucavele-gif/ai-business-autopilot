@@ -61,3 +61,9 @@ Até os testes de Auth e persistência da aplicação estarem concluídos, não 
 - Nenhuma política RLS foi afrouxada.
 - Nenhuma conta ou função administrativa foi criada ou alterada.
 - Nenhuma compra, pagamento, campanha publicitária ou contacto com fornecedor é iniciado por este ambiente.
+
+## Teste local de autenticação e persistência
+
+O workflow `.github/workflows/local-supabase.yml` também executa `scripts/test-local-supabase-auth.mjs` depois de aplicar e verificar as migrações. O script cria duas contas temporárias **apenas no Supabase local**, com `app_metadata.role=admin` para corresponder ao gate RLS existente, e remove ambas no bloco de limpeza. Não usa nem altera contas do projeto remoto.
+
+O teste verifica login das duas contas, identidade de sessão, gravação/leitura da linha `autopilot_state`, impossibilidade de uma conta ler a linha da outra, logout, novo login e persistência após a nova sessão. A atribuição local de role admin existe só para este teste isolado e não é aplicada a utilizadores de produção.
