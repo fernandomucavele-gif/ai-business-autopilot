@@ -42,8 +42,9 @@ type AutopilotContextType = {
   addProduct: (name: string, market: Product["market"], price: number, estimatedUnitCost?: number) => void;
   addCampaign: (productId: string, market: Campaign["market"], objective: Campaign["objective"], dailyBudget: number) => void;
   addCreative: (creative: CreativeRecord) => void;
-  addOrder: (productId: string, customerName: string, market: Order["market"], amount: number) => void;
+  addOrder: (productId: string, customerName: string, market: Order["market"], amount: number, supplierName?: string) => void;
   updateOrder: (id: string, status: Order["status"]) => void;
+  updateOrderDetails: (id: string, updates: Partial<Pick<Order, "estimatedDeliveryAt" | "revisedDeliveryAt" | "delayNotice" | "supplierName">>) => void;
   addFinanceRecord: (record: FinanceRecord) => void;
   addCustomer: (customer: Customer) => void;
   updateCustomer: (id: string, updates: Partial<Pick<Customer, "name" | "phone" | "email" | "market" | "notes">>) => void;
@@ -171,10 +172,10 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     }));
   }
 
-  function addOrder(productId: string, customerName: string, market: Order["market"], amount: number) {
+  function addOrder(productId: string, customerName: string, market: Order["market"], amount: number, supplierName?: string) {
     if (!state.products.some(product => product.id === productId)) return;
     if (!customerName.trim() || !Number.isFinite(amount) || amount <= 0) return;
-    const order = createOrder(productId, customerName.trim(), market, amount);
+    const order = { ...createOrder(productId, customerName.trim(), market, amount), supplierName: supplierName?.trim() || undefined };
     setState(current => ({ ...current, orders: [...current.orders, order] }));
   }
 
@@ -182,6 +183,13 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     setState(current => ({
       ...current,
       orders: current.orders.map(order => order.id === id ? { ...order, status } : order),
+    }));
+  }
+
+  function updateOrderDetails(id: string, updates: Partial<Pick<Order, "estimatedDeliveryAt" | "revisedDeliveryAt" | "delayNotice" | "supplierName">>) {
+    setState(current => ({
+      ...current,
+      orders: current.orders.map(order => order.id === id ? { ...order, ...updates } : order),
     }));
   }
 
@@ -246,7 +254,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   }[saveStatus];
 
   return (
-    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, addFinanceRecord, addCustomer, updateCustomer, removeCustomer, addSupplierQuote, removeSupplierQuote, setAutomation, metrics }}>
+    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, updateOrderDetails, addFinanceRecord, addCustomer, updateCustomer, removeCustomer, addSupplierQuote, removeSupplierQuote, setAutomation, metrics }}>
       <div
         role="status"
         aria-live="polite"
