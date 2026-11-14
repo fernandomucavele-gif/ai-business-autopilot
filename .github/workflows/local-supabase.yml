@@ -1,0 +1,36 @@
+name: Local Supabase infrastructure
+
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - ".github/workflows/local-supabase.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.1.0
+
+      - name: Start isolated local Supabase
+        run: supabase start
+
+      - name: Verify local services
+        run: |
+          supabase status
+          supabase db query --local "select current_database() as database_name, current_user as database_role;"
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
