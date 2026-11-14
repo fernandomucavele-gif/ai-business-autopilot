@@ -42,7 +42,7 @@ type AutopilotContextType = {
   addProduct: (name: string, market: Product["market"], price: number, estimatedUnitCost?: number) => void;
   addCampaign: (productId: string, market: Campaign["market"], objective: Campaign["objective"], dailyBudget: number) => void;
   addCreative: (creative: CreativeRecord) => void;
-  addOrder: (productId: string, customerName: string, market: Order["market"], amount: number, supplierName?: string) => void;
+  addOrder: (productId: string, customerName: string, market: Order["market"], amount: number, supplierName?: string, customerId?: string) => void;
   updateOrder: (id: string, status: Order["status"]) => void;
   updateOrderDetails: (id: string, updates: Partial<Pick<Order, "estimatedDeliveryAt" | "revisedDeliveryAt" | "delayNotice" | "supplierName">>) => void;
   addFinanceRecord: (record: FinanceRecord) => void;
@@ -172,10 +172,10 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     }));
   }
 
-  function addOrder(productId: string, customerName: string, market: Order["market"], amount: number, supplierName?: string) {
+  function addOrder(productId: string, customerName: string, market: Order["market"], amount: number, supplierName?: string, customerId?: string) {
     if (!state.products.some(product => product.id === productId)) return;
     if (!customerName.trim() || !Number.isFinite(amount) || amount <= 0) return;
-    const order = { ...createOrder(productId, customerName.trim(), market, amount), supplierName: supplierName?.trim() || undefined };
+    const order = { ...createOrder(productId, customerName.trim(), market, amount, customerId), supplierName: supplierName?.trim() || undefined };
     setState(current => ({ ...current, orders: [...current.orders, order] }));
   }
 
@@ -211,10 +211,17 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
       const customers = current.customers.map(customer => customer.id === id
         ? { ...customer, ...updates, ...(nextName !== undefined ? { name: nextName } : {}) }
         : customer);
+      const oldNameKey = existing?.name.trim().toLowerCase();
+      const oldNameIsUnique = !!existing && current.customers.filter(customer =>
+        customer.name.trim().toLowerCase() === oldNameKey
+      ).length === 1;
       const orders = existing && nextName && nextName !== existing.name
-        ? current.orders.map(order => order.customerName.trim().toLowerCase() === existing.name.trim().toLowerCase()
-            ? { ...order, customerName: nextName }
-            : order)
+        ? current.orders.map(order => {
+            const belongsById = order.customerId === id;
+            const belongsAsLegacy = !order.customerId && oldNameIsUnique &&
+              order.customerName.trim().toLowerCase() === oldNameKey;
+            return belongsById || belongsAsLegacy ? { ...order, customerId: id, customerName: nextName } : order;
+          })
         : current.orders;
       return { ...current, customers, orders };
     });
