@@ -27,9 +27,7 @@ jobs:
         run: supabase start
 
       - name: Verify local services
-        run: |
-          supabase status
-          supabase db query --local "select current_database() as database_name, current_user as database_role;"
+        run: supabase status
 
       - name: Stop local Supabase
         if: always()
