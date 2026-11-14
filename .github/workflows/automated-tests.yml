@@ -21,12 +21,17 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install
-      - name: Report dependency vulnerabilities
+      - name: Audit dependencies and block known vulnerabilities
         shell: bash
         run: |
           npm audit --json > npm-audit-report.json || true
-          node -e 'const a=require("./npm-audit-report.json"); for (const [name,v] of Object.entries(a.vulnerabilities || {})) { const via=(v.via || []).map(x => typeof x === "string" ? x : x.title).join("; "); console.log(JSON.stringify({name,severity:v.severity,range:v.range,via,fixAvailable:v.fixAvailable})); } console.log("TOTAL", JSON.stringify(a.metadata?.vulnerabilities || {}));'
+          node -e 'const a=require("./npm-audit-report.json"); for (const [name,v] of Object.entries(a.vulnerabilities || {})) { const via=(v.via || []).map(x => typeof x === "string" ? x : x.title).join("; "); console.log(JSON.stringify({name,severity:v.severity,range:v.range,via,fixAvailable:v.fixAvailable})); } const total=a.metadata?.vulnerabilities || {}; console.log("TOTAL", JSON.stringify(total)); if ((total.total || 0) > 0) process.exit(1);'
       - name: Run isolated tests
         run: npm test
       - name: Check TypeScript
         run: npx tsc --noEmit
+      - name: Build Next.js with dummy Supabase configuration
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-key-not-valid-for-any-project
+        run: npm run build
