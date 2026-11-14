@@ -24,12 +24,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install project dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Set up Supabase CLI
+        id: supabase_cli
         uses: supabase/setup-cli@v1
         with:
           version: 3.1.0
@@ -68,5 +68,5 @@ jobs:
         run: supabase status
 
       - name: Stop local Supabase
-        if: always()
+        if: always() && steps.supabase_cli.outcome == 'success'
         run: supabase stop --no-backup
