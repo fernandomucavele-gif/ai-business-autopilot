@@ -39,6 +39,7 @@ export default function FinancePage() {
     simulatedAds > 0
       ? simulatedRevenue / simulatedAds
       : 0;
+  const otherCurrencies = Array.from(new Set(state.finance.map((item) => item.currency).filter((currency) => currency !== "MT")));
 
   function selectProduct(productId: string) {
     setSelectedProductId(productId);
@@ -111,7 +112,7 @@ export default function FinancePage() {
     }
 
     setMessage(
-      "✅ Registos manuais guardados no Autopilot. Confirma se cada valor é real ou estimado; este ecrã não valida documentos nem executa pagamentos."
+      "Registos adicionados ao estado do Autopilot. Aguarda a confirmação no indicador superior antes de considerar a gravação concluída."
     );
 
     setQuantity("1");
@@ -193,7 +194,7 @@ export default function FinancePage() {
           />
 
           <Card
-            title="📊 ROAS Autopilot"
+            title="📊 ROAS global indicativo"
             value={metrics.roas}
             suffix="x"
           />
@@ -212,7 +213,7 @@ export default function FinancePage() {
           <h2>🧮 Simulador financeiro</h2>
 
           <p style={{ color: "#64748b" }}>
-            Introduz valores reais já confirmados ou estimativas. Os registos são apenas lançados no Autopilot: não validam extratos/faturas nem executam pagamentos, transferências ou cobranças. Identifica mentalmente quais valores são reais e quais são estimativas.
+            Os indicadores agregados desta página consideram apenas MT; valores noutras moedas não são somados aos totais em MT. O ROAS apresentado é global e indicativo, não atribuído a campanhas específicas. Introduz valores reais já confirmados ou estimativas. Os registos são apenas lançados no Autopilot: não validam extratos/faturas nem executam pagamentos, transferências ou cobranças. Identifica mentalmente quais valores são reais e quais são estimativas.
           </p>
 
           <label style={{ display: "block", marginTop: "16px", fontWeight: 700 }}>
@@ -300,7 +301,7 @@ export default function FinancePage() {
             </p>
 
             <p>
-              ROAS:{" "}
+              ROAS global indicativo (não atribuído a campanha):{" "}
               {simulatedROAS.toFixed(2)}x
             </p>
           </div>
@@ -350,6 +351,12 @@ export default function FinancePage() {
           }}
         >
           <h2>📋 Registos financeiros</h2>
+
+          {otherCurrencies.length > 0 && (
+            <p style={{ color: "#9a3412", background: "#fff7ed", padding: 12, borderRadius: 8 }}>
+              Atenção: existem registos noutras moedas ({otherCurrencies.join(", ")}). Não estão incluídos nos totais em MT; não convertas nem somes moedas diferentes sem uma taxa de câmbio confirmada.
+            </p>
+          )}
 
           {state.finance.length === 0 ? (
             <p style={{ color: "#64748b" }}>
