@@ -62,9 +62,13 @@ export default function CustomersPage() {
   }, [state.customers, search]);
 
   const totalCustomerOrders = state.orders.length;
-  const repeatCustomers = state.customers.filter(customer =>
-    state.orders.filter(order => order.customerName.trim().toLowerCase() === customer.name.trim().toLowerCase()).length > 1
-  ).length;
+  const ordersForCustomer = (customer: Customer) => state.orders.filter(order =>
+    order.customerId
+      ? order.customerId === customer.id
+      : order.customerName.trim().toLowerCase() === customer.name.trim().toLowerCase() &&
+        state.customers.filter(item => item.name.trim().toLowerCase() === customer.name.trim().toLowerCase()).length === 1
+  );
+  const repeatCustomers = state.customers.filter(customer => ordersForCustomer(customer).length > 1).length;
 
   function saveCustomer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -116,7 +120,7 @@ export default function CustomersPage() {
       setMessage("Regista ou seleciona um cliente e um produto primeiro.");
       return;
     }
-    addOrder(product.id, customer.name, customer.market, product.price);
+    addOrder(product.id, customer.name, customer.market, product.price, undefined, customer.id);
     setMessage(`Pedido simulado criado para ${customer.name}. Nenhum pagamento ou envio real foi realizado.`);
   }
 
@@ -195,7 +199,7 @@ export default function CustomersPage() {
           {filteredCustomers.length === 0 ? (
             <p style={emptyStyle}>{state.customers.length === 0 ? "Ainda não existem clientes registados. Usa o formulário acima para adicionar o primeiro." : "Não foram encontrados clientes com essa pesquisa."}</p>
           ) : filteredCustomers.map(customer => {
-            const orders = state.orders.filter(order => order.customerName.trim().toLowerCase() === customer.name.trim().toLowerCase());
+            const orders = ordersForCustomer(customer);
             const orderValue = orders.reduce((sum, order) => sum + order.amount, 0);
             return (
               <article key={customer.id} style={{ border: "1px solid #e2e8f0", borderRadius: 13, padding: 16, marginTop: 12, background: "#fff" }}>
