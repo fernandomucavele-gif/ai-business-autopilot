@@ -1,0 +1,52 @@
+name: Local Supabase schema reconstruction
+
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - ".github/workflows/local-supabase.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.1.0
+
+      - name: Start isolated local Supabase
+        run: supabase start
+
+      - name: Apply reconstructed migrations locally
+        run: |
+          supabase db reset --local
+          supabase migration list --local
+
+      - name: Verify reconstructed schema
+        shell: bash
+        run: |
+          schema_result="$(supabase db query --read-only "SELECT CASE WHEN
+            (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE') = 23
+            AND (SELECT count(*) FROM pg_policies WHERE schemaname = 'public') = 48
+            AND (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'i') = 78
+            AND (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind IN ('r','p') AND c.relrowsecurity) = 23
+            AND EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'ensure_rls')
+            THEN 'PASS' ELSE 'FAIL' END AS schema_check;")"
+          echo "$schema_result"
+          grep -q "PASS" <<< "$schema_result"
+
+      - name: Verify local services
+        run: supabase status
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
