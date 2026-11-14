@@ -81,16 +81,20 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AutopilotState>(initialAutopilotState);
   const [loaded, setLoaded] = useState(false);
   const [canSave, setCanSave] = useState(false);
+  const [activeUserId, setActiveUserId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("loading");
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveAttemptRef = useRef(0);
+  const authEventVersionRef = useRef(0);
 
   useEffect(() => {
     let mounted = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+      const authVersion = ++authEventVersionRef.current;
 
       if (event === "SIGNED_OUT" || !session) {
+        setActiveUserId(null);
         setLoaded(false);
         setCanSave(false);
         setState(initialAutopilotState);
@@ -99,20 +103,22 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        const expectedUserId = session.user.id;
+        setActiveUserId(expectedUserId);
         setLoaded(false);
         setCanSave(false);
         setSaveStatus("loading");
         Promise.resolve().then(async () => {
           try {
-            const savedState = await loadAutopilotState();
-            if (!mounted) return;
+            const savedState = await loadAutopilotState(expectedUserId);
+            if (!mounted || authEventVersionRef.current !== authVersion) return;
             setState(savedState ? enforceSimulationSafety(savedState) : initialAutopilotState);
             setCanSave(true);
           } catch (error) {
             console.error("Não foi possível carregar os dados do Autopilot:", error);
-            if (mounted) setSaveStatus("error");
+            if (mounted && authEventVersionRef.current === authVersion) setSaveStatus("error");
           } finally {
-            if (mounted) setLoaded(true);
+            if (mounted && authEventVersionRef.current === authVersion) setLoaded(true);
           }
         });
       }
@@ -125,26 +131,28 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!loaded || !canSave) return;
+    if (!loaded || !canSave || !activeUserId) return;
 
     const attempt = ++saveAttemptRef.current;
+    const authVersion = authEventVersionRef.current;
+    const expectedUserId = activeUserId;
     const snapshot = enforceSimulationSafety(state);
     setSaveStatus("saving");
 
-    // Serializa as gravações e impede que uma atualização antiga termine
-    // depois de uma mais recente e sobrescreva os dados novos.
+    // Serializa as gravações e cancela tarefas antigas após qualquer troca de sessão.
     saveQueueRef.current = saveQueueRef.current
       .then(async () => {
-        const saved = await saveAutopilotState(snapshot);
-        if (attempt === saveAttemptRef.current) {
+        if (authEventVersionRef.current !== authVersion) return;
+        const saved = await saveAutopilotState(snapshot, expectedUserId);
+        if (attempt === saveAttemptRef.current && authEventVersionRef.current === authVersion) {
           setSaveStatus(saved ? "saved" : "error");
         }
       })
       .catch((error) => {
         console.error("Erro inesperado ao guardar o Autopilot:", error);
-        if (attempt === saveAttemptRef.current) setSaveStatus("error");
+        if (attempt === saveAttemptRef.current && authEventVersionRef.current === authVersion) setSaveStatus("error");
       });
-  }, [state, loaded, canSave]);
+  }, [state, loaded, canSave, activeUserId]);
 
   function addProduct(name: string, market: Product["market"], price: number, estimatedUnitCost?: number) {
     if (!name.trim() || !Number.isFinite(price) || price <= 0) return;
