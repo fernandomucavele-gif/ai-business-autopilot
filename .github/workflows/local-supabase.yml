@@ -1,0 +1,74 @@
+name: Local Supabase schema reconstruction
+
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "scripts/test-local-supabase-auth.mjs"
+      - ".github/workflows/local-supabase.yml"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install isolated auth-test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/autopilot-auth-test" --no-save --no-package-lock @supabase/supabase-js@2.57.0
+          ln -s "$RUNNER_TEMP/autopilot-auth-test/node_modules" node_modules
+
+      - name: Set up Supabase CLI
+        id: supabase_cli
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.1.0
+
+      - name: Start isolated local Supabase
+        run: supabase start
+
+      - name: Apply reconstructed migrations locally
+        run: |
+          supabase db reset --local
+          supabase migration list --local
+
+      - name: Verify reconstructed schema
+        shell: bash
+        run: |
+          schema_result="$(supabase db query --read-only "SELECT CASE WHEN
+            (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE') = 23
+            AND (SELECT count(*) FROM pg_policies WHERE schemaname = 'public') = 48
+            AND (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'i') = 78
+            AND (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind IN ('r','p') AND c.relrowsecurity) = 23
+            AND EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'ensure_rls')
+            THEN 'PASS' ELSE 'FAIL' END AS schema_check;")"
+          echo "$schema_result"
+          grep -q "PASS" <<< "$schema_result"
+
+      - name: Test two local accounts, login, logout, persistence and RLS isolation
+        shell: bash
+        run: |
+          eval "$(supabase status -o env)"
+          export LOCAL_SUPABASE_URL="$API_URL"
+          export LOCAL_SUPABASE_ANON_KEY="$ANON_KEY"
+          export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          node scripts/test-local-supabase-auth.mjs
+
+      - name: Verify local services
+        run: supabase status
+
+      - name: Stop local Supabase
+        if: always() && steps.supabase_cli.outcome == 'success'
+        run: supabase stop --no-backup

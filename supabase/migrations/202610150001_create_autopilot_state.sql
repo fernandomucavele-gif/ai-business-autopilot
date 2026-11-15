@@ -1,12 +1,10 @@
 CREATE TABLE IF NOT EXISTS public.autopilot_state (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    state_key TEXT NOT NULL UNIQUE,
+    state_key TEXT NOT NULL,
     state_value JSONB NOT NULL DEFAULT '{}'::jsonb,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    user_id UUID
 );
-
-CREATE INDEX IF NOT EXISTS idx_autopilot_state_updated_at
-    ON public.autopilot_state (updated_at DESC);
 
 ALTER TABLE public.autopilot_state
     ENABLE ROW LEVEL SECURITY;
