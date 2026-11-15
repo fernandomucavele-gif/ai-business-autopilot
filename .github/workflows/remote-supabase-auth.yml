@@ -1,0 +1,40 @@
+name: Isolated remote Supabase auth test
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_remote_test:
+        description: "Confirm this test creates and then deletes two temporary users in the isolated test project"
+        required: true
+        type: choice
+        options:
+          - run-isolated-test
+
+permissions:
+  contents: read
+
+jobs:
+  remote-auth-test:
+    if: ${{ inputs.confirm_remote_test == 'run-isolated-test' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pinned Supabase client
+        run: |
+          npm install --prefix "$RUNNER_TEMP/autopilot-auth-test" --no-save --no-package-lock @supabase/supabase-js@2.57.0
+          ln -s "$RUNNER_TEMP/autopilot-auth-test/node_modules" node_modules
+
+      - name: Run isolated remote auth, persistence and RLS test
+        env:
+          REMOTE_SUPABASE_URL: https://sgfshctthntmfolnsmbw.supabase.co
+          REMOTE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dug9tf3LASgBiM-k_9mxGA_1bRWkxWL
+          REMOTE_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: node scripts/test-remote-supabase-auth.mjs
