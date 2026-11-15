@@ -19,8 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout test branch containing the isolated test script
         uses: actions/checkout@v4
+        with:
+          ref: test/automated-simulation-suite
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -31,6 +33,15 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/autopilot-auth-test" --no-save --no-package-lock @supabase/supabase-js@2.57.0
           ln -s "$RUNNER_TEMP/autopilot-auth-test/node_modules" node_modules
+
+      - name: Verify isolated test secret is configured
+        env:
+          REMOTE_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$REMOTE_SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Repository secret SUPABASE_TEST_SERVICE_ROLE_KEY is missing or unavailable to this workflow."
+            exit 1
+          fi
 
       - name: Run isolated remote auth, persistence and RLS test
         env:
