@@ -25,8 +25,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install project dependencies
-        run: npm install
+      - name: Install isolated auth-test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/autopilot-auth-test" --no-save --no-package-lock @supabase/supabase-js@2.57.0
+          ln -s "$RUNNER_TEMP/autopilot-auth-test/node_modules" node_modules
 
       - name: Set up Supabase CLI
         id: supabase_cli
