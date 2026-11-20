@@ -38,6 +38,7 @@ const money = (value: number, currency: string) =>
 
 export default function SuppliersPage() {
   const [product, setProduct] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState("");
   const [country, setCountry] = useState("Qualquer país");
   const [market, setMarket] = useState("Moçambique");
   const { state, addSupplierQuote, removeSupplierQuote } = useAutopilot();
@@ -128,8 +129,37 @@ export default function SuppliersPage() {
         <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-7">
           <h2 className="text-xl font-semibold">Encontrar fornecedores</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Indica o produto e os países para orientar a pesquisa externa.
+            Seleciona um produto do Research AI para reutilizar o seu nome, ou escreve uma pesquisa independente.
           </p>
+
+          {state.products.length > 0 && (
+            <label className="mt-5 block">
+              <span className="mb-2 block text-sm text-slate-300">Importar produto do Research AI</span>
+              <select
+                value={selectedProductId}
+                onChange={(event) => {
+                  const id = event.target.value;
+                  const selected = state.products.find((item) => item.id === id);
+                  setSelectedProductId(id);
+                  if (selected) {
+                    setProduct(selected.name);
+                    setForm((current) => ({ ...current, product: selected.name }));
+                  }
+                }}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3"
+              >
+                <option value="">Selecionar produto existente...</option>
+                {state.products.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name} — {item.market}</option>
+                ))}
+              </select>
+              {selectedProductId && (
+                <span className="mt-2 block text-xs text-emerald-300">
+                  Produto ligado ao Research AI. Confirma especificações e custos com o fornecedor.
+                </span>
+              )}
+            </label>
+          )}
 
           <form className="mt-5 space-y-4" onSubmit={(event) => event.preventDefault()}>
             <label className="block">
