@@ -83,6 +83,7 @@ export type Customer = {
 
 export type SupplierQuote = {
   id: string;
+  productId?: string;
   company: string;
   country: string;
   platform: string;
