@@ -65,6 +65,7 @@ export type Order = {
 
 export type FinanceRecord = {
   id: string;
+  productId?: string;
   type: "revenue" | "product_cost" | "ad_cost" | "shipping";
   amount: number;
   currency: string;
