@@ -54,7 +54,13 @@ export default function AdsPage() {
             <>
               <label style={{ display: "block", marginBottom: 12, fontWeight: 600 }}>
                 Produto
-                <select value={productId} onChange={event => { setProductId(event.target.value); setMessage(""); }} style={fieldStyle}>
+                <select value={productId} onChange={event => {
+                  const nextId = event.target.value;
+                  const nextProduct = state.products.find(product => product.id === nextId);
+                  setProductId(nextId);
+                  if (nextProduct) setMarket(nextProduct.market);
+                  setMessage("");
+                }} style={fieldStyle}>
                   <option value="">Selecionar produto...</option>
                   {state.products.map(product => <option key={product.id} value={product.id}>{product.name}</option>)}
                 </select>
