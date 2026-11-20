@@ -89,6 +89,7 @@ export default function FinancePage() {
     if (simulatedRevenue > 0) {
       addFinanceRecord({
         id: `FIN-${Date.now()}-R`,
+        productId: selectedProductId || undefined,
         type: "revenue",
         amount: simulatedRevenue,
         currency: "MT",
@@ -99,6 +100,7 @@ export default function FinancePage() {
     if (simulatedProductCost > 0) {
       addFinanceRecord({
         id: `FIN-${Date.now()}-P`,
+        productId: selectedProductId || undefined,
         type: "product_cost",
         amount: simulatedProductCost,
         currency: "MT",
@@ -109,6 +111,7 @@ export default function FinancePage() {
     if (simulatedAds > 0) {
       addFinanceRecord({
         id: `FIN-${Date.now()}-A`,
+        productId: selectedProductId || undefined,
         type: "ad_cost",
         amount: simulatedAds,
         currency: "MT",
@@ -119,6 +122,7 @@ export default function FinancePage() {
     if (simulatedShipping > 0) {
       addFinanceRecord({
         id: `FIN-${Date.now()}-S`,
+        productId: selectedProductId || undefined,
         type: "shipping",
         amount: simulatedShipping,
         currency: "MT",
