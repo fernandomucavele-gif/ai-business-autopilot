@@ -96,6 +96,7 @@ export default function SuppliersPage() {
 
     addSupplierQuote({
         id: `quote-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        productId: selectedProductId || undefined,
         company: form.company.trim(),
         country: form.country,
         platform: form.platform,
