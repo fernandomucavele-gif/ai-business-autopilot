@@ -84,6 +84,48 @@ export default function AnalyticsPage() {
   const costs = finance.filter(item => item.type !== "revenue").reduce((sum, item) => sum + item.amount, 0);
   const orderValue = orders.reduce((sum, item) => sum + item.amount, 0);
 
+  // Resultados reais/lançados só são atribuídos quando o registo financeiro tem productId.
+  const productPerformance = useMemo(() => {
+    const visibleProducts = market === "Global"
+      ? state.products
+      : state.products.filter(product => product.market === market);
+
+    return visibleProducts.map(product => {
+      const linkedFinance = state.finance.filter(record =>
+        record.productId === product.id && record.currency === "MT"
+      );
+      const recordedRevenue = linkedFinance
+        .filter(record => record.type === "revenue")
+        .reduce((sum, record) => sum + record.amount, 0);
+      const recordedCosts = linkedFinance
+        .filter(record => record.type !== "revenue")
+        .reduce((sum, record) => sum + record.amount, 0);
+      const quotes = state.supplierQuotes
+        .filter(quote => quote.productId === product.id && ["MZN", "MT"].includes(quote.currency))
+        .map(quote => ({
+          company: quote.company,
+          unitCost: (quote.unitPrice * quote.minimumOrder + quote.shipping + quote.taxes) / quote.minimumOrder,
+        }))
+        .sort((a, b) => a.unitCost - b.unitCost);
+      const bestQuote = quotes[0];
+      const projectedUnitProfit = bestQuote ? product.price - bestQuote.unitCost : null;
+      const projectedMargin = bestQuote && product.price > 0
+        ? (projectedUnitProfit! / product.price) * 100
+        : null;
+
+      return {
+        product,
+        recordedRevenue,
+        recordedCosts,
+        recordedProfit: recordedRevenue - recordedCosts,
+        hasLinkedRecords: linkedFinance.length > 0,
+        bestQuote,
+        projectedUnitProfit,
+        projectedMargin,
+      };
+    });
+  }, [market, state.products, state.finance, state.supplierQuotes]);
+
   const adTotals = visibleAdMetrics.reduce((totals, item) => ({
     impressions: totals.impressions + item.impressions,
     clicks: totals.clicks + item.clicks,
@@ -128,6 +170,35 @@ export default function AnalyticsPage() {
           <article className="card"><span>Receita financeira guardada</span><strong>{money(revenue)}</strong></article>
           <article className="card"><span>Custos financeiros guardados</span><strong>{money(costs)}</strong></article>
           <article className="card"><span>Resultado financeiro</span><strong>{money(revenue - costs)}</strong></article>
+        </section>
+
+        <section className="panel">
+          <h2>Rentabilidade por produto</h2>
+          <p className="footnote" style={{ marginTop: 0, marginBottom: 14 }}>
+            Separa resultados financeiros já registados das margens projetadas com propostas de fornecedores em MZN/MT. Registos antigos sem ligação a produto não são atribuídos automaticamente.
+          </p>
+          {productPerformance.length === 0 ? (
+            <p className="empty">Ainda não existem produtos para analisar neste mercado.</p>
+          ) : (
+            <div className="tableWrap"><table><thead><tr>
+              <th>Produto</th><th>Preço de venda</th><th>Melhor custo unitário cotado</th><th>Margem unitária projetada</th><th>Receita registada</th><th>Custos registados</th><th>Resultado registado</th>
+            </tr></thead><tbody>
+              {productPerformance.map(item => (
+                <tr key={item.product.id}>
+                  <td>{item.product.name}</td>
+                  <td>{money(item.product.price)}</td>
+                  <td>{item.bestQuote ? money(item.bestQuote.unitCost) + " (" + item.bestQuote.company + ")" : "Sem proposta MZN/MT"}</td>
+                  <td>{item.projectedUnitProfit === null || item.projectedMargin === null
+                    ? "—"
+                    : money(item.projectedUnitProfit) + " / " + item.projectedMargin.toFixed(1) + "%"}</td>
+                  <td>{item.hasLinkedRecords ? money(item.recordedRevenue) : "Sem registos ligados"}</td>
+                  <td>{item.hasLinkedRecords ? money(item.recordedCosts) : "—"}</td>
+                  <td>{item.hasLinkedRecords ? money(item.recordedProfit) : "—"}</td>
+                </tr>
+              ))}
+            </tbody></table></div>
+          )}
+          <p className="footnote">A margem projetada considera apenas preço de venda e custo unitário cotado (produto + transporte + taxas). Não inclui publicidade, operação, devoluções ou outros encargos. Não é lucro confirmado.</p>
         </section>
 
         <section className="panel">
