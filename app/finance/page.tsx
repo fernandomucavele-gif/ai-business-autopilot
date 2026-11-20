@@ -7,6 +7,7 @@ export default function FinancePage() {
   const { state, metrics, addFinanceRecord } = useAutopilot();
 
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [selectedQuoteId, setSelectedQuoteId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [revenue, setRevenue] = useState("");
   const [productCost, setProductCost] = useState("");
@@ -43,13 +44,27 @@ export default function FinancePage() {
 
   function selectProduct(productId: string) {
     setSelectedProductId(productId);
+    setSelectedQuoteId("");
     const product = state.products.find((item) => item.id === productId);
     if (!product) return;
     setRevenue(String(product.price));
     setProductCost(typeof product.estimatedUnitCost === "number" ? String(product.estimatedUnitCost) : "");
     setMessage(product.estimatedUnitCost === undefined
-      ? "Produto selecionado. O custo ainda não está definido; introduz uma estimativa."
+      ? "Produto selecionado. Escolhe uma proposta ligada ou introduz o custo estimado em MT."
       : "Preço e custo estimado preenchidos a partir do produto guardado.");
+  }
+
+  function selectSupplierQuote(quoteId: string) {
+    setSelectedQuoteId(quoteId);
+    const quote = state.supplierQuotes.find((item) => item.id === quoteId);
+    if (!quote) return;
+    const landedUnitCost = (quote.unitPrice * quote.minimumOrder + quote.shipping + quote.taxes) / quote.minimumOrder;
+    if (quote.currency === "MZN") {
+      setProductCost(landedUnitCost.toFixed(2));
+      setMessage("Custo estimado por unidade preenchido com produto, transporte e taxas da proposta em MZN. Confirma os valores com o fornecedor.");
+    } else {
+      setMessage("A proposta está em " + quote.currency + ". Não foi feita conversão automática. Converte o custo unitário total para MT com uma taxa confirmada e introduz o resultado.");
+    }
   }
 
   function addSimulation() {
@@ -245,6 +260,27 @@ export default function FinancePage() {
             value={revenue}
             setValue={setRevenue}
           />
+
+          {selectedProductId && state.supplierQuotes.some((quote) => quote.productId === selectedProductId) && (
+            <label style={{ display: "block", marginTop: "16px", fontWeight: 700 }}>
+              Proposta de fornecedor ligada ao produto
+              <select
+                value={selectedQuoteId}
+                onChange={(event) => selectSupplierQuote(event.target.value)}
+                style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: "7px", padding: "13px", borderRadius: "10px", border: "1px solid #dbe3ee", fontSize: "16px", background: "#fff" }}
+              >
+                <option value="">Selecionar proposta...</option>
+                {state.supplierQuotes.filter((quote) => quote.productId === selectedProductId).map((quote) => (
+                  <option key={quote.id} value={quote.id}>
+                    {quote.company} — {quote.currency} {(quote.unitPrice * quote.minimumOrder + quote.shipping + quote.taxes).toFixed(2)} total
+                  </option>
+                ))}
+              </select>
+              <small style={{ display: "block", marginTop: "6px", color: "#64748b", fontWeight: 400 }}>
+                Custo unitário estimado = (preço × quantidade mínima + transporte + taxas) ÷ quantidade mínima.
+              </small>
+            </label>
+          )}
 
           <Input
             label="Custo do produto por unidade (MT)"
