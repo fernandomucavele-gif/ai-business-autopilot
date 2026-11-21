@@ -3,6 +3,7 @@ import { normalizeTrendText, parseGoogleTrendsRss } from "../lib/market-trends";
 import {
   calculateCosts,
   classifyProductOpportunity,
+  scoreProductOpportunity,
   classifyMarketPotential,
   calculateProfit,
   calculateROAS,
@@ -196,5 +197,32 @@ describe("integração Google Trends RSS", () => {
 
   it("normaliza acentos e maiúsculas para comparação textual", () => {
     expect(normalizeTrendText("GARRAFA TÉRMICA")).toBe("garrafa termica");
+  });
+});
+
+
+describe("pontuação integrada de oportunidade", () => {
+  it("calcula pontuação completa com margem, mercado e fornecedor", () => {
+    const result = scoreProductOpportunity(500, 300, { demand: "Alta", competition: "Baixa" }, 250);
+    expect(result.score).toBe(100);
+    expect(result.label).toBe("Excelente");
+    expect(result.supplierVerified).toBe(true);
+  });
+
+  it("não atribui pontuação sem margem ou avaliação de mercado completa", () => {
+    expect(scoreProductOpportunity(500, undefined, { demand: "Alta", competition: "Baixa" }).score).toBeNull();
+    expect(scoreProductOpportunity(500, 250, { demand: "Alta", competition: "Por avaliar" }).label).toBe("Dados insuficientes");
+  });
+
+  it("identifica ausência de cotação e limita a pontuação aos outros componentes", () => {
+    const result = scoreProductOpportunity(500, 300, { demand: "Alta", competition: "Baixa" });
+    expect(result.score).toBe(85);
+    expect(result.supplierPoints).toBe(0);
+    expect(result.supplierVerified).toBe(false);
+  });
+
+  it("não dá pontos de fornecedor quando o custo entregue atinge o preço de venda", () => {
+    const result = scoreProductOpportunity(500, 300, { demand: "Alta", competition: "Baixa" }, 500);
+    expect(result.supplierPoints).toBe(0);
   });
 });
