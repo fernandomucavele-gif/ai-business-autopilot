@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
+import { classifyProductOpportunity } from "../../lib/autopilot";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -64,21 +65,13 @@ export default function SupervisorPage() {
     const recordedProfit = revenue - costs;
     const alerts: string[] = [];
     if (!bestQuote) alerts.push("Sem proposta de fornecedor em MZN/MT");
-    else if (margin !== null && margin < 0) alerts.push("Custo cotado acima do preço de venda");
+    else if (margin !== null && margin <= 0) alerts.push("Custo cotado igual ou acima do preço de venda");
     else if (margin !== null && margin < 20) alerts.push("Margem projetada inferior a 20%");
     if (linkedRecords.length > 0 && recordedProfit < 0) alerts.push("Resultado financeiro registado negativo");
 
     // Classificação indicativa baseada apenas na margem bruta projetada.
     // Sem cotação válida, o produto fica por avaliar em vez de receber uma nota inventada.
-    const classification = !bestQuote || margin === null
-      ? "Por avaliar"
-      : margin < 0
-        ? "Não recomendado"
-        : margin < 20
-          ? "Risco elevado"
-          : margin < 40
-            ? "Promissor"
-            : "Excelente";
+    const classification = classifyProductOpportunity(product.price, bestQuote?.unitCost);
     return { product, bestQuote, margin, revenue, costs, recordedProfit, hasRecords: linkedRecords.length > 0, alerts, classification };
   }), [state.products, state.supplierQuotes, state.finance]);
   const campaignAlerts = useMemo(() => state.campaigns.filter(campaign => {
