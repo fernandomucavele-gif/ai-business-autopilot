@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
-import { classifyProductOpportunity, classifyMarketPotential, type MarketLevel } from "../../lib/autopilot";
+import { classifyProductOpportunity, classifyMarketPotential, scoreProductOpportunity, type MarketLevel } from "../../lib/autopilot";
 import type { Market } from "../../lib/autopilot";
 
 const markets: Market[] = [
@@ -100,6 +100,15 @@ export default function ResearchPage() {
         "Pesquisa simulada concluída."
       );
     }, 600);
+  }
+
+  function getProductScore(product: (typeof state.products)[number]) {
+    const quote = state.supplierQuotes
+      .filter((item) => item.productId === product.id && item.currency.trim().toUpperCase() === "MT" && item.minimumOrder > 0)
+      .map((item) => (item.unitPrice * item.minimumOrder + item.shipping + item.taxes) / item.minimumOrder)
+      .filter((cost) => Number.isFinite(cost) && cost >= 0)
+      .sort((a, b) => a - b)[0];
+    return scoreProductOpportunity(product.price, product.estimatedUnitCost, product.marketAssessment, quote);
   }
 
   function addResearchProduct(name: string) {
@@ -341,6 +350,11 @@ export default function ResearchPage() {
             Margem bruta estimada: {(Number(price) - Number(unitCost)).toFixed(2)} MT por unidade
             {Number(price) > 0 ? ` (${(((Number(price) - Number(unitCost)) / Number(price)) * 100).toFixed(1)}%)` : ""}.
             Não inclui transporte, impostos, taxas, devoluções, armazenamento nem publicidade.
+          </p>
+          <p style={{ color: "#475467", fontSize: "14px" }}>
+            Pontuação preliminar: <strong>{scoreProductOpportunity(Number(price), Number(unitCost), { demand, competition }).score ?? "Dados insuficientes"}/100</strong>
+            {" "}— {scoreProductOpportunity(Number(price), Number(unitCost), { demand, competition }).label}.
+            A cotação do fornecedor ainda não foi verificada nesta simulação (0/15 pontos).
           </p>
           <p style={{ color: "#475467", fontSize: "14px" }}>
             Potencial de mercado: <strong>{classifyMarketPotential({ demand, competition })}</strong>.
@@ -636,6 +650,10 @@ export default function ResearchPage() {
                         <span style={{ color: "#667085" }}>Custo estimado ainda não definido</span>
                       )}
                       <strong>Classificação financeira: {classifyProductOpportunity(product.price, product.estimatedUnitCost)}</strong>
+                      <strong>Pontuação de oportunidade: {getProductScore(product).score == null ? "Dados insuficientes" : getProductScore(product).score + "/100"} — {getProductScore(product).label}</strong>
+                      <span>Componentes: margem {getProductScore(product).marginPoints.toFixed(0)}/40 · procura {getProductScore(product).demandPoints}/25 · concorrência {getProductScore(product).competitionPoints}/20 · fornecedor {getProductScore(product).supplierPoints}/15.</span>
+                      {!getProductScore(product).supplierVerified && <span style={{ color: "#b54708" }}>Cotação de fornecedor em MT ainda não verificada para este produto.</span>}
+
                       <strong>Potencial de mercado: {classifyMarketPotential(product.marketAssessment)}</strong>
                       {product.marketAssessment && <span>Procura: {product.marketAssessment.demand} · Concorrência: {product.marketAssessment.competition}</span>}
                       {product.marketAssessment?.evidenceNote && <span>Notas: {product.marketAssessment.evidenceNote}</span>}
