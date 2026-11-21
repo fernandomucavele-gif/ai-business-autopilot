@@ -199,9 +199,7 @@ export default function ResearchPage() {
               fontSize: "14px",
             }}
           >
-            MODO DE DEMONSTRAÇÃO: as sugestões abaixo são exemplos ilustrativos,
-            não resultados de pesquisa em tempo real. Confirma procura, concorrência,
-            fornecedores, custos e impostos antes de investir.
+            As sugestões de produtos continuam em demonstração. A secção de tendências consulta o feed público do Google Trends; tendências gerais não comprovam procura específica nem vendas.
           </p>
         </header>
 
