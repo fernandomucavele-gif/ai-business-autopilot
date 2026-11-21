@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
 import Link from "next/link";
 import {
@@ -46,6 +46,38 @@ const protections = [
 
 export default function SupervisorPage() {
   const { state, metrics } = useAutopilot();
+  const productAlerts = useMemo(() => state.products.map(product => {
+    const quotes = state.supplierQuotes
+      .filter(quote => quote.productId === product.id && ["MZN", "MT"].includes(quote.currency) && quote.minimumOrder > 0)
+      .map(quote => ({
+        company: quote.company,
+        unitCost: (quote.unitPrice * quote.minimumOrder + quote.shipping + quote.taxes) / quote.minimumOrder,
+      }))
+      .sort((a, b) => a.unitCost - b.unitCost);
+    const bestQuote = quotes[0];
+    const margin = bestQuote && product.price > 0
+      ? ((product.price - bestQuote.unitCost) / product.price) * 100
+      : null;
+    const linkedRecords = state.finance.filter(record => record.productId === product.id && record.currency === "MT");
+    const revenue = linkedRecords.filter(record => record.type === "revenue").reduce((sum, record) => sum + record.amount, 0);
+    const costs = linkedRecords.filter(record => record.type !== "revenue").reduce((sum, record) => sum + record.amount, 0);
+    const recordedProfit = revenue - costs;
+    const alerts: string[] = [];
+    if (!bestQuote) alerts.push("Sem proposta de fornecedor em MZN/MT");
+    else if (margin !== null && margin < 0) alerts.push("Custo cotado acima do preço de venda");
+    else if (margin !== null && margin < 20) alerts.push("Margem projetada inferior a 20%");
+    if (linkedRecords.length > 0 && recordedProfit < 0) alerts.push("Resultado financeiro registado negativo");
+    return { product, bestQuote, margin, revenue, costs, recordedProfit, hasRecords: linkedRecords.length > 0, alerts };
+  }), [state.products, state.supplierQuotes, state.finance]);
+  const campaignAlerts = useMemo(() => state.campaigns.filter(campaign => {
+    const product = state.products.find(item => item.id === campaign.productId);
+    if (!product) return true;
+    const quote = state.supplierQuotes
+      .filter(item => item.productId === product.id && ["MZN", "MT"].includes(item.currency) && item.minimumOrder > 0)
+      .map(item => (item.unitPrice * item.minimumOrder + item.shipping + item.taxes) / item.minimumOrder)
+      .sort((a, b) => a - b)[0];
+    return quote !== undefined && quote >= product.price;
+  }), [state.campaigns, state.products, state.supplierQuotes]);
   const [checking, setChecking] = useState(false);
   const [lastCheck, setLastCheck] = useState("");
   const [message, setMessage] = useState("");
@@ -59,8 +91,9 @@ export default function SupervisorPage() {
 
     // Diagnóstico local de demonstração.
     // Não executa compras, pagamentos, anúncios ou levantamentos.
+    const alertCount = productAlerts.reduce((sum, item) => sum + item.alerts.length, 0) + campaignAlerts.length;
     const result =
-      `Diagnóstico local concluído: ${state.products.length} produto(s), ${state.campaigns.length} campanha(s), ${state.orders.length} encomenda(s); lucro simulado de ${metrics.profit.toLocaleString("pt-PT")} MT. Compras, pagamentos e anúncios reais continuam bloqueados.`;
+      `Diagnóstico local concluído: ${state.products.length} produto(s), ${state.campaigns.length} campanha(s), ${state.orders.length} encomenda(s); ${alertCount} alerta(s) de rentabilidade/campanha; lucro financeiro registado de ${metrics.profit.toLocaleString("pt-PT")} MT. Compras, pagamentos e anúncios reais continuam bloqueados.`;
 
     setLastCheck(
       new Date().toLocaleString("pt-MZ", {
@@ -147,6 +180,47 @@ export default function SupervisorPage() {
                 <span>{message}</span>
               </div>
             )}
+          </section>
+
+          <section className={styles.diagnosticCard}>
+            <div className={styles.diagnosticHeading}>
+              <ChartNoAxesCombined size={25} />
+              <div>
+                <h3>Alertas de rentabilidade e campanhas</h3>
+                <p>Análise local com base nos custos cotados e nos registos financeiros ligados a cada produto.</p>
+              </div>
+            </div>
+            {productAlerts.length === 0 ? (
+              <p className={styles.securityNote}>Ainda não existem produtos para analisar.</p>
+            ) : (
+              <div className={styles.protectionList}>
+                {productAlerts.map(item => (
+                  <div className={styles.protectionItem} key={item.product.id}>
+                    <span>
+                      <strong>{item.product.name}</strong>
+                      <small style={{ display: "block", color: "#64748b", marginTop: 4 }}>
+                        {item.bestQuote
+                          ? `Melhor custo cotado: ${item.bestQuote.unitCost.toLocaleString("pt-PT", { maximumFractionDigits: 2 })} MT · Margem projetada: ${item.margin?.toFixed(1)}%`
+                          : "Sem proposta de fornecedor em MZN/MT"}
+                        {item.hasRecords ? ` · Resultado registado: ${item.recordedProfit.toLocaleString("pt-PT")} MT` : " · Sem resultado financeiro ligado"}
+                      </small>
+                      {item.alerts.length > 0 && (
+                        <small style={{ display: "block", color: "#b45309", marginTop: 4 }}>{item.alerts.join(" · ")}</small>
+                      )}
+                    </span>
+                    <span className={styles.blockedBadge}>{item.alerts.length > 0 ? `${item.alerts.length} ALERTA(S)` : "SEM ALERTAS"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {campaignAlerts.length > 0 && (
+              <p className={styles.securityNote}>
+                Atenção: {campaignAlerts.length} campanha(s) associada(s) a produto cujo custo cotado por unidade é igual ou superior ao preço de venda. Rever antes de qualquer investimento.
+              </p>
+            )}
+            <p className={styles.securityNote}>
+              As margens são projeções e não incluem todos os encargos. O Supervisor apenas recomenda revisão; não pausa campanhas, não altera orçamentos e não executa operações.
+            </p>
           </section>
 
           <section className={styles.modulesSection}>
