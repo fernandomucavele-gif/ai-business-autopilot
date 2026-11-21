@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { normalizeTrendText, parseGoogleTrendsRss } from "../lib/market-trends";
 import {
   calculateCosts,
   classifyProductOpportunity,
@@ -172,5 +173,28 @@ describe("avaliação preliminar de mercado", () => {
   it("não atribui potencial sem avaliação completa", () => {
     expect(classifyMarketPotential()).toBe("Por avaliar");
     expect(classifyMarketPotential({ demand: "Alta", competition: "Por avaliar" })).toBe("Por avaliar");
+  });
+});
+
+
+describe("integração Google Trends RSS", () => {
+  it("extrai tendências, tráfego e ligações de um feed XML", () => {
+    const xml = `<rss><channel><item><title>Garrafa térmica</title><ht:approx_traffic>2K+</ht:approx_traffic><pubDate>Sat, 21 Nov 2026 10:00:00 GMT</pubDate><link>https://trends.google.com/example</link></item></channel></rss>`;
+    expect(parseGoogleTrendsRss(xml, "MZ")).toEqual([{
+      title: "Garrafa térmica",
+      traffic: "2K+",
+      publishedAt: "Sat, 21 Nov 2026 10:00:00 GMT",
+      link: "https://trends.google.com/example",
+      geo: "MZ",
+    }]);
+  });
+
+  it("descarta itens sem título ou ligação segura", () => {
+    const xml = `<rss><item><title>Sem ligação</title></item><item><title>Ligação inválida</title><link>javascript:alert(1)</link></item></rss>`;
+    expect(parseGoogleTrendsRss(xml, "BR")).toEqual([]);
+  });
+
+  it("normaliza acentos e maiúsculas para comparação textual", () => {
+    expect(normalizeTrendText("GARRAFA TÉRMICA")).toBe("garrafa termica");
   });
 });
