@@ -67,7 +67,19 @@ export default function SupervisorPage() {
     else if (margin !== null && margin < 0) alerts.push("Custo cotado acima do preço de venda");
     else if (margin !== null && margin < 20) alerts.push("Margem projetada inferior a 20%");
     if (linkedRecords.length > 0 && recordedProfit < 0) alerts.push("Resultado financeiro registado negativo");
-    return { product, bestQuote, margin, revenue, costs, recordedProfit, hasRecords: linkedRecords.length > 0, alerts };
+
+    // Classificação indicativa baseada apenas na margem bruta projetada.
+    // Sem cotação válida, o produto fica por avaliar em vez de receber uma nota inventada.
+    const classification = !bestQuote || margin === null
+      ? "Por avaliar"
+      : margin < 0
+        ? "Não recomendado"
+        : margin < 20
+          ? "Risco elevado"
+          : margin < 40
+            ? "Promissor"
+            : "Excelente";
+    return { product, bestQuote, margin, revenue, costs, recordedProfit, hasRecords: linkedRecords.length > 0, alerts, classification };
   }), [state.products, state.supplierQuotes, state.finance]);
   const campaignAlerts = useMemo(() => state.campaigns.filter(campaign => {
     const product = state.products.find(item => item.id === campaign.productId);
@@ -199,9 +211,10 @@ export default function SupervisorPage() {
                     <span>
                       <strong>{item.product.name}</strong>
                       <small style={{ display: "block", color: "#64748b", marginTop: 4 }}>
+                        Classificação: <strong>{item.classification}</strong>
                         {item.bestQuote
-                          ? `Melhor custo cotado: ${item.bestQuote.unitCost.toLocaleString("pt-PT", { maximumFractionDigits: 2 })} MT · Margem projetada: ${item.margin?.toFixed(1)}%`
-                          : "Sem proposta de fornecedor em MZN/MT"}
+                          ? ` · Melhor custo cotado: ${item.bestQuote.unitCost.toLocaleString("pt-PT", { maximumFractionDigits: 2 })} MT · Margem projetada: ${item.margin?.toFixed(1)}%`
+                          : " · Sem proposta de fornecedor em MZN/MT"}
                         {item.hasRecords ? ` · Resultado registado: ${item.recordedProfit.toLocaleString("pt-PT")} MT` : " · Sem resultado financeiro ligado"}
                       </small>
                       {item.alerts.length > 0 && (
@@ -219,7 +232,7 @@ export default function SupervisorPage() {
               </p>
             )}
             <p className={styles.securityNote}>
-              As margens são projeções e não incluem todos os encargos. O Supervisor apenas recomenda revisão; não pausa campanhas, não altera orçamentos e não executa operações.
+              Critérios indicativos: Excelente = margem projetada de 40% ou mais; Promissor = 20% a 39,9%; Risco elevado = 0% a 19,9%; Não recomendado = custo cotado igual ou superior ao preço de venda. Sem cotação válida, fica Por avaliar. As margens não incluem todos os encargos. O Supervisor apenas recomenda revisão; não pausa campanhas, não altera orçamentos e não executa operações.
             </p>
           </section>
 
