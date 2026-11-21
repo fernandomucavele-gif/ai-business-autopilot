@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
+import { classifyProductOpportunity } from "../../lib/autopilot";
 import type { Market } from "../../lib/autopilot";
 
 const markets: Market[] = [
@@ -55,11 +56,6 @@ export default function ResearchPage() {
       setMessage("⚠️ Define um custo estimado válido, igual ou superior a zero.");
       return;
     }
-    if (numericCost >= numericPrice) {
-      setMessage("⚠️ O custo estimado é igual ou superior ao preço de venda. Revê os valores antes de avançar.");
-      return;
-    }
-
     setSearching(true);
     setMessage("");
 
@@ -83,8 +79,8 @@ export default function ResearchPage() {
       setMessage("⚠️ Define um preço estimado válido, maior que zero.");
       return;
     }
-    if (!Number.isFinite(numericCost) || numericCost < 0 || numericCost >= numericPrice) {
-      setMessage("⚠️ O custo deve ser válido, não negativo e inferior ao preço de venda.");
+    if (!Number.isFinite(numericCost) || numericCost < 0) {
+      setMessage("⚠️ Define um custo estimado válido, igual ou superior a zero.");
       return;
     }
 
@@ -387,6 +383,7 @@ export default function ResearchPage() {
                     Margem bruta: {(Number(price) - Number(unitCost)).toFixed(2)} MT
                     {Number(price) > 0 ? ` (${(((Number(price) - Number(unitCost)) / Number(price)) * 100).toFixed(1)}%)` : ""}
                   </p>
+                  <p style={{ fontWeight: 700 }}>Classificação: {classifyProductOpportunity(Number(price), Number(unitCost))}</p>
 
                   <button
                     onClick={() =>
@@ -504,6 +501,7 @@ export default function ResearchPage() {
                       ) : (
                         <span style={{ color: "#667085" }}>Custo estimado ainda não definido</span>
                       )}
+                      <strong>Classificação: {classifyProductOpportunity(product.price, product.estimatedUnitCost)}</strong>
                     </div>
 
                     <span>
