@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
-import { classifyProductOpportunity } from "../../lib/autopilot";
+import { classifyProductOpportunity, scoreProductOpportunity } from "../../lib/autopilot";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -72,8 +72,21 @@ export default function SupervisorPage() {
     // Classificação indicativa baseada apenas na margem bruta projetada.
     // Sem cotação válida, o produto fica por avaliar em vez de receber uma nota inventada.
     const classification = classifyProductOpportunity(product.price, bestQuote?.unitCost);
-    return { product, bestQuote, margin, revenue, costs, recordedProfit, hasRecords: linkedRecords.length > 0, alerts, classification };
-  }), [state.products, state.supplierQuotes, state.finance]);
+    const opportunity = scoreProductOpportunity(
+      product.price,
+      product.estimatedUnitCost,
+      product.marketAssessment,
+      bestQuote?.unitCost
+    );
+    const reasons: string[] = [];
+    if (opportunity.score === null) reasons.push("Completar custo estimado, procura e concorrência para obter pontuação.");
+    if (!bestQuote) reasons.push("Adicionar cotação ligada ao produto para verificar fornecedor (+ até 15 pontos).");
+    if (product.marketAssessment?.demand === "Baixa") reasons.push("Procura avaliada como baixa.");
+    if (product.marketAssessment?.competition === "Alta") reasons.push("Concorrência avaliada como alta.");
+    if (margin !== null && margin < 20) reasons.push("Margem do melhor fornecedor abaixo de 20%.");
+    if (margin !== null && margin <= 0) reasons.push("Custo entregue igual ou superior ao preço de venda.");
+    return { product, bestQuote, margin, revenue, costs, recordedProfit, hasRecords: linkedRecords.length > 0, alerts, classification, opportunity, reasons };
+  }).sort((a, b) => (b.opportunity.score ?? -1) - (a.opportunity.score ?? -1)), [state.products, state.supplierQuotes, state.finance]);
   const campaignAlerts = useMemo(() => state.campaigns.filter(campaign => {
     const product = state.products.find(item => item.id === campaign.productId);
     if (!product) return true;
@@ -204,10 +217,17 @@ export default function SupervisorPage() {
                     <span>
                       <strong>{item.product.name}</strong>
                       <small style={{ display: "block", color: "#64748b", marginTop: 4 }}>
-                        Classificação: <strong>{item.classification}</strong>
+                        <span style={{ display: "block", marginBottom: 4, fontWeight: 700, color: "#175cd3" }}>
+                          Pontuação: {item.opportunity.score === null ? "Dados insuficientes" : `${item.opportunity.score}/100 · ${item.opportunity.label}`}
+                        </span>
+                        Classificação financeira: <strong>{item.classification}</strong>
                         {item.bestQuote
                           ? ` · Melhor custo cotado: ${item.bestQuote.unitCost.toLocaleString("pt-PT", { maximumFractionDigits: 2 })} MT · Margem projetada: ${item.margin?.toFixed(1)}%`
                           : " · Sem proposta de fornecedor em MZN/MT"}
+                        <span style={{ display: "block", marginTop: 4 }}>
+                          Pontos: margem {item.opportunity.marginPoints}/40 · procura {item.opportunity.demandPoints}/25 · concorrência {item.opportunity.competitionPoints}/20 · fornecedor {item.opportunity.supplierPoints}/15.
+                        </span>
+                        {item.reasons.length > 0 && <small style={{ display: "block", color: "#b45309", marginTop: 4 }}>A rever: {item.reasons.join(" · ")}</small>}
                         {item.hasRecords ? ` · Resultado registado: ${item.recordedProfit.toLocaleString("pt-PT")} MT` : " · Sem resultado financeiro ligado"}
                       </small>
                       {item.alerts.length > 0 && (
@@ -225,7 +245,7 @@ export default function SupervisorPage() {
               </p>
             )}
             <p className={styles.securityNote}>
-              Critérios indicativos: Excelente = margem projetada de 40% ou mais; Promissor = 20% a 39,9%; Risco elevado = 0% a 19,9%; Não recomendado = custo cotado igual ou superior ao preço de venda. Sem cotação válida, fica Por avaliar. As margens não incluem todos os encargos. O Supervisor apenas recomenda revisão; não pausa campanhas, não altera orçamentos e não executa operações.
+              Pontuação integrada: margem estimada até 40 pontos, procura manual até 25, concorrência manual até 20 e cotação ligada de fornecedor até 15. Sem custo estimado, procura ou concorrência avaliados, não é atribuída pontuação. A cotação não substitui verificação de qualidade, prazos ou custos totais. O Supervisor apenas recomenda revisão; não pausa campanhas, não altera orçamentos e não executa operações.
             </p>
           </section>
 
