@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useAutopilot } from "./context/autopilot-context";
+import { scoreProductOpportunity } from "../lib/autopilot";
 
 const menu = [
   ["🏠", "Dashboard", "/"],
@@ -30,6 +31,22 @@ export default function DashboardHome() {
   const router = useRouter();
   const pathname = usePathname();
   const { state, metrics, saveStatus } = useAutopilot();
+
+  const topOpportunities = state.products
+    .map((product) => {
+      const bestQuote = state.supplierQuotes
+        .filter((quote) => quote.productId === product.id && ["MZN", "MT"].includes(quote.currency) && quote.minimumOrder > 0)
+        .map((quote) => ({
+          company: quote.company,
+          landedCost: (quote.unitPrice * quote.minimumOrder + quote.shipping + quote.taxes) / quote.minimumOrder,
+        }))
+        .sort((a, b) => a.landedCost - b.landedCost)[0];
+      const opportunity = scoreProductOpportunity(product.price, product.estimatedUnitCost, product.marketAssessment, bestQuote?.landedCost);
+      return { product, opportunity, bestQuote };
+    })
+    .filter((item) => item.opportunity.score !== null)
+    .sort((a, b) => (b.opportunity.score ?? -1) - (a.opportunity.score ?? -1))
+    .slice(0, 3);
 
   const pipeline = [
     { label: "Produtos pesquisados", count: state.products.length, href: "/research", icon: "🔎" },
@@ -82,6 +99,33 @@ export default function DashboardHome() {
           <Card icon="🎨" title="Criativos" value={String(state.creatives.length)} note="Rascunhos e materiais" />
           <Card icon="📢" title="Campanhas" value={String(state.campaigns.length)} note="Registadas no sistema" />
           <Card icon="🛒" title="Pedidos" value={String(state.orders.length)} note="Registados no sistema" />
+        </section>
+
+        <section className="panel opportunities">
+          <div className="panel-head"><div><h2>🏆 Melhores oportunidades de produto</h2><p>Os três produtos com maior pontuação integrada, quando existem dados suficientes.</p></div><button type="button" className="text-link" onClick={() => router.push("/supervisor")}>Ver análise completa ›</button></div>
+          {topOpportunities.length === 0 ? (
+            <div className="empty-opportunities">
+              <strong>Ainda não há produtos avaliáveis.</strong>
+              <p>Regista um produto com preço, custo estimado, avaliação de procura e concorrência. Uma cotação ligada pode acrescentar até 15 pontos.</p>
+              <button type="button" onClick={() => router.push("/research")}>Abrir Research AI ›</button>
+            </div>
+          ) : (
+            <div className="opportunity-list">
+              {topOpportunities.map(({ product, opportunity, bestQuote }, index) => (
+                <article className="opportunity-row" key={product.id}>
+                  <div className="opportunity-rank">#{index + 1}</div>
+                  <div className="opportunity-info">
+                    <strong>{product.name}</strong>
+                    <small>{product.market} · {opportunity.label}</small>
+                    <div className="opportunity-points">Margem {opportunity.marginPoints}/40 · Procura {opportunity.demandPoints}/25 · Concorrência {opportunity.competitionPoints}/20 · Fornecedor {opportunity.supplierPoints}/15</div>
+                    <small>{bestQuote ? `Melhor custo entregue: ${money(bestQuote.landedCost)} · ${bestQuote.company}` : "Sem cotação ligada em MZN/MT — pontuação limitada."}</small>
+                  </div>
+                  <div className="opportunity-score"><strong>{opportunity.score}/100</strong><span>Pontuação</span></div>
+                </article>
+              ))}
+            </div>
+          )}
+          <p className="opportunity-disclaimer">Pontuação indicativa: margem baseada no custo estimado; procura e concorrência são avaliações manuais. A cotação não valida qualidade, prazo ou todos os custos. Não representa lucro confirmado.</p>
         </section>
 
         <div className="main-grid">
@@ -157,6 +201,18 @@ export default function DashboardHome() {
         .cards { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:17px; }
         .card,.panel { min-width:0; border:1px solid var(--border); background:rgba(16,26,44,.9); box-shadow:0 12px 35px rgba(0,0,0,.12); }
         .card { padding:16px; border-radius:15px; } .card-icon { font-size:21px; } .card-title { margin:12px 0 6px; color:var(--muted); font-size:11px; } .card-value { font-size:clamp(16px,1.7vw,22px); font-weight:700; overflow-wrap:anywhere; } .card-note { display:block; margin-top:7px; color:#64748b; font-size:10px; }
+        .opportunities { margin-bottom:16px; }
+        .text-link,.empty-opportunities button { border:1px solid rgba(34,211,238,.22); border-radius:9px; padding:8px 11px; background:rgba(34,211,238,.07); color:var(--cyan); font-size:11px; font-weight:700; cursor:pointer; }
+        .empty-opportunities { padding:17px; border:1px dashed rgba(148,163,184,.22); border-radius:12px; background:rgba(30,41,59,.25); }
+        .empty-opportunities strong { font-size:13px; } .empty-opportunities p { margin:6px 0 12px; font-size:11px; }
+        .opportunity-list { display:grid; gap:9px; }
+        .opportunity-row { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid rgba(148,163,184,.1); border-radius:12px; background:rgba(30,41,59,.35); }
+        .opportunity-rank { flex:0 0 34px; width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:rgba(34,211,238,.09); color:var(--cyan); font-size:13px; font-weight:800; }
+        .opportunity-info { flex:1; min-width:0; } .opportunity-info strong,.opportunity-info small { display:block; overflow-wrap:anywhere; }
+        .opportunity-info strong { font-size:12px; } .opportunity-info small { margin-top:4px; color:var(--muted); font-size:10px; }
+        .opportunity-points { margin-top:7px; color:#cbd5e1; font-size:10px; line-height:1.5; }
+        .opportunity-score { flex:0 0 auto; text-align:right; } .opportunity-score strong { display:block; color:#86efac; font-size:17px; } .opportunity-score span { color:var(--muted); font-size:9px; }
+        .opportunity-disclaimer { margin:12px 0 0; font-size:10px; }
         .main-grid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(250px,1fr); align-items:start; gap:16px; }
         .panel { padding:19px; border-radius:17px; } .panel-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; } .panel-head p { margin:5px 0 0; font-size:12px; }
         .pipeline { display:grid; gap:8px; } .pipeline-row { display:flex; align-items:center; gap:11px; width:100%; min-height:58px; padding:10px 12px; border:1px solid rgba(148,163,184,.1); border-radius:11px; background:rgba(30,41,59,.4); color:#f8fafc; text-align:left; cursor:pointer; }
@@ -171,7 +227,7 @@ export default function DashboardHome() {
         .footer { padding:22px 5px 5px; color:#64748b; text-align:center; font-size:10px; line-height:1.8; } .footer span { padding:0 5px; color:#475569; }
         @media(max-width:1150px) { .sidebar { flex-basis:215px; width:215px; } .content { padding:24px 18px; } .cards { grid-template-columns:repeat(3,minmax(0,1fr)); } .main-grid { grid-template-columns:minmax(0,1.3fr) minmax(230px,1fr); } }
         @media(max-width:800px) { .dashboard { display:block; } .sidebar { width:100%; min-height:0; padding:14px; border-right:0; border-bottom:1px solid var(--border); } .brand { margin-bottom:14px; } nav { display:flex; gap:7px; overflow-x:auto; padding:2px 0 8px; scrollbar-width:thin; } .nav-link { flex:0 0 auto; width:auto; min-height:40px; white-space:nowrap; } .safe { margin-top:9px; padding:10px; } .content { width:100%; padding:20px 14px; } .main-grid { grid-template-columns:1fr; } .header { gap:12px; } }
-        @media(max-width:520px) { .content { padding:18px 12px; } .header { display:block; } h1 { font-size:clamp(25px,7vw,32px); letter-spacing:-.7px; } .heading p { font-size:12px; } .sync { margin-top:13px; } .banner { align-items:flex-start; flex-wrap:wrap; padding:14px; } .banner-copy { flex-basis:calc(100% - 42px); } .simulation-tag { margin-left:37px; } .cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .card { padding:13px; } .card-value { font-size:clamp(15px,4.4vw,20px); } .panel { padding:14px; } .finance-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .finance-grid>div { padding:12px; } .panel-head { gap:8px; } .badge { font-size:8px; } .quick-links { align-items:flex-start; flex-direction:column; } .quick-links button { width:100%; } }
+        @media(max-width:520px) { .opportunity-row { align-items:flex-start; gap:8px; } .opportunity-score strong { font-size:15px; } .text-link { padding:7px 8px; font-size:9px; } .content { padding:18px 12px; } .header { display:block; } h1 { font-size:clamp(25px,7vw,32px); letter-spacing:-.7px; } .heading p { font-size:12px; } .sync { margin-top:13px; } .banner { align-items:flex-start; flex-wrap:wrap; padding:14px; } .banner-copy { flex-basis:calc(100% - 42px); } .simulation-tag { margin-left:37px; } .cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .card { padding:13px; } .card-value { font-size:clamp(15px,4.4vw,20px); } .panel { padding:14px; } .finance-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .finance-grid>div { padding:12px; } .panel-head { gap:8px; } .badge { font-size:8px; } .quick-links { align-items:flex-start; flex-direction:column; } .quick-links button { width:100%; } }
         @media(prefers-reduced-motion:no-preference) { .nav-link,.pipeline-row,.quick-links button { transition:background .15s ease,border-color .15s ease; } }
       `}</style>
     </main>
