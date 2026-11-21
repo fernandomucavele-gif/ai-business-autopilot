@@ -14,6 +14,25 @@ export type ProductClassification =
   | "Não recomendado"
   | "Por avaliar";
 
+export type MarketLevel = "Baixa" | "Média" | "Alta" | "Por avaliar";
+export type MarketAssessment = {
+  demand: MarketLevel;
+  competition: MarketLevel;
+  evidenceNote?: string;
+};
+
+export function classifyMarketPotential(assessment?: MarketAssessment): string {
+  if (!assessment || assessment.demand === "Por avaliar" || assessment.competition === "Por avaliar") {
+    return "Por avaliar";
+  }
+  const demandScore = assessment.demand === "Alta" ? 2 : assessment.demand === "Média" ? 1 : 0;
+  const competitionScore = assessment.competition === "Baixa" ? 2 : assessment.competition === "Média" ? 1 : 0;
+  const score = demandScore + competitionScore;
+  if (score >= 3) return "Potencial favorável";
+  if (score === 2) return "Potencial moderado";
+  return "Potencial fraco";
+}
+
 /** Classificação indicativa pela margem bruta; não substitui custos totais nem validação de mercado. */
 export function classifyProductOpportunity(price: number, unitCost?: number | null): ProductClassification {
   if (!Number.isFinite(price) || price <= 0 || unitCost == null || !Number.isFinite(unitCost) || unitCost < 0) {
@@ -32,6 +51,7 @@ export type Product = {
   market: Market;
   price: number;
   estimatedUnitCost?: number;
+  marketAssessment?: MarketAssessment;
   supplier?: string;
   supplierCountry?: string;
   score: number;
@@ -152,7 +172,8 @@ export function createProduct(
   name: string,
   market: Market,
   price: number,
-  estimatedUnitCost?: number
+  estimatedUnitCost?: number,
+  marketAssessment?: MarketAssessment
 ): Product {
   return {
     id: `PROD-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -160,6 +181,7 @@ export function createProduct(
     market,
     price,
     estimatedUnitCost,
+    marketAssessment,
     score: 0,
     status: "research",
   };
