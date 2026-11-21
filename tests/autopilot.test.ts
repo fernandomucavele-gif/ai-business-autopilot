@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateCosts,
   classifyProductOpportunity,
+  classifyMarketPotential,
   calculateProfit,
   calculateROAS,
   calculateRevenue,
@@ -151,5 +152,25 @@ describe("classificação indicativa de produtos", () => {
     expect(classifyProductOpportunity(500)).toBe("Por avaliar");
     expect(classifyProductOpportunity(0, 10)).toBe("Por avaliar");
     expect(classifyProductOpportunity(500, -1)).toBe("Por avaliar");
+  });
+});
+
+
+describe("avaliação preliminar de mercado", () => {
+  it("classifica procura alta e concorrência baixa como potencial favorável", () => {
+    expect(classifyMarketPotential({ demand: "Alta", competition: "Baixa" })).toBe("Potencial favorável");
+  });
+
+  it("classifica procura e concorrência médias como potencial moderado", () => {
+    expect(classifyMarketPotential({ demand: "Média", competition: "Média" })).toBe("Potencial moderado");
+  });
+
+  it("classifica procura baixa e concorrência alta como potencial fraco", () => {
+    expect(classifyMarketPotential({ demand: "Baixa", competition: "Alta" })).toBe("Potencial fraco");
+  });
+
+  it("não atribui potencial sem avaliação completa", () => {
+    expect(classifyMarketPotential()).toBe("Por avaliar");
+    expect(classifyMarketPotential({ demand: "Alta", competition: "Por avaliar" })).toBe("Por avaliar");
   });
 });
