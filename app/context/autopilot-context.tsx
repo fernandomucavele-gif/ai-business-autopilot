@@ -22,6 +22,7 @@ import {
   Customer,
   createProduct,
   createCampaign,
+  type MarketAssessment,
   createOrder,
   calculateRevenue,
   calculateCosts,
@@ -39,7 +40,7 @@ type SaveStatus = "loading" | "idle" | "saving" | "saved" | "error";
 type AutopilotContextType = {
   state: AutopilotState;
   saveStatus: SaveStatus;
-  addProduct: (name: string, market: Product["market"], price: number, estimatedUnitCost?: number) => void;
+  addProduct: (name: string, market: Product["market"], price: number, estimatedUnitCost?: number, marketAssessment?: MarketAssessment) => void;
   addCampaign: (productId: string, market: Campaign["market"], objective: Campaign["objective"], dailyBudget: number) => void;
   addCreative: (creative: CreativeRecord) => void;
   addOrder: (productId: string, customerName: string, market: Order["market"], amount: number, supplierName?: string, customerId?: string) => void;
@@ -154,10 +155,10 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
       });
   }, [state, loaded, canSave, activeUserId]);
 
-  function addProduct(name: string, market: Product["market"], price: number, estimatedUnitCost?: number) {
+  function addProduct(name: string, market: Product["market"], price: number, estimatedUnitCost?: number, marketAssessment?: MarketAssessment) {
     if (!name.trim() || !Number.isFinite(price) || price <= 0) return;
     if (estimatedUnitCost !== undefined && (!Number.isFinite(estimatedUnitCost) || estimatedUnitCost < 0)) return;
-    const product = createProduct(name.trim(), market, price, estimatedUnitCost);
+    const product = createProduct(name.trim(), market, price, estimatedUnitCost, marketAssessment);
     setState(current => ({ ...current, products: [...current.products, product] }));
   }
 
