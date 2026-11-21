@@ -40,6 +40,7 @@ export default function ResearchPage() {
   const [competition, setCompetition] = useState<MarketLevel>("Por avaliar");
   const [evidenceNote, setEvidenceNote] = useState("");
   const [productQuery, setProductQuery] = useState("");
+  const [competitorQuery, setCompetitorQuery] = useState("");
   const [liveTrends, setLiveTrends] = useState<{ title: string; traffic: string; publishedAt: string; link: string; geo: string }[]>([]);
   const [trendFeeds, setTrendFeeds] = useState<{ geo: string; ok: boolean; count: number }[]>([]);
   const [trendNote, setTrendNote] = useState("");
@@ -417,6 +418,38 @@ export default function ResearchPage() {
             </div>)}
           </div>}
           <p style={{ color: "#667085", fontSize: "12px", marginTop: "12px" }}>Nota: o feed lista tendências gerais e não fornece volume de pesquisa por produto. Não encontrar o nome do produto na lista não significa que não exista procura.</p>
+        </section>
+
+        <section style={{ background: "#ffffff", borderRadius: "16px", padding: "20px", marginBottom: "20px", border: "1px solid #e4e7ec" }}>
+          <h2>Concorrência, preços e anúncios ativos</h2>
+          <p style={{ color: "#667085", fontSize: "14px" }}>
+            Pesquisa assistida em fontes públicas. Abre os resultados, confirma o país, regista preços comparáveis e verifica se os anúncios continuam ativos.
+          </p>
+          <label style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "14px" }}>
+            Produto ou palavra-chave para comparar
+            <input value={competitorQuery} onChange={(event) => setCompetitorQuery(event.target.value)} maxLength={100} placeholder="Ex.: garrafa térmica inteligente" style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d0d5dd" }} />
+          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px", marginTop: "16px" }}>
+            <a href={"https://www.google.com/search?tbm=shop&q=" + encodeURIComponent(competitorQuery.trim() || productQuery.trim() || "produto") + "&gl=" + (market === "Moçambique" ? "mz" : market === "Brasil" ? "br" : market === "Portugal" ? "pt" : market === "África do Sul" ? "za" : market === "EUA" ? "us" : "gb")} target="_blank" rel="noreferrer" style={{ display: "block", padding: "14px", border: "1px solid #d0d5dd", borderRadius: "10px", color: "#175cd3", textDecoration: "none", fontWeight: 700 }}>
+              Comparar preços — Google Shopping
+              <span style={{ display: "block", color: "#667085", fontWeight: 400, fontSize: "12px", marginTop: "5px" }}>Produtos semelhantes, lojas e preços publicados</span>
+            </a>
+            <a href={"https://www.facebook.com/ads/library/?active_status=ACTIVE&ad_type=ALL&country=" + (market === "Moçambique" ? "MZ" : market === "Brasil" ? "BR" : market === "Portugal" ? "PT" : market === "África do Sul" ? "ZA" : market === "EUA" ? "US" : "GB") + "&q=" + encodeURIComponent(competitorQuery.trim() || productQuery.trim() || "produto") + "&search_type=keyword"} target="_blank" rel="noreferrer" style={{ display: "block", padding: "14px", border: "1px solid #d0d5dd", borderRadius: "10px", color: "#175cd3", textDecoration: "none", fontWeight: 700 }}>
+              Ver anúncios ativos — Meta Ad Library
+              <span style={{ display: "block", color: "#667085", fontWeight: 400, fontSize: "12px", marginTop: "5px" }}>Anúncios encontrados para a palavra-chave e país</span>
+            </a>
+            <a href="https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en" target="_blank" rel="noreferrer" style={{ display: "block", padding: "14px", border: "1px solid #d0d5dd", borderRadius: "10px", color: "#175cd3", textDecoration: "none", fontWeight: 700 }}>
+              Explorar anúncios — TikTok Creative Center
+              <span style={{ display: "block", color: "#667085", fontWeight: 400, fontSize: "12px", marginTop: "5px" }}>Criativos e anúncios em destaque por região e setor</span>
+            </a>
+          </div>
+          <div style={{ background: "#fffaeb", border: "1px solid #fedf89", borderRadius: "10px", padding: "12px", marginTop: "14px", color: "#93370d", fontSize: "13px" }}>
+            Estes links abrem pesquisas nos sites das plataformas; o Autopilot ainda não importa automaticamente preços, concorrentes ou métricas de anúncios. A disponibilidade e os resultados variam por país. Confirma preço, moeda, portes, data e estado do anúncio antes de tomar decisões.
+          </div>
+          <label style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "14px" }}>
+            Registo manual da concorrência (adiciona à nota de evidência antes de guardar o produto)
+            <textarea value={evidenceNote} onChange={(event) => setEvidenceNote(event.target.value)} rows={3} maxLength={500} placeholder="Ex.: Loja A — 650 MT; Loja B — 720 MT; anúncio Meta observado em 21/11/2026..." style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d0d5dd" }} />
+          </label>
         </section>
 
         {results.length > 0 && (
