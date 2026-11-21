@@ -39,6 +39,11 @@ export default function ResearchPage() {
   const [demand, setDemand] = useState<MarketLevel>("Por avaliar");
   const [competition, setCompetition] = useState<MarketLevel>("Por avaliar");
   const [evidenceNote, setEvidenceNote] = useState("");
+  const [liveTrends, setLiveTrends] = useState<{ title: string; traffic: string; publishedAt: string; link: string; geo: string }[]>([]);
+  const [trendFeeds, setTrendFeeds] = useState<{ geo: string; ok: boolean; count: number }[]>([]);
+  const [trendNote, setTrendNote] = useState("");
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [trendCheckedAt, setTrendCheckedAt] = useState("");
 
   const [searching, setSearching] =
     useState(false);
@@ -48,6 +53,25 @@ export default function ResearchPage() {
 
   const [results, setResults] =
     useState<string[]>([]);
+
+  async function loadLiveTrends() {
+    setTrendLoading(true);
+    setTrendNote("");
+    setLiveTrends([]);
+    try {
+      const response = await fetch(`/api/research/trends?market=${encodeURIComponent(market)}&q=${encodeURIComponent(evidenceNote.trim())}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível consultar as tendências.");
+      setLiveTrends(data.trends || []);
+      setTrendFeeds(data.feeds || []);
+      setTrendNote(data.note || "Dados externos recebidos.");
+      setTrendCheckedAt(data.checkedAt || "");
+    } catch (error) {
+      setTrendNote(error instanceof Error ? error.message : "Falha ao consultar a fonte externa.");
+    } finally {
+      setTrendLoading(false);
+    }
+  }
 
   function runResearch() {
     const numericPrice = Number(price);
@@ -319,6 +343,24 @@ export default function ResearchPage() {
           </p>
 
           <button
+            onClick={loadLiveTrends}
+            disabled={trendLoading}
+            style={{
+              marginTop: "20px",
+              width: "100%",
+              padding: "13px",
+              border: "1px solid #1570ef",
+              borderRadius: "10px",
+              background: "#eff8ff",
+              color: "#175cd3",
+              cursor: trendLoading ? "wait" : "pointer",
+              fontWeight: 700,
+            }}
+          >
+            {trendLoading ? "A consultar fonte externa..." : "Consultar tendências reais do Google Trends"}
+          </button>
+
+          <button
             onClick={runResearch}
             disabled={searching}
             style={{
@@ -350,6 +392,27 @@ export default function ResearchPage() {
               {message}
             </p>
           )}
+        </section>
+
+        <section style={{ background: "#ffffff", borderRadius: "16px", padding: "20px", marginBottom: "20px", border: "1px solid #e4e7ec" }}>
+          <h2>Tendências externas — Google Trends</h2>
+          <p style={{ color: "#667085", fontSize: "14px" }}>
+            Mercado: {market}. Consulta do feed público de pesquisas em tendência. Para comparar um produto específico, abre também
+            <a href={`https://trends.google.com/trends/explore?geo=${market === "Moçambique" ? "MZ" : market === "Brasil" ? "BR" : market === "Portugal" ? "PT" : market === "África do Sul" ? "ZA" : market === "EUA" ? "US" : "GB"}&q=${encodeURIComponent(evidenceNote.trim() || "produto")}`} target="_blank" rel="noreferrer" style={{ color: "#175cd3", marginLeft: "4px" }}>Google Trends Explore</a>.
+          </p>
+          {trendCheckedAt && <p style={{ color: "#667085", fontSize: "12px" }}>Última consulta: {new Date(trendCheckedAt).toLocaleString()}</p>}
+          {trendFeeds.length > 0 && <p style={{ color: "#475467", fontSize: "13px" }}>Feeds consultados: {trendFeeds.map((feed) => `${feed.geo}: ${feed.ok ? `${feed.count} tendências` : "indisponível"}`).join(" · ")}</p>}
+          {trendNote && <p style={{ background: "#fffaeb", border: "1px solid #fedf89", borderRadius: "8px", padding: "10px", color: "#93370d", fontSize: "13px" }}>{trendNote}</p>}
+          {liveTrends.length === 0 && !trendLoading && <p style={{ color: "#667085" }}>Ainda sem tendências carregadas. Clica em “Consultar tendências reais” para obter os dados mais recentes disponíveis.</p>}
+          {liveTrends.length > 0 && <div style={{ display: "grid", gap: "10px" }}>
+            {liveTrends.map((trend, index) => <div key={`${trend.geo}-${trend.title}-${index}`} style={{ padding: "12px", border: "1px solid #e4e7ec", borderRadius: "10px" }}>
+              <strong>{trend.title}</strong>
+              <p style={{ margin: "5px 0", color: "#667085", fontSize: "13px" }}>País/região: {trend.geo} · Tráfego aproximado indicado pelo feed: {trend.traffic}</p>
+              {trend.publishedAt && <p style={{ margin: "4px 0", color: "#667085", fontSize: "12px" }}>{trend.publishedAt}</p>}
+              <a href={trend.link} target="_blank" rel="noreferrer" style={{ color: "#175cd3", fontSize: "13px" }}>Ver pesquisa relacionada</a>
+            </div>)}
+          </div>}
+          <p style={{ color: "#667085", fontSize: "12px", marginTop: "12px" }}>Nota: o feed lista tendências gerais e não fornece volume de pesquisa por produto. Não encontrar o nome do produto na lista não significa que não exista procura.</p>
         </section>
 
         {results.length > 0 && (
