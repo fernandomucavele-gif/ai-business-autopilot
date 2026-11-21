@@ -7,6 +7,25 @@ export type Market =
   | "EUA"
   | "Global";
 
+export type ProductClassification =
+  | "Excelente"
+  | "Promissor"
+  | "Risco elevado"
+  | "Não recomendado"
+  | "Por avaliar";
+
+/** Classificação indicativa pela margem bruta; não substitui custos totais nem validação de mercado. */
+export function classifyProductOpportunity(price: number, unitCost?: number | null): ProductClassification {
+  if (!Number.isFinite(price) || price <= 0 || unitCost == null || !Number.isFinite(unitCost) || unitCost < 0) {
+    return "Por avaliar";
+  }
+  const margin = ((price - unitCost) / price) * 100;
+  if (margin <= 0) return "Não recomendado";
+  if (margin < 20) return "Risco elevado";
+  if (margin < 40) return "Promissor";
+  return "Excelente";
+}
+
 export type Product = {
   id: string;
   name: string;
