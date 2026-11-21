@@ -39,6 +39,7 @@ export default function ResearchPage() {
   const [demand, setDemand] = useState<MarketLevel>("Por avaliar");
   const [competition, setCompetition] = useState<MarketLevel>("Por avaliar");
   const [evidenceNote, setEvidenceNote] = useState("");
+  const [productQuery, setProductQuery] = useState("");
   const [liveTrends, setLiveTrends] = useState<{ title: string; traffic: string; publishedAt: string; link: string; geo: string }[]>([]);
   const [trendFeeds, setTrendFeeds] = useState<{ geo: string; ok: boolean; count: number }[]>([]);
   const [trendNote, setTrendNote] = useState("");
@@ -59,7 +60,7 @@ export default function ResearchPage() {
     setTrendNote("");
     setLiveTrends([]);
     try {
-      const response = await fetch(`/api/research/trends?market=${encodeURIComponent(market)}&q=${encodeURIComponent(evidenceNote.trim())}`);
+      const response = await fetch(`/api/research/trends?market=${encodeURIComponent(market)}&q=${encodeURIComponent(productQuery.trim())}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Não foi possível consultar as tendências.");
       setLiveTrends(data.trends || []);
@@ -328,6 +329,11 @@ export default function ResearchPage() {
           </div>
 
           <label style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "14px" }}>
+            Produto ou termo a pesquisar no Google Trends
+            <input value={productQuery} onChange={(event) => setProductQuery(event.target.value)} maxLength={80} placeholder="Ex.: garrafa térmica inteligente" style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d0d5dd" }} />
+          </label>
+
+          <label style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "14px" }}>
             Fonte ou observações da pesquisa (opcional)
             <textarea value={evidenceNote} onChange={(event) => setEvidenceNote(event.target.value)} rows={2} maxLength={500} placeholder="Ex.: observação de lojas, inquérito a clientes, tendências consultadas..." style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d0d5dd" }} />
           </label>
@@ -398,7 +404,7 @@ export default function ResearchPage() {
           <h2>Tendências externas — Google Trends</h2>
           <p style={{ color: "#667085", fontSize: "14px" }}>
             Mercado: {market}. Consulta do feed público de pesquisas em tendência. Para comparar um produto específico, abre também
-            <a href={`https://trends.google.com/trends/explore?geo=${market === "Moçambique" ? "MZ" : market === "Brasil" ? "BR" : market === "Portugal" ? "PT" : market === "África do Sul" ? "ZA" : market === "EUA" ? "US" : "GB"}&q=${encodeURIComponent(evidenceNote.trim() || "produto")}`} target="_blank" rel="noreferrer" style={{ color: "#175cd3", marginLeft: "4px" }}>Google Trends Explore</a>.
+            <a href={`https://trends.google.com/trends/explore?geo=${market === "Moçambique" ? "MZ" : market === "Brasil" ? "BR" : market === "Portugal" ? "PT" : market === "África do Sul" ? "ZA" : market === "EUA" ? "US" : "GB"}&q=${encodeURIComponent(productQuery.trim() || "produto")}`} target="_blank" rel="noreferrer" style={{ color: "#175cd3", marginLeft: "4px" }}>Google Trends Explore</a>.
           </p>
           {trendCheckedAt && <p style={{ color: "#667085", fontSize: "12px" }}>Última consulta: {new Date(trendCheckedAt).toLocaleString()}</p>}
           {trendFeeds.length > 0 && <p style={{ color: "#475467", fontSize: "13px" }}>Feeds consultados: {trendFeeds.map((feed) => `${feed.geo}: ${feed.ok ? `${feed.count} tendências` : "indisponível"}`).join(" · ")}</p>}
