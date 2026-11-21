@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
-import { classifyProductOpportunity } from "../../lib/autopilot";
+import { classifyProductOpportunity, classifyMarketPotential, type MarketLevel } from "../../lib/autopilot";
 import type { Market } from "../../lib/autopilot";
 
 const markets: Market[] = [
@@ -35,6 +35,10 @@ export default function ResearchPage() {
 
   const [unitCost, setUnitCost] =
     useState("250");
+
+  const [demand, setDemand] = useState<MarketLevel>("Por avaliar");
+  const [competition, setCompetition] = useState<MarketLevel>("Por avaliar");
+  const [evidenceNote, setEvidenceNote] = useState("");
 
   const [searching, setSearching] =
     useState(false);
@@ -99,7 +103,8 @@ export default function ResearchPage() {
       name,
       market,
       numericPrice,
-      numericCost
+      numericCost,
+      { demand, competition, evidenceNote: evidenceNote.trim() || undefined }
     );
 
     setMessage(
@@ -276,12 +281,41 @@ export default function ResearchPage() {
                 }}
               />
             </label>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              Procura estimada (avaliação manual)
+              <select value={demand} onChange={(event) => setDemand(event.target.value as MarketLevel)} style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d0d5dd", background: "#fff" }}>
+                <option>Por avaliar</option>
+                <option>Baixa</option>
+                <option>Média</option>
+                <option>Alta</option>
+              </select>
+            </label>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              Concorrência estimada (avaliação manual)
+              <select value={competition} onChange={(event) => setCompetition(event.target.value as MarketLevel)} style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d0d5dd", background: "#fff" }}>
+                <option>Por avaliar</option>
+                <option>Baixa</option>
+                <option>Média</option>
+                <option>Alta</option>
+              </select>
+            </label>
           </div>
+
+          <label style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "14px" }}>
+            Fonte ou observações da pesquisa (opcional)
+            <textarea value={evidenceNote} onChange={(event) => setEvidenceNote(event.target.value)} rows={2} maxLength={500} placeholder="Ex.: observação de lojas, inquérito a clientes, tendências consultadas..." style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d0d5dd" }} />
+          </label>
 
           <p style={{ color: "#475467", fontSize: "14px", marginTop: "14px" }}>
             Margem bruta estimada: {(Number(price) - Number(unitCost)).toFixed(2)} MT por unidade
             {Number(price) > 0 ? ` (${(((Number(price) - Number(unitCost)) / Number(price)) * 100).toFixed(1)}%)` : ""}.
             Não inclui transporte, impostos, taxas, devoluções, armazenamento nem publicidade.
+          </p>
+          <p style={{ color: "#475467", fontSize: "14px" }}>
+            Potencial de mercado: <strong>{classifyMarketPotential({ demand, competition })}</strong>.
+            Esta classificação usa apenas as tuas estimativas, não dados automáticos do mercado.
           </p>
 
           <button
@@ -501,7 +535,10 @@ export default function ResearchPage() {
                       ) : (
                         <span style={{ color: "#667085" }}>Custo estimado ainda não definido</span>
                       )}
-                      <strong>Classificação: {classifyProductOpportunity(product.price, product.estimatedUnitCost)}</strong>
+                      <strong>Classificação financeira: {classifyProductOpportunity(product.price, product.estimatedUnitCost)}</strong>
+                      <strong>Potencial de mercado: {classifyMarketPotential(product.marketAssessment)}</strong>
+                      {product.marketAssessment && <span>Procura: {product.marketAssessment.demand} · Concorrência: {product.marketAssessment.competition}</span>}
+                      {product.marketAssessment?.evidenceNote && <span>Notas: {product.marketAssessment.evidenceNote}</span>}
                     </div>
 
                     <span>
