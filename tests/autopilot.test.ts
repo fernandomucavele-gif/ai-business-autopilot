@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateCosts,
+  classifyProductOpportunity,
   calculateProfit,
   calculateROAS,
   calculateRevenue,
@@ -121,5 +122,34 @@ describe("resumo do sistema", () => {
     expect(status.realPurchasesEnabled).toBe(false);
     expect(status.realAdsEnabled).toBe(false);
     expect(status.automaticPaymentsEnabled).toBe(false);
+  });
+});
+
+
+describe("classificação indicativa de produtos", () => {
+  it("classifica margens de 40% ou mais como Excelente", () => {
+    expect(classifyProductOpportunity(500, 300)).toBe("Excelente");
+    expect(classifyProductOpportunity(500, 250)).toBe("Excelente");
+  });
+
+  it("classifica margens entre 20% e 39,9% como Promissor", () => {
+    expect(classifyProductOpportunity(500, 350)).toBe("Promissor");
+    expect(classifyProductOpportunity(500, 400)).toBe("Promissor");
+  });
+
+  it("classifica margens positivas abaixo de 20% como Risco elevado", () => {
+    expect(classifyProductOpportunity(500, 450)).toBe("Risco elevado");
+    expect(classifyProductOpportunity(500, 499)).toBe("Risco elevado");
+  });
+
+  it("não recomenda custo igual ou superior ao preço de venda", () => {
+    expect(classifyProductOpportunity(500, 500)).toBe("Não recomendado");
+    expect(classifyProductOpportunity(500, 600)).toBe("Não recomendado");
+  });
+
+  it("deixa produtos sem dados válidos Por avaliar", () => {
+    expect(classifyProductOpportunity(500)).toBe("Por avaliar");
+    expect(classifyProductOpportunity(0, 10)).toBe("Por avaliar");
+    expect(classifyProductOpportunity(500, -1)).toBe("Por avaliar");
   });
 });
