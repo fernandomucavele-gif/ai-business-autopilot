@@ -45,6 +45,42 @@ export function classifyProductOpportunity(price: number, unitCost?: number | nu
   return "Excelente";
 }
 
+export type ProductOpportunityScore = {
+  score: number | null;
+  label: "Excelente" | "Boa oportunidade" | "Oportunidade moderada" | "Oportunidade fraca" | "Dados insuficientes";
+  marginPoints: number;
+  demandPoints: number;
+  competitionPoints: number;
+  supplierPoints: number;
+  supplierVerified: boolean;
+};
+
+/** Pontuação indicativa (0–100). Procura e concorrência são avaliações manuais; cotação de fornecedor é opcional e vale 15 pontos. */
+export function scoreProductOpportunity(
+  price: number,
+  unitCost: number | null | undefined,
+  assessment?: MarketAssessment,
+  supplierLandedCost?: number | null
+): ProductOpportunityScore {
+  const validBase = Number.isFinite(price) && price > 0 &&
+    unitCost != null && Number.isFinite(unitCost) && unitCost >= 0 &&
+    assessment != null && assessment.demand !== "Por avaliar" &&
+    assessment.competition !== "Por avaliar";
+  const supplierVerified = supplierLandedCost != null &&
+    Number.isFinite(supplierLandedCost) && supplierLandedCost >= 0;
+  const marginPercent = validBase ? ((price - (unitCost as number)) / price) * 100 : 0;
+  const marginPoints = validBase ? Math.max(0, Math.min(40, marginPercent)) : 0;
+  const demandPoints = !validBase ? 0 : assessment!.demand === "Alta" ? 25 : assessment!.demand === "Média" ? 17 : 7;
+  const competitionPoints = !validBase ? 0 : assessment!.competition === "Baixa" ? 20 : assessment!.competition === "Média" ? 13 : 5;
+  const supplierPoints = supplierVerified && supplierLandedCost! < price ? 15 : 0;
+  if (!validBase) {
+    return { score: null, label: "Dados insuficientes", marginPoints, demandPoints, competitionPoints, supplierPoints, supplierVerified };
+  }
+  const score = Math.round(marginPoints + demandPoints + competitionPoints + supplierPoints);
+  const label = score >= 80 ? "Excelente" : score >= 65 ? "Boa oportunidade" : score >= 45 ? "Oportunidade moderada" : "Oportunidade fraca";
+  return { score, label, marginPoints, demandPoints, competitionPoints, supplierPoints, supplierVerified };
+}
+
 export type Product = {
   id: string;
   name: string;
