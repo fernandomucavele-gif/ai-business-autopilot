@@ -21,7 +21,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
       })),
       { onConflict: "id,user_id" }
     );
-    if (error) throw error;
+    if (error) throw new Error(`autopilot_products: ${error.message}`);
   }
 
   if (state.campaigns.length) {
@@ -39,7 +39,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
       })),
       { onConflict: "id,user_id" }
     );
-    if (error) throw error;
+    if (error) throw new Error(`ad_campaigns: ${error.message}`);
   }
 
   if (state.creatives.length) {
@@ -58,7 +58,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
       })),
       { onConflict: "user_id,source_record_id" }
     );
-    if (error) throw error;
+    if (error) throw new Error(`ad_creatives: ${error.message}`);
   }
 
   const legacyOrderNames = Array.from(new Set(
@@ -87,7 +87,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
       .from("autopilot_customers")
       .upsert(customerRows, { onConflict: "user_id,source_record_id" })
       .select("id, full_name, source_record_id");
-    if (error) throw error;
+    if (error) throw new Error(`autopilot_customers: ${error.message}`);
     for (const customer of customers ?? []) {
       if (customer.source_record_id.startsWith("customer:")) {
         customerIdsById.set(customer.source_record_id.slice("customer:".length), customer.id);
@@ -118,7 +118,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
       })),
       { onConflict: "id,user_id" }
     );
-    if (error) throw error;
+    if (error) throw new Error(`autopilot_orders: ${error.message}`);
 
     const productById = new Map(state.products.map((product) => [product.id, product]));
     const { error: itemError } = await supabase.from("autopilot_order_items").upsert(
@@ -134,7 +134,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
       })),
       { onConflict: "user_id,source_record_id" }
     );
-    if (itemError) throw itemError;
+    if (itemError) throw new Error(`autopilot_order_items: ${itemError.message}`);
   }
 
   if (state.finance.length) {
@@ -150,7 +150,7 @@ async function syncOperationalTables(state: AutopilotState, userId: string): Pro
       })),
       { onConflict: "user_id,source_record_id" }
     );
-    if (error) throw error;
+    if (error) throw new Error(`finance_transactions: ${error.message}`);
   }
 }
 
@@ -221,7 +221,7 @@ export async function saveAutopilotState(state: AutopilotState, expectedUserId?:
   try {
     await syncOperationalTables(state, user.id);
   } catch (syncError) {
-    console.error("Estado geral guardado, mas houve erro ao sincronizar tabelas operacionais:", syncError);
+    console.error("Estado principal guardado, mas a sincronização operacional falhou. Tabela e motivo:", syncError);
     return false;
   }
 
