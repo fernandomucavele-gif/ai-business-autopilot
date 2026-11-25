@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
 import {
   Search,
@@ -44,17 +44,24 @@ export default function SuppliersPage() {
   const { state, addSupplierQuote, removeSupplierQuote } = useAutopilot();
   const quotes = state.supplierQuotes;
   const [form, setForm] = useState(emptyQuote);
+  const autoSelectionAttempted = useRef(false);
 
-  // Se existir apenas um produto no Research AI, liga-o automaticamente ao Supplier AI.
+  // Se existir apenas um produto no Research AI, liga-o automaticamente uma vez.
   useEffect(() => {
-    if (state.products.length !== 1 || selectedProductId) return;
+    if (state.products.length === 0) {
+      autoSelectionAttempted.current = false;
+      return;
+    }
+    if (state.products.length !== 1 || autoSelectionAttempted.current) return;
+
     const onlyProduct = state.products[0];
     if (!onlyProduct) return;
 
+    autoSelectionAttempted.current = true;
     setSelectedProductId(onlyProduct.id);
     setProduct(onlyProduct.name);
     setForm((current) => ({ ...current, product: onlyProduct.name }));
-  }, [state.products, selectedProductId]);
+  }, [state.products]);
 
   const ready = product.trim().length > 0;
   const searchText = [
