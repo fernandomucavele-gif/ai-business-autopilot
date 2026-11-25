@@ -84,6 +84,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   const [canSave, setCanSave] = useState(false);
   const [activeUserId, setActiveUserId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("loading");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveAttemptRef = useRef(0);
   const authEventVersionRef = useRef(0);
@@ -100,6 +101,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
         setCanSave(false);
         setState(initialAutopilotState);
         setSaveStatus("idle");
+        setSaveError(null);
         return;
       }
 
@@ -109,6 +111,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
         setLoaded(false);
         setCanSave(false);
         setSaveStatus("loading");
+        setSaveError(null);
         Promise.resolve().then(async () => {
           try {
             const savedState = await loadAutopilotState(expectedUserId);
@@ -139,19 +142,24 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     const expectedUserId = activeUserId;
     const snapshot = enforceSimulationSafety(state);
     setSaveStatus("saving");
+    setSaveError(null);
 
     // Serializa as gravações e cancela tarefas antigas após qualquer troca de sessão.
     saveQueueRef.current = saveQueueRef.current
       .then(async () => {
         if (authEventVersionRef.current !== authVersion) return;
-        const saved = await saveAutopilotState(snapshot, expectedUserId);
+        const result = await saveAutopilotState(snapshot, expectedUserId);
         if (attempt === saveAttemptRef.current && authEventVersionRef.current === authVersion) {
-          setSaveStatus(saved ? "saved" : "error");
+          setSaveStatus(result.success ? "saved" : "error");
+          setSaveError(result.success ? null : result.error);
         }
       })
       .catch((error) => {
         console.error("Erro inesperado ao guardar o Autopilot:", error);
-        if (attempt === saveAttemptRef.current && authEventVersionRef.current === authVersion) setSaveStatus("error");
+        if (attempt === saveAttemptRef.current && authEventVersionRef.current === authVersion) {
+          setSaveStatus("error");
+          setSaveError(error instanceof Error ? error.message : String(error));
+        }
       });
   }, [state, loaded, canSave, activeUserId]);
 
@@ -295,6 +303,11 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
         }}
       >
         {saveMessage}
+        {saveStatus === "error" && saveError && (
+          <div style={{ marginTop: 4, fontWeight: 500, overflowWrap: "anywhere" }}>
+            Detalhe técnico: {saveError}
+          </div>
+        )}
       </div>
       {children}
     </AutopilotContext.Provider>
