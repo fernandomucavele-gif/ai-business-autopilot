@@ -185,7 +185,14 @@ export async function loadAutopilotState(expectedUserId?: string): Promise<Autop
   return (data?.state_value as AutopilotState | null) ?? null;
 }
 
-export async function saveAutopilotState(state: AutopilotState, expectedUserId?: string): Promise<boolean> {
+export type SaveResult = { success: true } | { success: false; error: string };
+
+function describeDatabaseError(error: { message: string; code?: string; details?: string | null; hint?: string | null }): string {
+  return [error.code ? `Código ${error.code}` : "", error.message, error.details || "", error.hint ? `Sugestão: ${error.hint}` : ""]
+    .filter(Boolean).join(" — ");
+}
+
+export async function saveAutopilotState(state: AutopilotState, expectedUserId?: string): Promise<SaveResult> {
   const {
     data: { user },
     error: authError,
@@ -193,12 +200,12 @@ export async function saveAutopilotState(state: AutopilotState, expectedUserId?:
 
   if (authError || !user) {
     console.error("É necessário iniciar sessão para guardar os dados.");
-    return false;
+    return { success: false, error: "Sessão não autenticada. Inicia sessão novamente." };
   }
 
   if (expectedUserId && user.id !== expectedUserId) {
     console.error("A sessão mudou antes de guardar os dados. Operação cancelada.");
-    return false;
+    return { success: false, error: "A sessão mudou durante a gravação. Atualiza a página e tenta novamente." };
   }
 
   const { error } = await supabase
@@ -214,16 +221,18 @@ export async function saveAutopilotState(state: AutopilotState, expectedUserId?:
     );
 
   if (error) {
-    console.error("Erro ao guardar estado:", error.message);
-    return false;
+    const message = `autopilot_state: ${describeDatabaseError(error)}`;
+    console.error("Erro ao guardar estado:", error);
+    return { success: false, error: message };
   }
 
   try {
     await syncOperationalTables(state, user.id);
   } catch (syncError) {
+    const message = syncError instanceof Error ? syncError.message : String(syncError);
     console.error("Estado principal guardado, mas a sincronização operacional falhou. Tabela e motivo:", syncError);
-    return false;
+    return { success: false, error: message };
   }
 
-  return true;
+  return { success: true };
 }
