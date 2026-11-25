@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useAutopilot } from "../context/autopilot-context";
 import {
   Search,
@@ -44,6 +44,17 @@ export default function SuppliersPage() {
   const { state, addSupplierQuote, removeSupplierQuote } = useAutopilot();
   const quotes = state.supplierQuotes;
   const [form, setForm] = useState(emptyQuote);
+
+  // Se existir apenas um produto no Research AI, liga-o automaticamente ao Supplier AI.
+  useEffect(() => {
+    if (state.products.length !== 1 || selectedProductId) return;
+    const onlyProduct = state.products[0];
+    if (!onlyProduct) return;
+
+    setSelectedProductId(onlyProduct.id);
+    setProduct(onlyProduct.name);
+    setForm((current) => ({ ...current, product: onlyProduct.name }));
+  }, [state.products, selectedProductId]);
 
   const ready = product.trim().length > 0;
   const searchText = [
@@ -167,7 +178,9 @@ export default function SuppliersPage() {
               </p>
             ) : (
               <p className="mt-2 text-xs text-emerald-300">
-                {state.products.length} produto(s) disponível(is) para importar. Seleciona um para preencher automaticamente o nome e ligar a futura cotação.
+                {state.products.length === 1
+                  ? "O único produto disponível foi selecionado automaticamente e está ligado à futura cotação."
+                  : `${state.products.length} produto(s) disponível(is). Seleciona um para preencher o nome e ligar a futura cotação.`}
               </p>
             )}
             {selectedProductId && (
@@ -184,7 +197,11 @@ export default function SuppliersPage() {
                 <Search size={18} className="text-slate-400" />
                 <input
                   value={product}
-                  onChange={(event) => setProduct(event.target.value)}
+                  onChange={(event) => {
+                    setProduct(event.target.value);
+                    setSelectedProductId("");
+                    setForm((current) => ({ ...current, product: event.target.value }));
+                  }}
                   placeholder="Ex.: organizadores inteligentes para casa"
                   className="w-full bg-transparent py-3 outline-none"
                 />
