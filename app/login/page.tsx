@@ -73,15 +73,18 @@ export default function LoginPage() {
         if (authError) throw authError;
         if (data.user && data.user.identities?.length === 0) {
           setMessage("Este e-mail já está registado. Escolhe «Iniciar sessão» ou «Esqueci-me da palavra-passe».");
+        } else if (data.session) {
+          // With email confirmation disabled in the isolated test project,
+          // Supabase returns an active session and the user can continue directly.
+          setPassword("");
+          setMessage("Conta criada com sucesso. A abrir a loja...");
+          router.replace("/shop");
         } else {
-          // A new account must prove ownership of its email before using private features.
-          // If confirmation is disabled in Supabase, discard the temporary session;
-          // the dashboard must have Confirm email enabled for this flow to work.
-          if (data.session) await supabase.auth.signOut();
+          // If confirmation is enabled, Supabase returns no session and requires email verification.
           setMode("verify-email");
           setPassword("");
           setOtp("");
-          setMessage("Enviámos um código de confirmação para o teu e-mail. Introduz os 6 dígitos abaixo. O prazo de validade será definido nas configurações de segurança do serviço.");
+          setMessage("Enviámos uma confirmação para o teu e-mail. Introduz o código de 6 dígitos abaixo.");
         }
       } else if (mode === "verify-email") {
         const { error: verifyError } = await supabase.auth.verifyOtp({ email: normalizedEmail, token: otp.trim(), type: "signup" });
