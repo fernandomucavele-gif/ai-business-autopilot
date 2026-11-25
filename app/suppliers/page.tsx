@@ -133,11 +133,12 @@ export default function SuppliersPage() {
             Seleciona um produto do Research AI para reutilizar o seu nome, ou escreve uma pesquisa independente.
           </p>
 
-          {state.products.length > 0 && (
-            <label className="mt-5 block">
+          <div className="mt-5">
+            <label className="block">
               <span className="mb-2 block text-sm text-slate-300">Importar produto do Research AI</span>
               <select
                 value={selectedProductId}
+                disabled={state.products.length === 0}
                 onChange={(event) => {
                   const id = event.target.value;
                   const selected = state.products.find((item) => item.id === id);
@@ -147,20 +148,34 @@ export default function SuppliersPage() {
                     setForm((current) => ({ ...current, product: selected.name }));
                   }
                 }}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <option value="">Selecionar produto existente...</option>
+                <option value="">
+                  {state.products.length > 0
+                    ? "Selecionar produto existente..."
+                    : "Nenhum produto disponível no Autopilot"}
+                </option>
                 {state.products.map((item) => (
                   <option key={item.id} value={item.id}>{item.name} — {item.market}</option>
                 ))}
               </select>
-              {selectedProductId && (
-                <span className="mt-2 block text-xs text-emerald-300">
-                  Produto ligado ao Research AI. Confirma especificações e custos com o fornecedor.
-                </span>
-              )}
             </label>
-          )}
+            {state.products.length === 0 ? (
+              <p className="mt-2 text-xs text-amber-300">
+                Ainda não recebemos produtos guardados. Volta ao Research AI, adiciona um produto e aguarda a confirmação de gravação antes de regressar.
+                <a href="/research" className="ml-1 text-cyan-300 underline">Abrir Research AI</a>
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-emerald-300">
+                {state.products.length} produto(s) disponível(is) para importar. Seleciona um para preencher automaticamente o nome e ligar a futura cotação.
+              </p>
+            )}
+            {selectedProductId && (
+              <span className="mt-2 block text-xs text-emerald-300">
+                Produto ligado ao Research AI. Confirma especificações e custos com o fornecedor.
+              </span>
+            )}
+          </div>
 
           <form className="mt-5 space-y-4" onSubmit={(event) => event.preventDefault()}>
             <label className="block">
