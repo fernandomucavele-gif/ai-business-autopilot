@@ -46,6 +46,27 @@ export default function SuppliersPage() {
   const [form, setForm] = useState(emptyQuote);
   const autoSelectionAttempted = useRef(false);
 
+  // Pré-visualiza os custos da cotação antes de a guardar.
+  const quotePreview = useMemo(() => {
+    const unitPrice = Number(form.unitPrice);
+    const minimumOrder = Number(form.minimumOrder);
+    const shipping = Number(form.shipping);
+    const taxes = Number(form.taxes);
+    const valuesArePresent = [form.unitPrice, form.minimumOrder, form.shipping, form.taxes]
+      .every((value) => value.trim().length > 0);
+    const valuesAreValid = valuesArePresent &&
+      Number.isFinite(unitPrice) && unitPrice >= 0 &&
+      Number.isInteger(minimumOrder) && minimumOrder >= 1 &&
+      Number.isFinite(shipping) && shipping >= 0 &&
+      Number.isFinite(taxes) && taxes >= 0;
+
+    if (!valuesAreValid) return null;
+
+    const goods = unitPrice * minimumOrder;
+    const total = goods + shipping + taxes;
+    return { goods, shipping, taxes, total, perUnit: total / minimumOrder };
+  }, [form.unitPrice, form.minimumOrder, form.shipping, form.taxes]);
+
   // Se existir apenas um produto no Research AI, liga-o automaticamente uma vez.
   useEffect(() => {
     if (state.products.length === 0) {
@@ -366,6 +387,19 @@ export default function SuppliersPage() {
                 rows={3} placeholder="Regista o que o fornecedor declarou e o que ainda falta confirmar."
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3" />
             </label>
+            {quotePreview && (
+              <div className="rounded-xl border border-cyan-500/30 bg-slate-950 p-4" aria-live="polite">
+                <h3 className="font-semibold text-cyan-300">Pré-visualização do custo</h3>
+                <p className="mt-1 text-xs text-slate-400">Estimativa calculada automaticamente com os valores que introduziste.</p>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                  <div><p className="text-slate-400">Produtos</p><p className="mt-1 font-semibold">{money(quotePreview.goods, form.currency)}</p></div>
+                  <div><p className="text-slate-400">Transporte</p><p className="mt-1 font-semibold">{money(quotePreview.shipping, form.currency)}</p></div>
+                  <div><p className="text-slate-400">Impostos / taxas</p><p className="mt-1 font-semibold">{money(quotePreview.taxes, form.currency)}</p></div>
+                  <div><p className="text-slate-400">Total estimado</p><p className="mt-1 font-semibold text-cyan-300">{money(quotePreview.total, form.currency)}</p></div>
+                </div>
+                <p className="mt-3 text-sm text-slate-300">Custo estimado por unidade: <strong>{money(quotePreview.perUnit, form.currency)}</strong></p>
+              </div>
+            )}
             <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-slate-950 hover:bg-cyan-400">
               <Plus size={18} /> Adicionar à comparação
             </button>
