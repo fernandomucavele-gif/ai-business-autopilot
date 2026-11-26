@@ -91,13 +91,24 @@ export default function SuppliersPage() {
     },
   ];
 
-  const comparison = useMemo(
-    () => [...quotes].sort((a, b) =>
-      (a.unitPrice * a.minimumOrder + a.shipping + a.taxes) -
-      (b.unitPrice * b.minimumOrder + b.shipping + b.taxes)
-    ),
-    [quotes]
-  );
+  const comparison = useMemo(() => {
+    const groupKey = (quote: (typeof quotes)[number]) => [
+      quote.productId || "",
+      quote.product.trim().toLocaleLowerCase("pt-PT"),
+      quote.currency.trim().toUpperCase(),
+      quote.minimumOrder,
+    ].join("::");
+
+    const unitLandedCost = (quote: (typeof quotes)[number]) =>
+      (quote.unitPrice * quote.minimumOrder + quote.shipping + quote.taxes) /
+      quote.minimumOrder;
+
+    return [...quotes].sort((a, b) => {
+      const groupOrder = groupKey(a).localeCompare(groupKey(b), "pt-PT");
+      if (groupOrder !== 0) return groupOrder;
+      return unitLandedCost(a) - unitLandedCost(b);
+    });
+  }, [quotes]);
 
   function addQuote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -370,7 +381,7 @@ export default function SuppliersPage() {
             );
           })}
           {comparison.length > 1 && (
-            <p className="text-xs text-slate-500">A ordenação considera o custo total declarado. Compara apenas propostas na mesma moeda e para produtos/condições equivalentes.</p>
+            <p className="text-xs text-slate-500">As propostas são agrupadas por produto, moeda, produto ligado e MOQ. Dentro de cada grupo, a menor estimativa de custo por unidade aparece primeiro. Confirma também especificações, qualidade, Incoterms, prazo, garantia e condições de pagamento: estes detalhes ainda não são validados automaticamente.</p>
           )}
         </section>
 
