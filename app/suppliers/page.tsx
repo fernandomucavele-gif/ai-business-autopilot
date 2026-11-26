@@ -137,7 +137,8 @@ export default function SuppliersPage() {
         taxes,
         notes: form.notes.trim(),
     });
-    setForm(emptyQuote);
+    // Mantém o produto para registar várias propostas do mesmo artigo sem voltar a preenchê-lo.
+    setForm((current) => ({ ...emptyQuote, product: current.product.trim() }));
   }
 
   return (
