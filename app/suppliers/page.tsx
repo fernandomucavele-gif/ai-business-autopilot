@@ -355,11 +355,32 @@ export default function SuppliersPage() {
             const goods = quote.unitPrice * quote.minimumOrder;
             const total = goods + quote.shipping + quote.taxes;
             const perUnit = total / quote.minimumOrder;
+            const comparableKey = [
+              quote.productId || "",
+              quote.product.trim().toLocaleLowerCase("pt-PT"),
+              quote.currency.trim().toUpperCase(),
+              quote.minimumOrder,
+            ].join("::");
+            const previousQuote = comparison[index - 1];
+            const previousKey = previousQuote
+              ? [
+                  previousQuote.productId || "",
+                  previousQuote.product.trim().toLocaleLowerCase("pt-PT"),
+                  previousQuote.currency.trim().toUpperCase(),
+                  previousQuote.minimumOrder,
+                ].join("::")
+              : null;
+            const isLowestInGroup = comparableKey !== previousKey;
             return (
               <article key={quote.id} className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs text-cyan-300">PROPOSTA {index + 1} · VALORES DECLARADOS</p>
+                    <p className="text-xs text-cyan-300">PROPOSTA REGISTADA · VALORES DECLARADOS</p>
+                    {isLowestInGroup && (
+                      <span className="mt-2 inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                        Menor custo estimado neste grupo
+                      </span>
+                    )}
                     <h3 className="mt-1 text-lg font-semibold">{quote.company}</h3>
                     <p className="text-sm text-slate-400">{quote.product} · {quote.country} · {quote.platform}</p>
                   </div>
