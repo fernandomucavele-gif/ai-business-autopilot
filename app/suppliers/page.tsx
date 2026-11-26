@@ -93,7 +93,6 @@ export default function SuppliersPage() {
 
   const comparison = useMemo(() => {
     const groupKey = (quote: (typeof quotes)[number]) => [
-      quote.productId || "",
       quote.product.trim().toLocaleLowerCase("pt-PT"),
       quote.currency.trim().toUpperCase(),
       quote.minimumOrder,
@@ -115,8 +114,7 @@ export default function SuppliersPage() {
     const counts = new Map<string, number>();
     for (const quote of comparison) {
       const key = [
-        quote.productId || "",
-        quote.product.trim().toLocaleLowerCase("pt-PT"),
+          quote.product.trim().toLocaleLowerCase("pt-PT"),
         quote.currency.trim().toUpperCase(),
         quote.minimumOrder,
       ].join("::");
@@ -388,15 +386,13 @@ export default function SuppliersPage() {
             const total = goods + quote.shipping + quote.taxes;
             const perUnit = total / quote.minimumOrder;
             const comparableKey = [
-              quote.productId || "",
-              quote.product.trim().toLocaleLowerCase("pt-PT"),
+                      quote.product.trim().toLocaleLowerCase("pt-PT"),
               quote.currency.trim().toUpperCase(),
               quote.minimumOrder,
             ].join("::");
             const previousQuote = comparison[index - 1];
             const previousKey = previousQuote
               ? [
-                  previousQuote.productId || "",
                   previousQuote.product.trim().toLocaleLowerCase("pt-PT"),
                   previousQuote.currency.trim().toUpperCase(),
                   previousQuote.minimumOrder,
@@ -435,7 +431,7 @@ export default function SuppliersPage() {
             );
           })}
           {comparison.length > 1 && (
-            <p className="text-xs text-slate-500">As propostas são agrupadas por produto, moeda, produto ligado e MOQ. Dentro de cada grupo, a menor estimativa de custo por unidade aparece primeiro. Confirma também especificações, qualidade, Incoterms, prazo, garantia e condições de pagamento: estes detalhes ainda não são validados automaticamente.</p>
+            <p className="text-xs text-slate-500">As propostas são agrupadas pelo nome do produto, moeda e MOQ. Dentro de cada grupo, a menor estimativa de custo por unidade aparece primeiro. Confirma também especificações, qualidade, Incoterms, prazo, garantia e condições de pagamento: estes detalhes ainda não são validados automaticamente.</p>
           )}
         </section>
 
