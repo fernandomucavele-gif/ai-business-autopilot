@@ -282,8 +282,24 @@ export default function SuppliersPage() {
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm text-slate-300">Produto / modelo cotado</span>
-                <input required value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })}
-                  placeholder="Produto e especificação" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3" />
+                <input
+                  required
+                  value={form.product}
+                  onChange={(e) => {
+                    const nextProduct = e.target.value;
+                    setForm((current) => ({ ...current, product: nextProduct }));
+                    const linkedProduct = state.products.find((item) => item.id === selectedProductId);
+                    if (
+                      linkedProduct &&
+                      nextProduct.trim().toLocaleLowerCase("pt-PT") !==
+                        linkedProduct.name.trim().toLocaleLowerCase("pt-PT")
+                    ) {
+                      setSelectedProductId("");
+                    }
+                  }}
+                  placeholder="Produto e especificação"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3"
+                />
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm text-slate-300">País de origem</span>
