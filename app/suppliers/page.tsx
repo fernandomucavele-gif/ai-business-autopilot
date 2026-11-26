@@ -110,6 +110,21 @@ export default function SuppliersPage() {
     });
   }, [quotes]);
 
+  // Só existe um vencedor quando há pelo menos duas propostas no mesmo grupo.
+  const comparisonGroupCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const quote of comparison) {
+      const key = [
+        quote.productId || "",
+        quote.product.trim().toLocaleLowerCase("pt-PT"),
+        quote.currency.trim().toUpperCase(),
+        quote.minimumOrder,
+      ].join("::");
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  }, [comparison]);
+
   function addQuote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const unitPrice = Number(form.unitPrice);
@@ -387,13 +402,14 @@ export default function SuppliersPage() {
                   previousQuote.minimumOrder,
                 ].join("::")
               : null;
-            const isLowestInGroup = comparableKey !== previousKey;
+            const isFirstInGroup = comparableKey !== previousKey;
+            const showLowestBadge = isFirstInGroup && (comparisonGroupCounts.get(comparableKey) || 0) > 1;
             return (
               <article key={quote.id} className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xs text-cyan-300">PROPOSTA REGISTADA · VALORES DECLARADOS</p>
-                    {isLowestInGroup && (
+                    {showLowestBadge && (
                       <span className="mt-2 inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
                         Menor custo estimado neste grupo
                       </span>
