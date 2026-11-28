@@ -13,6 +13,7 @@ import {
   Calculator,
   ClipboardList,
   Copy,
+  FileDown,
 } from "lucide-react";
 
 
@@ -235,6 +236,35 @@ export default function SuppliersPage() {
       notes: quote.notes,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function exportQuotes() {
+    if (filteredComparison.length === 0) return;
+    const columns = [
+      "Fornecedor", "Produto", "País", "Plataforma", "Moeda",
+      "Preço unitário", "MOQ", "Transporte", "Impostos / taxas",
+      "Custo total estimado", "Custo estimado por unidade", "Notas",
+    ];
+    const escapeCsv = (value: string | number) =>
+      '"' + String(value).replace(/"/g, '""') + '"';
+    const rows = filteredComparison.map((quote) => {
+      const total = quote.unitPrice * quote.minimumOrder + quote.shipping + quote.taxes;
+      return [
+        quote.company, quote.product, quote.country, quote.platform, quote.currency,
+        quote.unitPrice, quote.minimumOrder, quote.shipping, quote.taxes,
+        total.toFixed(2), (total / quote.minimumOrder).toFixed(2), quote.notes,
+      ];
+    });
+    const csv = "\uFEFF" + [columns, ...rows].map((row) => row.map(escapeCsv).join(";")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "propostas-fornecedores.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   function cancelEditingQuote() {
@@ -501,7 +531,17 @@ export default function SuppliersPage() {
                   className="w-full bg-transparent py-3 outline-none"
                 />
               </div>
-              <p className="text-xs text-slate-500">{filteredComparison.length} de {comparison.length} proposta(s)</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs text-slate-500">{filteredComparison.length} de {comparison.length} proposta(s)</p>
+                <button
+                  type="button"
+                  onClick={exportQuotes}
+                  disabled={filteredComparison.length === 0}
+                  className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 px-3 py-2 text-sm font-medium text-cyan-300 hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <FileDown size={16} /> Exportar CSV
+                </button>
+              </div>
             </div>
           )}
           {comparison.length === 0 ? (
