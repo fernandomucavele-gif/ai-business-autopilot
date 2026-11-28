@@ -41,9 +41,10 @@ export default function SuppliersPage() {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [country, setCountry] = useState("Qualquer país");
   const [market, setMarket] = useState("Moçambique");
-  const { state, addSupplierQuote, removeSupplierQuote } = useAutopilot();
+  const { state, addSupplierQuote, updateSupplierQuote, removeSupplierQuote } = useAutopilot();
   const quotes = state.supplierQuotes;
   const [form, setForm] = useState(emptyQuote);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const autoSelectionAttempted = useRef(false);
 
   // Pré-visualiza os custos da cotação antes de a guardar.
@@ -157,22 +158,59 @@ export default function SuppliersPage() {
         !Number.isFinite(shipping) || shipping < 0 ||
         !Number.isFinite(taxes) || taxes < 0) return;
 
-    addSupplierQuote({
-        id: `quote-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        productId: selectedProductId || undefined,
-        company: form.company.trim(),
-        country: form.country,
-        platform: form.platform,
-        product: form.product.trim(),
-        currency: form.currency,
-        unitPrice,
-        minimumOrder,
-        shipping,
-        taxes,
-        notes: form.notes.trim(),
-    });
+    const quote = {
+      id: editingQuoteId || `quote-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      productId: selectedProductId || undefined,
+      company: form.company.trim(),
+      country: form.country,
+      platform: form.platform,
+      product: form.product.trim(),
+      currency: form.currency,
+      unitPrice,
+      minimumOrder,
+      shipping,
+      taxes,
+      notes: form.notes.trim(),
+    };
+
+    if (editingQuoteId) {
+      updateSupplierQuote(editingQuoteId, quote);
+      setEditingQuoteId(null);
+      setForm(emptyQuote);
+      setSelectedProductId("");
+      setProduct("");
+      return;
+    }
+
+    addSupplierQuote(quote);
     // Mantém o produto para registar várias propostas do mesmo artigo sem voltar a preenchê-lo.
     setForm((current) => ({ ...emptyQuote, product: current.product.trim() }));
+  }
+
+  function startEditingQuote(quote: (typeof quotes)[number]) {
+    setEditingQuoteId(quote.id);
+    setSelectedProductId(quote.productId || "");
+    setProduct(quote.product);
+    setForm({
+      company: quote.company,
+      country: quote.country,
+      platform: quote.platform,
+      product: quote.product,
+      currency: quote.currency,
+      unitPrice: String(quote.unitPrice),
+      minimumOrder: String(quote.minimumOrder),
+      shipping: String(quote.shipping),
+      taxes: String(quote.taxes),
+      notes: quote.notes,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEditingQuote() {
+    setEditingQuoteId(null);
+    setForm(emptyQuote);
+    setSelectedProductId("");
+    setProduct("");
   }
 
   return (
@@ -301,7 +339,7 @@ export default function SuppliersPage() {
         <section className="rounded-2xl border border-cyan-500/25 bg-slate-900 p-5 sm:p-7">
           <div className="flex items-center gap-2">
             <ClipboardList className="text-cyan-300" size={22} />
-            <h2 className="text-xl font-semibold">Registar proposta para comparação</h2>
+            <h2 className="text-xl font-semibold">{editingQuoteId ? "Editar proposta" : "Registar proposta para comparação"}</h2>
           </div>
           <p className="mt-2 text-sm text-slate-400">
             Introduz os valores que recebeste diretamente do fornecedor. O Autopilot não recolhe nem confirma estes dados.
@@ -400,9 +438,16 @@ export default function SuppliersPage() {
                 <p className="mt-3 text-sm text-slate-300">Custo estimado por unidade: <strong>{money(quotePreview.perUnit, form.currency)}</strong></p>
               </div>
             )}
-            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-slate-950 hover:bg-cyan-400">
-              <Plus size={18} /> Adicionar à comparação
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-slate-950 hover:bg-cyan-400">
+                <Plus size={18} /> {editingQuoteId ? "Guardar alterações" : "Adicionar à comparação"}
+              </button>
+              {editingQuoteId && (
+                <button type="button" onClick={cancelEditingQuote} className="rounded-xl border border-slate-700 px-5 py-3 font-semibold text-slate-200 hover:bg-slate-800">
+                  Cancelar edição
+                </button>
+              )}
+            </div>
           </form>
         </section>
 
@@ -447,10 +492,16 @@ export default function SuppliersPage() {
                     <h3 className="mt-1 text-lg font-semibold">{quote.company}</h3>
                     <p className="text-sm text-slate-400">{quote.product} · {quote.country} · {quote.platform}</p>
                   </div>
-                  <button type="button" onClick={() => removeSupplierQuote(quote.id)}
-                    aria-label="Remover proposta" className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-red-300">
-                    <Trash2 size={18} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => startEditingQuote(quote)}
+                      aria-label={`Editar proposta de ${quote.company}`} className="rounded-lg px-3 py-2 text-sm font-medium text-cyan-300 hover:bg-slate-800">
+                      Editar
+                    </button>
+                    <button type="button" onClick={() => removeSupplierQuote(quote.id)}
+                      aria-label="Remover proposta" className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-red-300">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                   <div className="rounded-xl bg-slate-950 p-3"><p className="text-slate-400">Preço / unidade</p><p className="mt-1 font-semibold">{money(quote.unitPrice, quote.currency)}</p></div>
