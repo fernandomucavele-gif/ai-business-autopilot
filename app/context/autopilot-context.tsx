@@ -51,6 +51,7 @@ type AutopilotContextType = {
   updateCustomer: (id: string, updates: Partial<Pick<Customer, "name" | "phone" | "email" | "market" | "notes">>) => void;
   removeCustomer: (id: string) => void;
   addSupplierQuote: (quote: SupplierQuote) => void;
+  updateSupplierQuote: (id: string, quote: SupplierQuote) => void;
   removeSupplierQuote: (id: string) => void;
   setAutomation: (key: keyof AutopilotState["automation"], value: boolean) => void;
   metrics: { revenue: number; costs: number; profit: number; roas: number };
@@ -253,6 +254,14 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
     setState(current => ({ ...current, supplierQuotes: [...current.supplierQuotes, quote] }));
   }
 
+  function updateSupplierQuote(id: string, quote: SupplierQuote) {
+    if (!quote.company.trim() || !quote.product.trim()) return;
+    setState(current => ({
+      ...current,
+      supplierQuotes: current.supplierQuotes.map(item => item.id === id ? { ...quote, id } : item),
+    }));
+  }
+
   function removeSupplierQuote(id: string) {
     setState(current => ({ ...current, supplierQuotes: current.supplierQuotes.filter(quote => quote.id !== id) }));
   }
@@ -285,7 +294,7 @@ export function AutopilotProvider({ children }: { children: ReactNode }) {
   }[saveStatus];
 
   return (
-    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, updateOrderDetails, addFinanceRecord, addCustomer, updateCustomer, removeCustomer, addSupplierQuote, removeSupplierQuote, setAutomation, metrics }}>
+    <AutopilotContext.Provider value={{ state, saveStatus, addProduct, addCampaign, addCreative, addOrder, updateOrder, updateOrderDetails, addFinanceRecord, addCustomer, updateCustomer, removeCustomer, addSupplierQuote, updateSupplierQuote, removeSupplierQuote, setAutomation, metrics }}>
       <div
         role="status"
         aria-live="polite"
