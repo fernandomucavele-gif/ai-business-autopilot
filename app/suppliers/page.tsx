@@ -46,6 +46,7 @@ export default function SuppliersPage() {
   const quotes = state.supplierQuotes;
   const [form, setForm] = useState(emptyQuote);
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+  const [quoteSearch, setQuoteSearch] = useState("");
   const autoSelectionAttempted = useRef(false);
 
   // Pré-visualiza os custos da cotação antes de a guardar.
@@ -131,6 +132,15 @@ export default function SuppliersPage() {
       return unitLandedCost(a) - unitLandedCost(b);
     });
   }, [quotes]);
+
+  const filteredComparison = useMemo(() => {
+    const term = quoteSearch.trim().toLocaleLowerCase("pt-PT");
+    if (!term) return comparison;
+    return comparison.filter((quote) =>
+      [quote.company, quote.product, quote.country, quote.platform]
+        .some((value) => value.toLocaleLowerCase("pt-PT").includes(term))
+    );
+  }, [comparison, quoteSearch]);
 
   // Só existe um vencedor quando há pelo menos duas propostas no mesmo grupo.
   const comparisonGroupCounts = useMemo(() => {
@@ -477,11 +487,33 @@ export default function SuppliersPage() {
             <Calculator className="text-cyan-300" size={22} />
             <h2 className="text-xl font-semibold">Comparação de propostas</h2>
           </div>
+          {comparison.length > 0 && (
+            <div className="space-y-2">
+              <label htmlFor="quote-search" className="block text-sm text-slate-300">Pesquisar propostas guardadas</label>
+              <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3">
+                <Search size={18} className="text-slate-400" />
+                <input
+                  id="quote-search"
+                  type="search"
+                  value={quoteSearch}
+                  onChange={(event) => setQuoteSearch(event.target.value)}
+                  placeholder="Fornecedor, produto, país ou plataforma..."
+                  className="w-full bg-transparent py-3 outline-none"
+                />
+              </div>
+              <p className="text-xs text-slate-500">{filteredComparison.length} de {comparison.length} proposta(s)</p>
+            </div>
+          )}
           {comparison.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-6 text-sm text-slate-400">
               Ainda não adicionaste propostas. Depois de registares os valores recebidos, a comparação aparecerá aqui.
             </div>
-          ) : comparison.map((quote, index) => {
+          ) : filteredComparison.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-6 text-sm text-slate-400">
+              Nenhuma proposta corresponde à pesquisa. Experimenta outro nome ou limpa o campo.
+            </div>
+          ) : filteredComparison.map((quote) => {
+            const index = comparison.findIndex((item) => item.id === quote.id);
             const goods = quote.unitPrice * quote.minimumOrder;
             const total = goods + quote.shipping + quote.taxes;
             const perUnit = total / quote.minimumOrder;
