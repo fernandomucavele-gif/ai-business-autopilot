@@ -12,6 +12,7 @@ import {
   Trash2,
   Calculator,
   ClipboardList,
+  Copy,
 } from "lucide-react";
 
 
@@ -193,6 +194,26 @@ export default function SuppliersPage() {
     setProduct(quote.product);
     setForm({
       company: quote.company,
+      country: quote.country,
+      platform: quote.platform,
+      product: quote.product,
+      currency: quote.currency,
+      unitPrice: String(quote.unitPrice),
+      minimumOrder: String(quote.minimumOrder),
+      shipping: String(quote.shipping),
+      taxes: String(quote.taxes),
+      notes: quote.notes,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function startQuoteFromExisting(quote: (typeof quotes)[number]) {
+    // Usa a proposta como modelo, sem alterar nem duplicar automaticamente a cotação guardada.
+    setEditingQuoteId(null);
+    setSelectedProductId(quote.productId || "");
+    setProduct(quote.product);
+    setForm({
+      company: "",
       country: quote.country,
       platform: quote.platform,
       product: quote.product,
@@ -493,6 +514,10 @@ export default function SuppliersPage() {
                     <p className="text-sm text-slate-400">{quote.product} · {quote.country} · {quote.platform}</p>
                   </div>
                   <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => startQuoteFromExisting(quote)}
+                      aria-label={`Usar proposta de ${quote.company} como base`} className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800">
+                      <Copy size={15} /> Usar como base
+                    </button>
                     <button type="button" onClick={() => startEditingQuote(quote)}
                       aria-label={`Editar proposta de ${quote.company}`} className="rounded-lg px-3 py-2 text-sm font-medium text-cyan-300 hover:bg-slate-800">
                       Editar
